@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     <style>
         a.btn, a.back-link { text-decoration: none; }
         .alert { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: var(--radius); margin-bottom: 14px; font-size: 13px; font-weight: 600; }
@@ -24,12 +26,37 @@
         .alert-success { background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
         .action-badge.action-lock   { background: var(--danger-soft); color: var(--danger); }
         .action-badge.action-unlock { background: var(--accent-soft); color: var(--accent); }
-        .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); }
+        .result-summary { padding: 10px 14px; font-size: 12.5px; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
         .filter-active-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 11px; }
         .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 16px; gap: 8px; color: var(--muted); }
         .empty-state .icon-wrap { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); display: flex; align-items: center; justify-content: center; }
         .empty-state .icon-wrap svg { width: 22px; height: 22px; stroke: var(--muted); }
         .empty-state strong { color: var(--fg); font-size: 14px; }
+
+        .status-purple { background:#ede9fe; color:#6d28d9; }
+        .status-orange { background:#fff3e0; color:#b15c00; }
+        .status-teal   { background:#e0f2f1; color:#00695c; }
+        .status-pink   { background:#fce4ec; color:#a13d63; }
+
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span { color: var(--muted); font-weight: 500; }
+        .confirm-row strong { color: var(--fg); font-weight: 600; text-align: right; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -41,19 +68,18 @@
             <h1>Chi tiết kho</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse?action=list">Kho hàng</a> / <span><c:out value="${warehouse.name}"/></span></span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <c:choose>
                     <c:when test="${warehouse.status == 'locked'}">
-                        <a class="btn" href="${pageContext.request.contextPath}/warehouse?action=unlock&id=${warehouse.warehouseId}" onclick="return confirm('Mở khóa kho này? Các máy trong kho sẽ hiển thị lại trong tồn kho.');">
+                        <button type="button" class="btn" onclick="openUnlockConfirm()">
                             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
                             Mở khóa kho
-                        </a>
+                        </button>
                     </c:when>
                     <c:otherwise>
-                        <a class="btn" href="${pageContext.request.contextPath}/warehouse?action=lock&id=${warehouse.warehouseId}" onclick="return confirm('Khóa kho này? Các máy trong kho sẽ bị ẩn khỏi tồn kho cho đến khi mở khóa lại.');">
+                        <button type="button" class="btn" onclick="openLockConfirm()">
                             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                             Khóa kho
-                        </a>
+                        </button>
                     </c:otherwise>
                 </c:choose>
                 <a class="btn" href="${pageContext.request.contextPath}/warehouse?action=update&id=${warehouse.warehouseId}">
@@ -64,11 +90,6 @@
         </header>
 
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/warehouse?action=list">
-                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Quay lại danh sách
-            </a>
-
             <c:if test="${param.msg == 'updated'}">
                 <div class="alert alert-success">
                     <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
@@ -76,46 +97,34 @@
                 </div>
             </c:if>
 
-            <div class="hero">
-                <div class="hero-avatar" style="background: oklch(58% 0.12 80);">
-                    <c:set var="nameParts" value="${fn:split(warehouse.name, ' ')}"/>
-                    <c:choose>
-                        <c:when test="${fn:length(nameParts) == 1}">${fn:toUpperCase(fn:substring(warehouse.name, 0, 2))}</c:when>
-                        <c:otherwise>${fn:toUpperCase(fn:substring(nameParts[0], 0, 1))}${fn:toUpperCase(fn:substring(nameParts[fn:length(nameParts)-1], 0, 1))}</c:otherwise>
-                    </c:choose>
-                </div>
-                <div class="hero-body">
-                    <h2 class="hero-name">
-                        <c:out value="${warehouse.name}"/>
+            <div class="header-bar">
+                <div class="left">
+                    <a class="back-link" href="${pageContext.request.contextPath}/warehouse?action=list">
+                        <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                        Quay lại danh sách
+                    </a>
+                    <span class="code-tag">
+                        <span class="ct-label">Kho hàng -</span>
+                        <span><c:out value="${warehouse.name}"/></span>
+                    </span>
+                    <h2 class="page-main-title">
+                        #<c:out value="${warehouse.name}"/>
                         <c:choose>
-                            <c:when test="${warehouse.status == 'active'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#d4edda;color:#155724;">Hoạt động</span></c:when>
-                            <c:when test="${warehouse.status == 'locked'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Bị khóa</span></c:when>
-                            <c:otherwise><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Ngưng hoạt động</span></c:otherwise>
+                            <c:when test="${warehouse.status == 'active'}">
+                                <span class="status-pill status-completed"><span class="pdot"></span>Hoạt động</span>
+                            </c:when>
+                            <c:when test="${warehouse.status == 'locked'}">
+                                <span class="status-pill status-cancelled"><span class="pdot"></span>Bị khóa</span>
+                            </c:when>
+                            <c:otherwise>
+                                <span class="status-pill status-neutral"><span class="pdot"></span>Ngưng hoạt động</span>
+                            </c:otherwise>
                         </c:choose>
                     </h2>
-                    <div class="hero-meta">
-                        <span>Kho hàng</span>
-                        <span class="sep">·</span>
-                        <span class="id">#${warehouse.warehouseId}</span>
-                    </div>
-                    <div class="hero-pills">
-                        <span class="pill warehouse"><span class="pdot"></span><c:out value="${warehouse.address}"/></span>
-                        <span class="pill status-active"><span class="pdot"></span>Tồn kho: <fmt:formatNumber value="${warehouse.totalInventory}"/></span>
-                        <span class="pill role-admin"><span class="pdot"></span><c:out value="${warehouse.itemCount}"/> mặt hàng</span>
-                    </div>
                 </div>
+                <div class="right"></div>
             </div>
 
-            <div class="tab-bar">
-                <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${warehouse.warehouseId}" class="tab ${empty currentTab or currentTab == 'info' ? 'active' : ''}">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                    Thông tin chung
-                </a>
-                <a href="${pageContext.request.contextPath}/warehouse?action=view&id=${warehouse.warehouseId}&amp;tab=history" class="tab ${currentTab == 'history' ? 'active' : ''}">
-                    <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Lịch sử
-                </a>
-            </div>
 
             <c:choose>
                 <c:when test="${currentTab == 'history'}">
@@ -227,57 +236,91 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="section" style="padding: 18px 22px;">
-                        <div class="info-grid">
-                            <div class="info-field">
-                                <div class="info-label">Tên kho</div>
-                                <div class="info-value mono"><c:out value="${warehouse.name}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Địa chỉ</div>
-                                <div class="info-value"><c:out value="${warehouse.address}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Trạng thái</div>
-                                <div class="info-value">
-                                    <c:choose>
-                                        <c:when test="${warehouse.status == 'active'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#d4edda;color:#155724;">Hoạt động</span></c:when>
-                                        <c:when test="${warehouse.status == 'locked'}"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Bị khóa</span></c:when>
-                                        <c:otherwise><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#f8d7da;color:#721c24;">Ngưng hoạt động</span></c:otherwise>
-                                    </c:choose>
-                                </div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Tổng tồn kho</div>
-                                <div class="info-value mono"><fmt:formatNumber value="${warehouse.totalInventory}"/></div>
-                            </div>
-                            <div class="info-field">
-                                <div class="info-label">Số mặt hàng</div>
-                                <div class="info-value mono">${warehouse.itemCount}</div>
-                            </div>
-                            <c:if test="${not empty warehouse.createdAt}">
+                    <div class="section">
+                        <div class="section-head">
+                            <h3>Thông tin chung</h3>
+                        </div>
+                        <div class="section-body">
+                            <div class="form-grid cols-5">
                                 <div class="info-field">
-                                    <div class="info-label">Ngày tạo</div>
-                                    <div class="info-value mono">${warehouse.createdAt}</div>
+                                    <label>Tên kho</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${warehouse.name}'/>">
                                 </div>
-                            </c:if>
-                            <c:if test="${not empty warehouse.updatedAt}">
                                 <div class="info-field">
-                                    <div class="info-label">Cập nhật cuối</div>
-                                    <div class="info-value mono">${warehouse.updatedAt}</div>
+                                    <label>Địa chỉ</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${warehouse.address}'/>">
                                 </div>
-                            </c:if>
+                                <div class="info-field">
+                                    <label>Trạng thái</label>
+                                    <input class="info-input" type="text" disabled value="<c:choose><c:when test='${warehouse.status == &quot;active&quot;}'>Hoạt động</c:when><c:when test='${warehouse.status == &quot;locked&quot;}'>Bị khóa</c:when><c:otherwise>Ngưng hoạt động</c:otherwise></c:choose>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Tổng tồn kho</label>
+                                    <input class="info-input mono" type="text" disabled value="<fmt:formatNumber value='${warehouse.totalInventory}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Số mặt hàng</label>
+                                    <input class="info-input mono" type="text" disabled value="${warehouse.itemCount}">
+                                </div>
+                            </div>
+                            <div class="form-grid cols-5" style="margin-top: 14px;">
+                                <c:if test="${not empty warehouse.createdAt}">
+                                    <div class="info-field">
+                                        <label>Ngày tạo</label>
+                                        <input class="info-input mono" type="text" disabled value="${warehouse.createdAt}">
+                                    </div>
+                                </c:if>
+                                <c:if test="${not empty warehouse.updatedAt}">
+                                    <div class="info-field">
+                                        <label>Cập nhật cuối</label>
+                                        <input class="info-input mono" type="text" disabled value="${warehouse.updatedAt}">
+                                    </div>
+                                </c:if>
+                            </div>
                             <c:if test="${not empty warehouse.description}">
-                                <div class="info-field" style="grid-column: span 2;">
-                                    <div class="info-label">Mô tả</div>
-                                    <div style="font-size:13px;color:var(--fg-soft);white-space:pre-wrap;line-height:1.55;padding:14px;background:var(--surface-2);border-radius:var(--radius-sm);"><c:out value="${warehouse.description}"/></div>
+                                <div style="margin-top: 18px;">
+                                    <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Mô tả</div>
+                                    <div class="note-soft"><c:out value="${warehouse.description}"/></div>
                                 </div>
                             </c:if>
                         </div>
                     </div>
                 </c:otherwise>
-            </c:choose>
+</c:choose>
         </main>
+    </div>
+</div>
+
+<div class="modal-host" id="lockConfirmModal" onclick="if (event.target === this) closeLockConfirm();">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="lockConfirmTitle">
+        <h3 id="lockConfirmTitle" style="color: var(--danger);">Xác nhận khóa kho</h3>
+        <p class="modal-sub">Các máy trong kho sẽ bị ẩn khỏi tồn kho cho đến khi mở khóa lại.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeLockConfirm()">Hủy</button>
+            <button type="button" class="btn btn-danger" onclick="doLockConfirm()">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Xác nhận khóa
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-host" id="unlockConfirmModal" onclick="if (event.target === this) closeUnlockConfirm();">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="unlockConfirmTitle">
+        <h3 id="unlockConfirmTitle" style="color: var(--accent);">Xác nhận mở khóa kho</h3>
+        <p class="modal-sub">Các máy trong kho sẽ hiển thị lại trong tồn kho.</p>
+        <div class="confirm-summary">
+            <div class="confirm-row"><span>Tên kho</span><strong><c:out value="${warehouse.name}"/></strong></div>
+            <div class="confirm-row"><span>Địa chỉ</span><strong><c:out value="${warehouse.address}"/></strong></div>
+            <div class="confirm-row"><span>Tổng tồn kho</span><strong><fmt:formatNumber value="${warehouse.totalInventory}"/></strong></div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeUnlockConfirm()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="doUnlockConfirm()">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                Xác nhận mở khóa
+            </button>
+        </div>
     </div>
 </div>
 
@@ -285,8 +328,8 @@
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">
     window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
-    <c:remove var="toastMessage" scope="session"/>
-    <c:remove var="toastType" scope="session"/>
+        <c:remove var="toastMessage" scope="session"/>
+        <c:remove var="toastType" scope="session"/>
     </c:if>
     <c:if test="${not empty requestScope.toastMessage}">
     window.SESSION_DATA = window.SESSION_DATA || {};
@@ -294,8 +337,53 @@
     window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
     </c:if>
 </script>
+<script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    var pendingLockUrl = null;
+    function openLockConfirm() {
+        pendingLockUrl = '${pageContext.request.contextPath}/warehouse?action=lock&id=${warehouse.warehouseId}';
+        var m = document.getElementById('lockConfirmModal');
+        if (m) m.classList.add('show');
+    }
+    function closeLockConfirm() {
+        var m = document.getElementById('lockConfirmModal');
+        if (m) m.classList.remove('show');
+        pendingLockUrl = null;
+    }
+    function doLockConfirm() {
+        var url = pendingLockUrl;
+        closeLockConfirm();
+        if (url) window.location.href = url;
+    }
+    function openUnlockConfirm() {
+        pendingLockUrl = '${pageContext.request.contextPath}/warehouse?action=unlock&id=${warehouse.warehouseId}';
+        var m = document.getElementById('unlockConfirmModal');
+        if (m) m.classList.add('show');
+    }
+    function closeUnlockConfirm() {
+        var m = document.getElementById('unlockConfirmModal');
+        if (m) m.classList.remove('show');
+        pendingLockUrl = null;
+    }
+    function doUnlockConfirm() {
+        var url = pendingLockUrl;
+        closeUnlockConfirm();
+        if (url) window.location.href = url;
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeLockConfirm();
+            closeUnlockConfirm();
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+            showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+        }
+    });
+</script>
 </body>
 </html>

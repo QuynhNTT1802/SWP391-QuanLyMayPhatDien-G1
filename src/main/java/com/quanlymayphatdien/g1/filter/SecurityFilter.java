@@ -1,6 +1,5 @@
 package com.quanlymayphatdien.g1.filter;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.entity.User;
 import jakarta.servlet.Filter;
@@ -23,7 +22,7 @@ import java.util.Set;
 public class SecurityFilter implements Filter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
-            "/authen", "/", "/home"
+            "/authen"
     );
 
     private static final List<String> PUBLIC_PREFIXES = List.of(
@@ -36,7 +35,6 @@ public class SecurityFilter implements Filter {
 
     private static final List<Rule> RULES = List.of(
             Rule.exact("/admin/dashboard", "dashboard.view"),
-            Rule.exact("/admin/system-log", "system_log.view"),
             Rule.exact("/admin/forgot-password", "forgot_pw.process"),
             Rule.action("/admin/users",
                     Map.of(
@@ -127,9 +125,7 @@ public class SecurityFilter implements Filter {
                             "ce_reject", "transfers.approve_ceo",
                             "ce_request_revision", "transfers.approve_ceo",
                             "edit_submit", "transfers.create",
-                            "edit_view", "transfers.create",
-                            "dest_accept", "transfers.approve_dest",
-                            "dest_reject", "transfers.approve_dest"),
+                            "edit_view", "transfers.create"),
                     "transfers.view")
     );
 
@@ -174,8 +170,7 @@ public class SecurityFilter implements Filter {
                 session.setAttribute("userPermissions", freshPerms);
                 req.getServletContext().removeAttribute("perm_refresh_" + userId);
             } catch (SQLException e) {
-                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le",
-                        e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
             }
         }
 

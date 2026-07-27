@@ -29,11 +29,7 @@
                     <h1>Thẻ kho</h1>
                     <span class="crumb">/ Kho / Thẻ kho</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
-                    </div>
+                        </div>
                 </header>
                 <main>
                     <div class="page-head">
@@ -92,7 +88,6 @@
                                     <th>Kho</th>
                                     <th style="width:100px;">Loại</th>
                                     <th>Sản phẩm</th>
-                                    <th style="width:200px;">Số serial</th>
                                     <th style="width:90px;">+/- SL</th>
                                     <th style="width:80px;">Tồn sau</th>
                                     <th>Mã phiếu</th>
@@ -119,20 +114,6 @@
                                                         <c:when test="${sc.transactionType == 'IMPORT'}"><span class="status active" style="--dot:var(--accent);"><span class="sdot"></span>Nhập</span></c:when>
                                                         <c:when test="${sc.transactionType == 'EXPORT'}"><span class="status locked" style="--dot:var(--danger);"><span class="sdot"></span>Xuất</span></c:when>
                                                         <c:otherwise><span class="status active" style="--dot:var(--warn);background:var(--warn-soft);color:var(--warn);"><span class="sdot"></span>Điều chỉnh</span></c:otherwise>
-                                                    </c:choose>
-                                                </td>
-                                                <td style="font-size:11px;font-family:monospace;max-width:200px;" title="<c:out value='${sc.serialList}'/>">
-                                                    <c:choose>
-                                                        <c:when test="${empty sc.serialList}">
-                                                            <span style="color:var(--muted);">—</span>
-                                                        </c:when>
-                                                        <c:otherwise>
-                                                            <c:set var="serialsArr" value="${fn:split(sc.serialList, ', ')}" />
-                                                            <c:out value="${serialsArr[0]}"/>
-                                                            <c:if test="${fn:length(serialsArr) > 1}">
-                                                                <span style="color:var(--accent);font-weight:600;"> +${fn:length(serialsArr) - 1}</span>
-                                                            </c:if>
-                                                        </c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td>

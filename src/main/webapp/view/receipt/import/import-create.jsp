@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -17,6 +17,35 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
+    <style>
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span {
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .confirm-row strong {
+            color: var(--fg);
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -46,7 +75,7 @@
                     </div>
                 </div>
 
-            <form id="receiptForm" action="${pageContext.request.contextPath}/import-receipt?action=save" method="POST" onsubmit="return validateReceiptForm()">
+            <form id="receiptForm" action="${pageContext.request.contextPath}/import-receipt?action=save" method="POST" onsubmit="return openSaveConfirm();">
                 <c:if test="${not empty receipt.purchaseOrderId}">
                     <input type="hidden" name="poId" value="${receipt.purchaseOrderId}" />
                 </c:if>
@@ -185,12 +214,20 @@
                             </div>
                         </c:if>
                         <c:if test="${not empty fromExportReceipt}">
+                            <c:set var="trBreakdown" value=""/>
+                            <c:forEach var="td" items="${transfer.details}" varStatus="loop">
+                                <c:set var="tdLabel" value="${td.generatorModel}"/>
+                                <c:if test="${not empty td.generatorBrand}">
+                                    <c:set var="tdLabel" value="${tdLabel} (${td.generatorBrand})"/>
+                                </c:if>
+                                <c:set var="trBreakdown" value="${trBreakdown}${td.quantity} máy ${tdLabel}${!loop.last ? ', ' : ''}"/>
+                            </c:forEach>
                             <div class="alert alert-info" style="margin: 14px 0;">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                                 <div class="alert-body">
                                     <div class="alert-title">Nhập từ phiếu luân chuyển</div>
                                     <div>
-                                        Tổng cần nhập: <strong>${expectedRows} số serial</strong>
+                                        Tổng cần nhập: <strong>${expectedRows} số serial</strong>, bao gồm: <strong>${trBreakdown}</strong>.
                                     </div>
                                 </div>
                             </div>
@@ -230,12 +267,6 @@
                                 </small>
                             </div>
                             </c:if>
-                            <div class="scanner-box" id="importScannerBox">
-                                <div class="scanner-input-wrap">
-                                    <input type="text" id="importScanBox" autocomplete="off"
-                                           placeholder="" />
-                                </div>
-                            </div>
                         </div>
 
                         <div class="tab-pane" data-tab="excel">
@@ -289,6 +320,20 @@
     </div>
 </div>
 
+<div class="modal-host" id="saveConfirmModal" onclick="if (event.target === this) closeSaveConfirm();">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+        <h3 id="saveConfirmTitle">Xác nhận lưu phiếu nhập</h3>
+        <p class="modal-sub">Vui lòng kiểm tra thông tin trước khi lưu phiếu.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeSaveConfirm()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="doConfirmSave()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                Xác nhận lưu
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="toast-host" id="toastHost"></div>
 <script>
     <c:if test="${not empty sessionScope.toastMessage}">
@@ -307,6 +352,78 @@
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
+    // ========== Confirm Save Modal ==========
+    function openSaveConfirm() {
+        if (typeof validateReceiptForm === 'function' && !validateReceiptForm()) {
+            return false;
+        }
+        populateSaveSummary();
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.add('show');
+        return false;
+    }
+
+    function closeSaveConfirm() {
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function doConfirmSave() {
+        closeSaveConfirm();
+        var form = document.getElementById('receiptForm');
+        if (form) form.submit();
+    }
+
+    function populateSaveSummary() {
+        var whEl = document.getElementById('saveSummaryWh');
+        var reasonEl = document.getElementById('saveSummaryReason');
+        var totalEl = document.getElementById('saveSummaryTotal');
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        if (whEl) {
+            if (whSelect && whSelect.tagName === 'SELECT') {
+                whEl.textContent = whSelect.options[whSelect.selectedIndex]
+                    ? whSelect.options[whSelect.selectedIndex].textContent.trim()
+                    : '—';
+            } else if (whSelect) {
+                var disp = document.querySelector('.readonly-field strong');
+                whEl.textContent = disp ? disp.textContent.trim() : '—';
+            } else {
+                whEl.textContent = '—';
+            }
+        }
+
+        var reasonSelect = document.querySelector('select[name="reasonId"], input[name="reasonId"][type="hidden"]');
+        if (reasonEl) {
+            if (reasonSelect && reasonSelect.tagName === 'SELECT') {
+                reasonEl.textContent = reasonSelect.options[reasonSelect.selectedIndex]
+                    ? reasonSelect.options[reasonSelect.selectedIndex].textContent.trim()
+                    : '—';
+            } else if (reasonSelect) {
+                var rdisp = reasonSelect.closest('.form-field');
+                if (rdisp) {
+                    var ssel = rdisp.querySelector('select');
+                    reasonEl.textContent = (ssel && ssel.options[ssel.selectedIndex])
+                        ? ssel.options[ssel.selectedIndex].textContent.trim()
+                        : '—';
+                } else {
+                    reasonEl.textContent = '—';
+                }
+            } else {
+                reasonEl.textContent = '—';
+            }
+        }
+
+        if (totalEl) {
+            var totalSource = document.getElementById('poFilledCount') || document.getElementById('totalRowCount');
+            totalEl.textContent = totalSource ? totalSource.textContent.trim() : '0';
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSaveConfirm();
+    });
+
     document.addEventListener('DOMContentLoaded', function () {
         if (window.SESSION_DATA && window.SESSION_DATA.message) {
             if (typeof showToast === 'function') {
@@ -352,7 +469,6 @@
             generatorCache = [];
             warn.style.display = 'flex';
             disableAllRows(true);
-            refreshScannerState();
             return;
         }
         warn.style.display = 'none';
@@ -364,7 +480,6 @@
                 refreshAllGeneratorSelects();
                 applyPrefill();
                 applyActiveGeneratorToAllRows();
-                refreshScannerState();
             })
             .catch(function (err) {
                 console.error(err);
@@ -372,7 +487,6 @@
                 refreshAllGeneratorSelects();
                 applyPrefill();
                 applyActiveGeneratorToAllRows();
-                refreshScannerState();
             });
     }
 
@@ -419,7 +533,6 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         initImportTabs();
-        refreshScannerState();
         updatePoCounter();
         updateEmptyState();
         if (isTransferImportMode) {
@@ -456,10 +569,7 @@
             }
         });
         if (tabName === 'scan') {
-            setTimeout(function () {
-                var scanEl = document.getElementById('importScanBox');
-                if (scanEl && !scanEl.disabled) scanEl.focus();
-            }, 50);
+            // global scanner không cần focus input
         }
     }
 
@@ -495,7 +605,6 @@
 
     function onActiveGeneratorChange() {
         applyActiveGeneratorToAllRows();
-        refreshScannerState();
     }
 
     function buildEmptyRow() {
@@ -617,7 +726,6 @@
         }
         updateRowNumbers();
         updatePoCounter();
-        refreshScannerState();
     }
 
     function removeGroup(btn) {
@@ -628,7 +736,6 @@
         updateEmptyState();
         updateRowNumbers();
         updatePoCounter();
-        refreshScannerState();
     }
 
     function addRow() {
@@ -805,79 +912,52 @@
 
     // ========== Scanner nhập kho ==========
     var importScannerLock = false;
+    var importScanBuf = '';
+    var importScanLastKey = 0;
+    var IMPORT_SCAN_THRESHOLD = 50;
+    var IMPORT_SCAN_MIN_LEN = 2;
 
     function initImportScanner() {
-        var scanInput = document.getElementById('importScanBox');
-        var scanBox = document.getElementById('importScannerBox');
-        if (!scanInput) return;
+        document.addEventListener('keydown', function (e) {
+            var now = Date.now();
+            var gap = now - importScanLastKey;
+            importScanLastKey = now;
 
-        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        var genPicker = document.getElementById('activeGeneratorId');
-        refreshScannerState();
-        if (whSelect && whSelect.tagName === 'SELECT') {
-            whSelect.addEventListener('change', refreshScannerState);
-        }
-        if (genPicker) {
-            genPicker.addEventListener('change', refreshScannerState);
-        }
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                importScanBuf = '';
+                return;
+            }
 
-        scanInput.addEventListener('keydown', function (e) {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            if (importScannerLock) return;
-            var serial = scanInput.value.trim();
-            if (!serial) return;
-            handleImportScan(serial);
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                if (importScanBuf.length >= IMPORT_SCAN_MIN_LEN) {
+                    var serial = importScanBuf.trim();
+                    importScanBuf = '';
+                    if (serial && !importScannerLock) {
+                        e.preventDefault();
+                        handleImportScan(serial);
+                    }
+                    return;
+                }
+                importScanBuf = '';
+                return;
+            }
+
+            if (gap > IMPORT_SCAN_THRESHOLD) importScanBuf = '';
+
+            if (e.key && e.key.length === 1 && !e.isComposing) {
+                importScanBuf += e.key;
+            } else if (e.key === 'Backspace' && importScanBuf.length > 0) {
+                importScanBuf = importScanBuf.slice(0, -1);
+            }
         });
 
-        scanInput.addEventListener('input', function () {
-            scanInput.classList.remove('success', 'error');
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) importScanBuf = '';
         });
-
-        setTimeout(function () {
-            if (!scanInput.disabled) scanInput.focus();
-        }, 100);
     }
 
-    function refreshScannerState() {
-        var scanInput = document.getElementById('importScanBox');
-        var scanBox = document.getElementById('importScannerBox');
-        if (!scanInput) return;
-        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        var wh = whSelect ? whSelect.value : '';
-        var isTransferMode = !!document.querySelector('tr.transfer-suggest-row');
-        var genPicker = document.getElementById('activeGeneratorId');
-        var hasGen = !genPicker || !!genPicker.value;
-
-        if (!wh) {
-            scanBox.classList.add('disabled');
-            scanInput.disabled = true;
-            scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
-        } else if (!isTransferImportMode && !isTransferMode && !hasGen) {
-            scanBox.classList.add('disabled');
-            scanInput.disabled = true;
-            scanInput.placeholder = 'Vui lòng chọn mẫu máy phát điện trước khi quét...';
-        } else {
-            scanBox.classList.remove('disabled');
-            scanInput.disabled = false;
-            scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét mã vạch (hoặc gõ tay rồi Enter)...';
-        }
-    }
-
-    function setImportScanStatus(msg, type) {
-        var el = document.getElementById('importScanStatus');
-        if (!el) return;
-        el.textContent = msg;
-        el.classList.remove('success', 'error');
-        if (type) el.classList.add(type);
-    }
-
-    function flashImportScan(type) {
-        var inp = document.getElementById('importScanBox');
-        if (!inp) return;
-        inp.classList.remove('success', 'error');
-        inp.classList.add(type);
-        setTimeout(function () { inp.classList.remove(type); }, 900);
+    function clearScanBuf() {
+        importScanBuf = '';
     }
 
     function flashRowSuccess(row) {
@@ -900,8 +980,8 @@
         var whId = whSelect ? whSelect.value : '';
         if (!whId) {
             importScannerLock = false;
-            setImportScanStatus('Vui lòng chọn kho trước khi quét.', 'error');
-            flashImportScan('error');
+            toast('Vui lòng chọn kho trước khi quét.', 'danger');
+            clearScanBuf();
             return;
         }
 
@@ -910,10 +990,8 @@
             if (currentFilled >= expectedRowsJs) {
                 importScannerLock = false;
                 var fullMsg = 'Đã quét đủ ' + expectedRowsJs + ' số serial theo phiếu. Không thể quét thêm.';
-                setImportScanStatus(fullMsg, 'error');
-                flashImportScan('error');
                 toast(fullMsg, 'danger');
-                focusScanBox();
+                clearScanBuf();
                 return;
             }
         }
@@ -923,10 +1001,10 @@
 
         if (!isTransferImportMode && !isTransferMode && !activeInfo) {
             importScannerLock = false;
-            setImportScanStatus('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'error');
-            flashImportScan('error');
+            toast('Vui lòng chọn mẫu máy phát điện trước khi quét.', 'danger');
             var picker = document.getElementById('activeGeneratorId');
             if (picker) picker.focus();
+            clearScanBuf();
             return;
         }
 
@@ -937,10 +1015,8 @@
         if (dupFound) {
             importScannerLock = false;
             var dupMsg = 'Số serial "' + serial + '" đã tồn tại trong phiếu này.';
-            setImportScanStatus(dupMsg, 'error');
-            flashImportScan('error');
             toast(dupMsg, 'danger');
-            focusScanBox();
+            clearScanBuf();
             return;
         }
 
@@ -956,22 +1032,19 @@
                     if (data.status === 'SOLD' || (isTransferImportMode && data.status === 'IN_TRANSIT')) {
                         existingInvId = data.inventoryId;
                     } else {
-                        var sysMsg = 'Số serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.';
-                        if (isTransferImportMode) {
-                            sysMsg = 'Số serial "' + serial + '" không ở trạng thái IN_TRANSIT (đang ' + (data.status || 'unknown') + '), không thể nhập.';
-                        }
-                        setImportScanStatus(sysMsg, 'error');
-                        flashImportScan('error');
+                        var statusName = data.status === 'IN_STOCK' ? 'tồn kho'
+                            : data.status === 'IN_TRANSIT' ? 'đang luân chuyển'
+                            : data.status === 'SOLD' ? 'đã bán'
+                            : data.status || 'không xác định';
+                        var sysMsg = 'Số serial "' + serial + '" đang ở trạng thái ' + statusName + ', không thể nhập.';
                         toast(sysMsg, 'danger');
-                        focusScanBox();
+                        clearScanBuf();
                         return;
                     }
                 } else if (isTransferImportMode) {
                     var nfMsg = 'Số serial "' + serial + '" không tồn tại trong hệ thống, không thể nhập từ phiếu luân chuyển.';
-                    setImportScanStatus(nfMsg, 'error');
-                    flashImportScan('error');
                     toast(nfMsg, 'danger');
-                    focusScanBox();
+                    clearScanBuf();
                     return;
                 }
 
@@ -981,10 +1054,8 @@
                     if (filled >= allowed) {
                         importScannerLock = false;
                         var perGenMsg = 'Đã quét đủ ' + allowed + ' số serial cho mẫu ' + (activeInfo.model || '') + '.';
-                        setImportScanStatus(perGenMsg, 'error');
-                        flashImportScan('error');
                         toast(perGenMsg, 'danger');
-                        focusScanBox();
+                        clearScanBuf();
                         return;
                     }
                 }
@@ -1002,7 +1073,6 @@
                 var targetTr = addRowToGroup(group, serial, '', existingInvId);
                 group.setAttribute('open', '');
                 flashRowSuccess(targetTr);
-                flashImportScan('success');
                 var modelLabel;
                 if (isTransferImportMode && data && data.found) {
                     modelLabel = data.generatorModel || '';
@@ -1010,30 +1080,21 @@
                     modelLabel = activeInfo ? (activeInfo.model || '') : '';
                 }
                 var okMsg = existingInvId
-                        ? ('✓ Đã nhập lại số serial "' + serial + '" (đã bán trước đó) vào kho.')
-                        : ('✓ Đã thêm số serial "' + serial + '" vào mẫu ' + modelLabel + '.');
-                setImportScanStatus(okMsg, 'success');
+                        ? 'Đã nhập lại số serial "' + serial + '" (đã xuất trước đó) vào kho'
+                        : 'Đã thêm số serial "' + serial + '" vào mẫu ' + modelLabel;
+                toast(okMsg, 'success');
                 updatePoCounter();
 
-                var scanEl2 = document.getElementById('importScanBox');
-                if (scanEl2) scanEl2.value = '';
-                focusScanBox();
+                clearScanBuf();
             })
             .catch(function (err) {
                 importScannerLock = false;
                 console.error(err);
-                setImportScanStatus('Lỗi kết nối: ' + err.message, 'error');
-                flashImportScan('error');
-                focusScanBox();
+                toast('Lỗi kết nối: ' + err.message, 'danger');
+                clearScanBuf();
             });
     }
 
-    function focusScanBox() {
-        var scanEl = document.getElementById('importScanBox');
-        if (scanEl && !scanEl.disabled) {
-            scanEl.focus();
-        }
-    }
 
     function findPoTargetRow() {
         var rows = document.querySelectorAll('#detailGroups tr');

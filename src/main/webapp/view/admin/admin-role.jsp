@@ -25,10 +25,6 @@
                         <h1>Phân quyền</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/dashboard">Quản trị</a> / Phân quyền</span>
                         <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            </button>
                             <a href="${pageContext.request.contextPath}/admin/role/edit" class="btn btn-primary" style="text-decoration: none;">
                             <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;"><path d="M12 5v14M5 12h14"/></svg>
                             Tạo vai trò mới

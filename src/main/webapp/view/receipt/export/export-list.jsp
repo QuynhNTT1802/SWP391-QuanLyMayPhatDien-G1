@@ -28,10 +28,6 @@
                     <span class="crumb">/ Kho / Phiếu xuất</span>
                     <div class="top-actions">
                         <jsp:include page="../../common/admin/bell.jsp"/>
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
                         <a class="btn" href="${pageContext.request.contextPath}/export-receipt?action=selectOrder">
                             Tạo từ đơn hàng
                         </a>
@@ -90,19 +86,6 @@
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                         </select>
 
-                        <select class="filter-select" name="warehouse" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                            <c:choose>
-                                <c:when test="${not empty scopedWarehouseId}">
-                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="">Kho: Tất cả</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}" <c:if test="${whFilter == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </select>
 
                         <div class="spacer"></div>
                         <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/export-receipt?action=list'">
@@ -140,9 +123,12 @@
                                                              <a href="javascript:void(0);" class="code-link code-link--purple" onclick="showRelatedModal(this)" data-doc-type="order" data-doc-code="<c:out value='${r.orderCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.orderId}"><c:out value="${r.orderCode}"/></a>
                                                          </c:when>
                                                          <c:when test="${not empty r.liquidationCode}">
-                                                             <a href="javascript:void(0);" class="code-link" onclick="showRelatedModal(this)" data-doc-type="liquidation" data-doc-code="<c:out value='${r.liquidationCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.liquidationId}"><c:out value="${r.liquidationCode}"/></a>
-                                                         </c:when>
-                                                        <c:otherwise><span class="muted">—</span></c:otherwise>
+                                                              <a href="javascript:void(0);" class="code-link" onclick="showRelatedModal(this)" data-doc-type="liquidation" data-doc-code="<c:out value='${r.liquidationCode}'/>" data-doc-customer="<c:out value='${r.customerName}'/>" data-doc-id="${r.liquidationId}"><c:out value="${r.liquidationCode}"/></a>
+                                                          </c:when>
+                                                          <c:when test="${not empty r.transferCode}">
+                                                              <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${r.linkedTransferId}" class="code-link"><c:out value="${r.transferCode}"/></a>
+                                                          </c:when>
+                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>
                                                 </td>
                                                 <td class="col-reason">

@@ -11,10 +11,8 @@ import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.dal.UserDAO;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -67,7 +65,6 @@ public class PurchaseOrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.doGet", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
             request.getSession().setAttribute("toastType", "danger");
@@ -108,7 +105,6 @@ public class PurchaseOrderController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.doPost", e.getMessage(), e);
             e.printStackTrace();
             request.getSession().setAttribute("toastMessage", "Lỗi xử lý: " + e.getMessage());
             request.getSession().setAttribute("toastType", "danger");
@@ -447,7 +443,7 @@ public class PurchaseOrderController extends HttpServlet {
 
             List<User> ceoUsers = userDAO.findUsersByPermission("purchase_orders", "approve_ceo");
             for (User u : ceoUsers) {
-                NotificationService.send(
+                NotificationUtil.send(
                     u.getId(),
                     "Phiếu mua " + po.getPoCode() + " chờ CEO duyệt",
                     "Nhân viên " + user.getName() + " vừa tạo phiếu mua cần CEO duyệt.",
@@ -459,7 +455,7 @@ public class PurchaseOrderController extends HttpServlet {
 
             response.sendRedirect(request.getContextPath() + "/purchase-order?action=detail&id=" + poId);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PURCHASE, "PurchaseOrderController.submitReviewCreate", e.getMessage(), e);
+            e.printStackTrace();
             e.printStackTrace();
             session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
             session.setAttribute("toastType", "danger");
@@ -727,7 +723,7 @@ public class PurchaseOrderController extends HttpServlet {
 
             PurchaseOrder po = poDao.findById(id);
             if (po != null && po.getCreatedBy() > 0) {
-                NotificationService.send(
+                NotificationUtil.send(
                     po.getCreatedBy(),
                     "Phiếu mua " + po.getPoCode() + " đã được duyệt",
                     "Phiếu mua " + po.getPoCode() + " đã được " + user.getName() + " duyệt.",
@@ -770,7 +766,7 @@ public class PurchaseOrderController extends HttpServlet {
 
             PurchaseOrder po = poDao.findById(id);
             if (po != null && po.getCreatedBy() > 0) {
-                NotificationService.send(
+                NotificationUtil.send(
                     po.getCreatedBy(),
                     "Phiếu mua " + po.getPoCode() + " bị từ chối",
                     "Phiếu mua " + po.getPoCode() + " bị " + user.getName() + " từ chối (lý do: " + reason.trim() + ").",

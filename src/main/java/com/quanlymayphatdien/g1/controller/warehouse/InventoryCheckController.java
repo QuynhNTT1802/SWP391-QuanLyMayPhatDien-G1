@@ -13,8 +13,7 @@ import com.quanlymayphatdien.g1.entity.InventoryCheckSerial;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
-import com.quanlymayphatdien.g1.utils.NotificationService;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -26,6 +25,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,11 +72,13 @@ public class InventoryCheckController extends HttpServlet {
                 case "exportReport":
                     exportReport(request, response);
                     break;
+                case "exportExcel":
+                    exportExcel(request, response);
+                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý kho", "InventoryCheckController.doGet", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -104,7 +107,6 @@ public class InventoryCheckController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quản lý kho", "InventoryCheckController.doPost", e.getMessage(), e);
             e.printStackTrace();
         }
     }
@@ -150,6 +152,13 @@ public class InventoryCheckController extends HttpServlet {
         request.setAttribute("totalChecks", checkDAO.countTotal());
         request.setAttribute("doingCount", checkDAO.countByStatus("doing"));
         request.setAttribute("completedCount", checkDAO.countByStatus("completed"));
+
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+        request.setAttribute("month", month);
+        request.setAttribute("year", year);
 
         request.getRequestDispatcher("/view/inventory-check/inventory-check-list.jsp").forward(request, response);
     }
@@ -498,7 +507,7 @@ public class InventoryCheckController extends HttpServlet {
                             + " (" + (diff > 0 ? "thiếu " + diff : "thừa " + (-diff)) + ")."
                             + " Vui lòng kiểm tra và tạo phiếu nhập/xuất bù.";
                     String link = "/inventory-check?action=detail&id=" + checkId;
-                    NotificationService.sendToRole("warehouse_staff", title, message, link,
+                    NotificationUtil.sendToRole("warehouse_staff", title, message, link,
                             "inventory_check", checkId);
                 }
             }
@@ -510,6 +519,67 @@ public class InventoryCheckController extends HttpServlet {
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+    }
+
+    private void exportExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String search = request.getParameter("search");
+        String whParam = request.getParameter("warehouseId");
+        Integer warehouseId = (whParam != null && !whParam.isEmpty()) ? Integer.parseInt(whParam) : null;
+        String status = request.getParameter("status");
+
+        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, 1, Integer.MAX_VALUE);
+
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+
+        final int fMonth = month, fYear = year;
+        list = list.stream()
+            .filter(c -> c.getCreatedAt() != null
+                && c.getCreatedAt().getMonthValue() == fMonth
+                && c.getCreatedAt().getYear() == fYear)
+            .collect(Collectors.toList());
+
+        XSSFWorkbook wb = new XSSFWorkbook();
+        XSSFSheet sheet = wb.createSheet("Kiểm kê");
+
+        String[] headers = {"STT", "Mã phiếu", "Trạng thái", "Người thực hiện", "Kho kiểm kê", "Thời gian bắt đầu", "Thời gian kết thúc"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        int rowNum = 1;
+        for (int i = 0; i < list.size(); i++) {
+            InventoryCheck c = list.get(i);
+            Row r = sheet.createRow(rowNum++);
+            r.createCell(0).setCellValue(i + 1);
+            r.createCell(1).setCellValue(c.getCheckCode() != null ? c.getCheckCode() : "");
+
+            String statusText;
+            if ("doing".equals(c.getStatus())) statusText = "Đang kiểm kê";
+            else if ("completed".equals(c.getStatus())) statusText = "Đã hoàn thành";
+            else statusText = c.getStatus() != null ? c.getStatus() : "";
+            r.createCell(2).setCellValue(statusText);
+
+            r.createCell(3).setCellValue(c.getCreatedByName() != null ? c.getCreatedByName() : "");
+            r.createCell(4).setCellValue(c.getWarehouseName() != null ? c.getWarehouseName() : "");
+            r.createCell(5).setCellValue(c.getStartedAt() != null ? c.getStartedAt().toString() : "");
+            r.createCell(6).setCellValue(c.getCompletedAt() != null ? c.getCompletedAt().toString() : "");
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=DanhSachKiemKe.xlsx");
+        try (OutputStream out = response.getOutputStream()) {
+            wb.write(out);
+        }
+        wb.close();
     }
 
     private void exportReport(HttpServletRequest request, HttpServletResponse response)

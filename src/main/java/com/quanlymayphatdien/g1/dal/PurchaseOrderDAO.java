@@ -650,6 +650,11 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     }
 
     public List<PurchaseOrder> findApprovedAvailableFiltered(String search, String fromDate, String toDate, int page, int pageSize) {
+        return findApprovedAvailableFiltered(search, fromDate, toDate, null, page, pageSize);
+    }
+
+    public List<PurchaseOrder> findApprovedAvailableFiltered(String search, String fromDate, String toDate,
+                                                            Integer warehouseId, int page, int pageSize) {
         List<PurchaseOrder> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT p.*, w.name AS warehouse_name, u_c.name AS created_by_name "
@@ -662,6 +667,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  WHERE r.purchase_order_id = p.po_id AND r.status <> 'CANCELLED'"
                 + ") ");
         List<Object> params = new ArrayList<>();
+        if (warehouseId != null && warehouseId > 0) {
+            sql.append("AND p.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND p.po_code LIKE ? ");
             params.add("%" + search.trim() + "%");
@@ -713,6 +722,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
     }
 
     public int countApprovedAvailableFiltered(String search, String fromDate, String toDate) {
+        return countApprovedAvailableFiltered(search, fromDate, toDate, null);
+    }
+
+    public int countApprovedAvailableFiltered(String search, String fromDate, String toDate, Integer warehouseId) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(*) FROM purchase_order p "
                 + "WHERE p.status = 'APPROVED' "
@@ -721,6 +734,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 + "  WHERE r.purchase_order_id = p.po_id AND r.status <> 'CANCELLED'"
                 + ") ");
         List<Object> params = new ArrayList<>();
+        if (warehouseId != null && warehouseId > 0) {
+            sql.append("AND p.warehouse_id = ? ");
+            params.add(warehouseId);
+        }
         if (search != null && !search.trim().isEmpty()) {
             sql.append("AND p.po_code LIKE ? ");
             params.add("%" + search.trim() + "%");

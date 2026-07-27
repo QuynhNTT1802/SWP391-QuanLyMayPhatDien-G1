@@ -52,11 +52,11 @@
         <c:if test="${not empty perms and perms.contains('dashboard.view')}">
             <a href="${pageContext.request.contextPath}/admin/dashboard">
                 <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                Bảng điều khiển
+                Dashboard
             </a>
         </c:if>
 
-        <c:if test="${not empty perms and (perms.contains('inventory.view') or perms.contains('stock_card.view'))}">
+        <c:if test="${not empty perms and perms.contains('inventory.view')}">
             <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">
                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
                 Kho
@@ -67,12 +67,6 @@
                     <a href="${pageContext.request.contextPath}/inventory">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
                         Tồn kho
-                    </a>
-                </c:if>
-                <c:if test="${not empty perms and perms.contains('stock_card.view')}">
-                    <a href="${pageContext.request.contextPath}/stock-card">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9M15 21V9"/></svg>
-                        Thẻ kho
                     </a>
                 </c:if>
             </div>
@@ -183,7 +177,7 @@
                 <c:if test="${not empty perms and perms.contains('reports.view')}">
                 <a href="${pageContext.request.contextPath}/reports?type=inventory" class="${activePage == 'report-inventory' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7l9-4 9 4-9 4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
-                    Tồn kho
+                    Xuất nhập tồn
                 </a>
                 <a href="${pageContext.request.contextPath}/reports?type=import" class="${activePage == 'report-import' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
@@ -192,10 +186,6 @@
                 <a href="${pageContext.request.contextPath}/reports?type=export" class="${activePage == 'report-export' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
                     Xuất
-                </a>
-                <a href="${pageContext.request.contextPath}/reports?type=inventory-check" class="${activePage == 'report-inventory-check' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
-                    Kiểm kê
                 </a>
                 <a href="${pageContext.request.contextPath}/reports?type=purchase" class="${activePage == 'report-purchase' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>
@@ -247,22 +237,6 @@
             </a>
         </div>
     </c:if>
-
-    <!-- comment  <c:if test="${not empty perms and perms.contains('system_log.view')}">
-        <a href="${pageContext.request.contextPath}/admin/system-log"
-           class="${activePage == 'system-log' ? 'active' : ''}">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="8" y1="13" x2="16" y2="13"/>
-            <line x1="8" y1="17" x2="16" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-            </svg>
-            System Log
-        </a>
-    </c:if> 
-    -->
-
 
     <c:if test="${not empty perms and (perms.contains('users.view') or perms.contains('roles.view') or perms.contains('forgot_pw.process'))}">
         <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">

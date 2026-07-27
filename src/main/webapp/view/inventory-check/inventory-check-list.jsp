@@ -25,10 +25,6 @@
                 <h1>Kiểm kê</h1>
                 <span class="crumb">/ Kho / Kiểm kê</span>
                 <div class="top-actions">
-                    <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    </button>
                     <a class="btn btn-primary" href="${pageContext.request.contextPath}/inventory-check?action=create">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                         Tạo phiếu kiểm kê
@@ -76,6 +72,12 @@
                         <option value="doing" <c:if test="${selectedStatus == 'doing'}">selected</c:if>>Đang kiểm kê</option>
                         <option value="completed" <c:if test="${selectedStatus == 'completed'}">selected</c:if>>Đã hoàn thành</option>
                     </select>
+                    <select name="month" class="filter-select" style="width:auto;">
+                        <c:forEach var="m" begin="1" end="12">
+                            <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
+                        </c:forEach>
+                    </select>
+                    <input type="number" name="year" value="${year}" class="edit-input" style="width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;">
                     <div class="spacer"></div>
                     <c:if test="${not empty search or not empty selectedWarehouse or not empty selectedStatus}">
                         <a href="${pageContext.request.contextPath}/inventory-check" class="btn">
@@ -83,6 +85,10 @@
                             Xoá lọc
                         </a>
                     </c:if>
+                    <button type="button" class="btn" style="background:#fff;color:#000;border:1px solid #ddd;" onclick="exportExcel()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
+                    </button>
                 </form>
 
                 <div class="table-card" style="margin-top:16px;">
@@ -187,5 +193,19 @@
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/inventory-check.js"></script>
+    <script>
+    function exportExcel() {
+        var form = document.querySelector('form[action*="inventory-check"]');
+        var params = new URLSearchParams();
+        params.set('action', 'exportExcel');
+        var inputs = form.querySelectorAll('input[name], select[name]');
+        inputs.forEach(function(inp) {
+            if (inp.name !== 'action' && inp.name !== 'page' && inp.value) {
+                params.set(inp.name, inp.value);
+            }
+        });
+        window.location = form.action + '?' + params.toString();
+    }
+    </script>
 </body>
 </html>

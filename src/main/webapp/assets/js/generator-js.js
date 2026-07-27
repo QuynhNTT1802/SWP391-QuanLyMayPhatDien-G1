@@ -4,12 +4,6 @@
   const root = document.documentElement;
   const storedTheme = localStorage.getItem('wh-theme');
   if (storedTheme === 'dark' || storedTheme === 'light') root.setAttribute('data-theme', storedTheme);
-  document.getElementById('themeToggle').addEventListener('click', () => {
-    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    localStorage.setItem('wh-theme', next);
-  });
-
   // clear filters
   document.getElementById('clearFilters').addEventListener('click', () => {
     window.location.href = APP_CTX + '/warehouse/generators?action=list';

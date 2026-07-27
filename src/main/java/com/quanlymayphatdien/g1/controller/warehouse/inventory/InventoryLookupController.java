@@ -2,7 +2,6 @@ package com.quanlymayphatdien.g1.controller.warehouse.inventory;
 
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,26 +14,6 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Endpoint tra cuu serial phuc vu cho quet barcode o cac trang:
- *  - Tao phieu nhap / xuat kho
- *  - Kiem ke kho
- *
- * GET /inventory-lookup?action=scan&serial=XXX&warehouseId=YYY
- *  Tra ve JSON:
- *   {
- *     "found": true|false,
- *     "serialNumber": "...",
- *     "generatorId": int,
- *     "generatorModel": "...",
- *     "generatorBrand": "...",
- *     "currentWarehouseId": int,
- *     "currentWarehouseName": "...",
- *     "status": "IN_STOCK|SOLD|IN_TRANSIT|LIQUIDATED|...",
- *     "blocked": bool,
- *     "inTargetWarehouse": bool|null
- *   }
- */
 @WebServlet(name = "InventoryLookupController", urlPatterns = {"/inventory-lookup"})
 public class InventoryLookupController extends HttpServlet {
 
@@ -61,7 +40,7 @@ public class InventoryLookupController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quan ly kho", "InventoryLookupController.doGet", e.getMessage(), e);
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"found\":false,\"message\":\"Lỗi hệ thống\"}");
@@ -100,7 +79,7 @@ public class InventoryLookupController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error("Quan ly kho", "InventoryLookupController.doPost", e.getMessage(), e);
+            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"found\":false,\"message\":\"Lỗi hệ thống\"}");

@@ -116,8 +116,7 @@
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / <span><c:out value="${receipt.receiptCode}"/></span></span>
                     <div class="top-actions">
                         <jsp:include page="../../common/admin/bell.jsp"/>
-                        <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                    </div>
+                        </div>
                 </header>
 
                 <main>
@@ -161,16 +160,6 @@
                             </h2>
                         </div>
                         <div class="right">
-                            <c:if test="${receipt.status == 'PENDING' and isManager}">
-                                <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                                    Duyệt phiếu
-                                </button>
-                                <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                    Từ chối
-                                </button>
-                            </c:if>
                         </div>
                     </div>
 
@@ -255,6 +244,11 @@
                                        data-po-code="<c:out value='${receipt.purchaseOrderCode}'/>"
                                        data-po-id="<c:out value='${receipt.purchaseOrderId}'/>">
                                        Phiếu mua <c:out value="${receipt.purchaseOrderCode}"/> →
+                                    </a>
+                                </c:if>
+                                <c:if test="${not empty receipt.transferCode}">
+                                    <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${receipt.linkedTransferId}" class="related-link">
+                                        Phiếu luân chuyển <c:out value="${receipt.transferCode}"/> →
                                     </a>
                                 </c:if>
                             </div>
@@ -459,7 +453,7 @@
                                     </tbody>
                                 </table>
 
-                                <c:if test="${detailTotalPages > 1}">
+                                <c:if test="${detailTotalPages > 0}">
                                 <div class="pagination" style="margin-top: 16px;">
                                     <div class="info">Hiển thị <strong>${(detailPage-1)*10 + 1}</strong>–<strong>${detailPage*10 > totalDetails ? totalDetails : detailPage*10}</strong> / <strong>${totalDetails}</strong> bản ghi</div>
                                     <div class="controls">
@@ -484,37 +478,6 @@
                 </main>
             </div>
         </div>
-
-        <c:if test="${receipt.status == 'PENDING' and isManager}">
-            <div class="modal-host" id="approveModal">
-                <div class="modal-card">
-                    <h3>Duyệt phiếu xuất</h3>
-                    <div class="modal-sub">Phiếu xuất sẽ chuyển sang trạng thái "Hoàn thành" và cập nhật tồn kho.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/export-receipt?action=approve">
-                        <input type="hidden" name="id" value="${receipt.receiptId}"/>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('approveModal')">Đóng</button>
-                            <button type="submit" class="btn btn-primary">Xác nhận duyệt</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-            <div class="modal-host" id="rejectModal">
-                <div class="modal-card">
-                    <h3>Từ chối phiếu xuất</h3>
-                    <div class="modal-sub">Phiếu xuất sẽ bị từ chối. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/export-receipt?action=reject">
-                        <input type="hidden" name="id" value="${receipt.receiptId}"/>
-                        <label for="rejectReason">Mô tả chi tiết lý do từ chối <span style="color:var(--danger)">*</span></label>
-                        <textarea id="rejectReason" name="reason" required placeholder="Ví dụ: Sai số lượng, sai serial, không khớp đơn hàng..." style="margin-top:8px;"></textarea>
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
 
         <div class="related-modal-backdrop" id="orderModal" onclick="if (event.target === this) closeOrderModal();">
             <div class="related-modal" role="dialog" aria-modal="true" aria-labelledby="orderModalTitle">

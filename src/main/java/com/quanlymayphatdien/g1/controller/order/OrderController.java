@@ -13,8 +13,6 @@ import com.quanlymayphatdien.g1.entity.OrderDetail;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,7 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import com.quanlymayphatdien.g1.dal.UserDAO;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -75,6 +73,7 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
+
                setMsg(request.getSession(), "Lỗi hệ thống: " + e.getMessage(), "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
@@ -121,7 +120,8 @@ public class OrderController extends HttpServlet {
                     doGet(request, response);
                     break;
             }
-        } catch (Exception e) {         
+
+        } catch (Exception e) {
             setMsg(request.getSession(), "Lỗi xử lý dữ liệu: " + e.getMessage(), "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
@@ -154,7 +154,6 @@ public class OrderController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                SystemLogger.warn(LogModule.ORDER, "OrderController.listOrders", "Lỗi định dạng trang: " + e.getMessage());
                 page = 1;
             }
         }
@@ -514,7 +513,7 @@ public class OrderController extends HttpServlet {
                     + "\",\"companyName\":\"" + escapeJson(companyName != null ? companyName.trim() : "")
                     + "\",\"customerTypeId\":" + (typeIdStr != null && !typeIdStr.trim().isEmpty() ? typeIdStr.trim() : "0") + "}");
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "quickCreateCustomer", e.getMessage(), e);
+            e.printStackTrace();
             response.getWriter().write("{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage() != null ? e.getMessage() : "không xác định") + "\"}");
         }
     }
@@ -894,7 +893,7 @@ public class OrderController extends HttpServlet {
 
             List<User> approvers = userDAO.findUsersByPermission("orders", "approve");
             for (User u : approvers) {
-                NotificationService.send(
+                NotificationUtil.send(
                     u.getId(),
                     "Đơn hàng " + order.getOrderCode() + " chờ duyệt",
                     "Nhân viên " + user.getName() + " vừa tạo đơn hàng cần duyệt.",
@@ -957,7 +956,7 @@ private void approveOrder(HttpServletRequest request, HttpServletResponse respon
 
             int creatorId = order != null ? order.getCreatedBy() : 0;
             if (creatorId > 0) {
-                NotificationService.send(
+                NotificationUtil.send(
                     creatorId,
                     "Đơn hàng " + order.getOrderCode() + " đã được duyệt",
                     "Đơn hàng " + order.getOrderCode() + " đã được " + user.getName() + " duyệt.",
@@ -1012,7 +1011,7 @@ private void approveOrder(HttpServletRequest request, HttpServletResponse respon
 
             int creatorId = order != null ? order.getCreatedBy() : 0;
             if (creatorId > 0) {
-                NotificationService.send(
+                NotificationUtil.send(
                     creatorId,
                     "Đơn hàng " + order.getOrderCode() + " bị từ chối",
                     "Đơn hàng " + order.getOrderCode() + " bị " + user.getName() + " từ chối (lý do: " + reason + ").",

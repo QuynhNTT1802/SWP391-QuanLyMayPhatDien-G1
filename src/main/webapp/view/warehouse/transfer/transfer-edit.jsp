@@ -8,13 +8,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Sửa phiếu luân chuyển — Warehouse OS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     <style>
         .detail-table { width:100%; border-collapse:collapse; margin-top:8px; }
+        .req { color: var(--danger); font-weight: 700; }
+        .form-field label .req { color: var(--danger); font-weight: 700; }
         .detail-table th { text-align:left; padding:8px 10px; font-size:12px; font-weight:600; color:var(--muted); border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:0.5px; }
         .detail-table td { padding:8px 6px; vertical-align:top; }
         .detail-table select, .detail-table input { width:100%; padding:7px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--bg); color:var(--fg); font-size:13px; box-sizing:border-box; font-family:var(--font-ui); }
@@ -26,11 +35,37 @@
         .row-del-btn { width:28px; height:28px; border:none; background:none; color:var(--danger); cursor:pointer; border-radius:var(--radius-sm); margin-top:4px; }
         .row-del-btn:hover { background:var(--danger-soft); }
         .add-row-btn { margin-top:8px; font-size:13px; }
-        .alert-info { display:flex; align-items:flex-start; gap:10px; padding:10px 14px; border-radius:var(--radius); background:var(--accent-soft); color:var(--accent); border:1px solid color-mix(in srgb, var(--accent) 25%, transparent); font-size:12.5px; margin-bottom:12px; }
         .alert-warn { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:var(--radius); background:var(--warn-soft); color:var(--warn); border:1px solid color-mix(in srgb, var(--warn) 25%, transparent); font-size:13px; line-height:1.5; margin-bottom:12px; }
         .alert-warn svg { flex-shrink:0; margin-top:2px; }
         .alert-warn .alert-body { flex:1; }
         .alert-warn pre { margin:6px 0 0; font-family:inherit; font-size:13px; white-space:pre-wrap; word-break:break-word; }
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span {
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .confirm-row strong {
+            color: var(--fg);
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
     </style>
 </head>
 <body>
@@ -41,54 +76,52 @@
             <h1>Sửa phiếu luân chuyển</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/transfers">Luân chuyển</a> / Sửa đơn #${transfer.transferCode}</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
                 <jsp:include page="../../common/admin/bell.jsp"/>
             </div>
         </header>
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/transfers?action=detail&id=${transfer.transferId}">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Quay lại chi tiết
+            <a class="receipt-back-link" href="javascript:void(0)" onclick="confirmCancelEdit()">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Huỷ và quay lại chi tiết
             </a>
 
+            <div class="hero-body">
+                <div class="hero-meta">
+                    <span>Cập nhật phiếu luân chuyển <span class="id">#${transfer.transferCode}</span></span>
+                </div>
+            </div>
+
             <c:if test="${isRevision && (not empty transfer.managerNote or not empty transfer.ceoNote)}">
-                <div class="alert-warn" style="margin-top:14px;">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                <div class="alert alert-warn" style="margin: 16px 0;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                     <div class="alert-body">
-                        <strong>Yêu cầu chỉnh sửa từ người duyệt</strong>
-                        <pre><c:out value="${not empty transfer.managerNote ? transfer.managerNote : transfer.ceoNote}"/></pre>
+                        <div class="alert-title">Yêu cầu chỉnh sửa từ người duyệt</div>
+                        <pre style="margin:6px 0 0;font-family:inherit;font-size:13px;white-space:pre-wrap;word-break:break-word;"><c:out value="${not empty transfer.managerNote ? transfer.managerNote : transfer.ceoNote}"/></pre>
                     </div>
                 </div>
             </c:if>
-
-            <div class="page-head">
-                <div class="eyebrow">Luân chuyển · Cập nhật phiếu</div>
-                <h2 class="page-title">Sửa phiếu #${transfer.transferCode}</h2>
-            </div>
 
             <c:set var="inStockJson" value=""/>
             <c:forEach var="entry" items="${inStockByGen}">
                 <c:set var="inStockJson" value="${inStockJson}${entry.key}:${entry.value},"/>
             </c:forEach>
 
-            <div class="form-layout">
-                <form id="transferForm" class="form-card" action="${pageContext.request.contextPath}/transfers" method="POST">
-                    <input type="hidden" name="action" value="edit_submit" />
-                    <input type="hidden" name="id" value="${transfer.transferId}" />
+            <form id="transferForm" action="${pageContext.request.contextPath}/transfers" method="POST">
+                <input type="hidden" name="action" value="edit_submit" />
+                <input type="hidden" name="id" value="${transfer.transferId}" />
 
-                    <!-- SECTION 01: THONG TIN CHUNG -->
-                    <div class="form-section">
-                        <div class="form-section-head">
-                            <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
-                            <h3 class="form-section-title">Kho nguồn, kho đích và ghi chú</h3>
+                <div class="content">
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">01 — THÔNG TIN CHUNG</div>
+                                <h3 class="section-title">Kho nguồn, kho đích và ghi chú</h3>
+                            </div>
                         </div>
 
                         <div class="form-grid">
-                            <div class="field">
-                                <label class="field-label">Kho nguồn <span class="req">*</span></label>
+                            <div class="form-field">
+                                <label>Kho nguồn <span class="req">*</span></label>
                                 <select class="input" name="sourceWarehouseId" id="sourceWarehouseId" required onchange="onSourceWarehouseChange()">
                                     <option value="">-- Chọn kho nguồn --</option>
                                     <c:forEach var="w" items="${warehouses}">
@@ -97,8 +130,8 @@
                                 </select>
                             </div>
 
-                            <div class="field">
-                                <label class="field-label">Kho đích <span class="req">*</span></label>
+                            <div class="form-field">
+                                <label>Kho đích <span class="req">*</span></label>
                                 <select class="input" name="destWarehouseId" id="destWarehouseId" required onchange="onDestWarehouseChange()">
                                     <option value="">-- Chọn kho đích --</option>
                                     <c:forEach var="w" items="${warehouses}">
@@ -106,27 +139,27 @@
                                     </c:forEach>
                                 </select>
                             </div>
+
+                            <div class="form-field full">
+                                <label>Ghi chú phiếu</label>
+                                <textarea class="input" name="note" maxlength="500" rows="2"
+                                          style="min-height: 64px; resize: vertical; font-family: var(--font-ui);"><c:out value="${transfer.note}"/></textarea>
+                            </div>
                         </div>
 
-                        <div id="warehouseWarning" class="alert-warn" style="display:none; margin-top:10px;">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <div id="warehouseWarning" class="alert alert-warn" style="display:none; margin-top: 10px;">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <span id="warehouseWarningText"></span>
                         </div>
+                    </section>
 
-                        <div class="field" style="margin-top:14px;">
-                            <label class="field-label">Ghi chú phiếu</label>
-                            <textarea class="input" name="note" maxlength="500" rows="2"
-                                      style="min-height:64px;resize:vertical;font-family:var(--font-ui);">${transfer.note}</textarea>
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">02 — ĐỀ XUẤT SỐ LƯỢNG</div>
+                                <h3 class="section-title">Số lượng từng dòng máy cần chuyển</h3>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- SECTION 02: SO LUONG DE XUAT -->
-                    <div class="form-section">
-                        <div class="form-section-head">
-                            <div class="form-section-num">02 — ĐỀ XUẤT SỐ LƯỢNG</div>
-                            <h3 class="form-section-title">Số lượng từng dòng máy cần chuyển</h3>
-                        </div>
-
 
                         <table class="detail-table">
                             <thead>
@@ -141,31 +174,30 @@
                             <tbody id="detailBody">
                                 <c:choose>
                                     <c:when test="${not empty detailQtyMap}">
-                                        <c:set var="genIds" value=""/>
                                         <c:forEach var="entry" items="${detailQtyMap}" varStatus="st">
                                             <c:set var="gid" value="${entry.key}"/>
                                             <c:set var="qty" value="${entry.value}"/>
                                             <c:set var="note" value="${detailNoteMap[gid]}"/>
-                                        <tr>
-                                            <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
-                                            <td>
-                                                <select class="serial-select generator-select" name="generatorId" required onchange="onGeneratorChange(this)">
-                                                    <option value="">-- Chọn dòng máy --</option>
-                                                    <c:forEach var="g" items="${generators}">
-                                                        <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}" ${g.id == gid ? 'selected' : ''}><c:out value="${g.model}"/> (<c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
-                                                    </c:forEach>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="quantity" min="1" max="100000" value="${qty}" required class="qty-input" oninput="onQuantityChange(this)" />
-                                            </td>
-                                            <td><input type="text" name="detailNote" maxlength="500" placeholder="Ghi chú dòng (tùy chọn)" value="<c:out value='${note}'/>"/></td>
-                                            <td class="col-del">
-                                                <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                            <tr>
+                                                <td class="col-num"><span class="row-num">${st.index + 1}</span></td>
+                                                <td>
+                                                    <select class="serial-select generator-select" name="generatorId" required onchange="onGeneratorChange(this)">
+                                                        <option value="">-- Chọn dòng máy --</option>
+                                                        <c:forEach var="g" items="${generators}">
+                                                            <option value="${g.id}" data-stock="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}" ${g.id == gid ? 'selected' : ''}><c:out value="${g.model}"/> (<c:out value="${inStockByGen[g.id] != null ? inStockByGen[g.id] : 0}"/>)</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="quantity" min="1" max="100000" value="${qty}" required class="qty-input" oninput="onQuantityChange(this)" />
+                                                </td>
+                                                <td><input type="text" name="detailNote" maxlength="500" placeholder="Ghi chú dòng (tùy chọn)" value="<c:out value='${note}'/>"/></td>
+                                                <td class="col-del">
+                                                    <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
                                         </c:forEach>
                                     </c:when>
                                     <c:otherwise>
@@ -198,18 +230,43 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
-                    </div>
+                    </section>
+                </div>
+            </form>
 
-                    <div class="form-actions" style="margin-top:24px;display:flex;gap:8px;justify-content:flex-end;">
-                        <a class="btn" href="${pageContext.request.contextPath}/transfers?action=detail&id=${transfer.transferId}">Huỷ bỏ</a>
-                        <button type="submit" class="btn btn-primary" onclick="return validateForm()">
-                            <c:choose>
-                                <c:when test="${isRevision}">Lưu &amp; gửi lại duyệt</c:when>
-                                <c:otherwise>Cập nhật phiếu</c:otherwise>
-                            </c:choose>
+            <div class="modal-host" id="saveConfirmModal" onclick="if (event.target === this) closeSaveConfirm();">
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+                    <h3 id="saveConfirmTitle">
+                        <c:choose>
+                            <c:when test="${isRevision}">Xác nhận lưu &amp; gửi lại duyệt</c:when>
+                            <c:otherwise>Xác nhận cập nhật phiếu</c:otherwise>
+                        </c:choose>
+                    </h3>
+                    <p class="modal-sub">Vui lòng kiểm tra thông tin trước khi lưu phiếu.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeSaveConfirm()">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="saveConfirmBtn" onclick="doConfirmSave()">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                            <span id="saveConfirmBtnLabel">
+                                <c:choose>
+                                    <c:when test="${isRevision}">Lưu &amp; gửi lại</c:when>
+                                    <c:otherwise>Xác nhận cập nhật</c:otherwise>
+                                </c:choose>
+                            </span>
                         </button>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <a class="btn" href="javascript:void(0)" onclick="confirmCancelEdit()">Huỷ</a>
+                <button type="submit" form="transferForm" class="btn btn-primary" onclick="return openSaveConfirm()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                    <c:choose>
+                        <c:when test="${isRevision}">Lưu &amp; gửi lại duyệt</c:when>
+                        <c:otherwise>Cập nhật phiếu</c:otherwise>
+                    </c:choose>
+                </button>
             </div>
         </main>
     </div>
@@ -222,10 +279,81 @@
 </select>
 
 <div class="toast-host" id="toastHost"></div>
+<script>
+    <c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+        <c:remove var="toastMessage" scope="session"/>
+        <c:remove var="toastType" scope="session"/>
+    </c:if>
+    <c:if test="${not empty requestScope.toastMessage}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+    </c:if>
+</script>
 <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    function confirmCancelEdit() {
+        if (confirm('Bạn có chắc muốn huỷ sửa phiếu luân chuyển?')) {
+            location.href = window.APP_CTX + '/transfers?action=detail&id=${transfer.transferId}';
+        }
+    }
+
+    // ========== Confirm Save Modal ==========
+    function openSaveConfirm() {
+        if (typeof validateForm === 'function' && !validateForm()) {
+            return false;
+        }
+        populateSaveSummary();
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.add('show');
+        return false;
+    }
+
+    function closeSaveConfirm() {
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function doConfirmSave() {
+        closeSaveConfirm();
+        var form = document.getElementById('transferForm');
+        if (form) form.submit();
+    }
+
+    function populateSaveSummary() {
+        var srcEl = document.getElementById('saveSummarySource');
+        var destEl = document.getElementById('saveSummaryDest');
+        var rowsEl = document.getElementById('saveSummaryRows');
+        var srcSel = document.getElementById('sourceWarehouseId');
+        var destSel = document.getElementById('destWarehouseId');
+        if (srcEl && srcSel) {
+            srcEl.textContent = srcSel.options[srcSel.selectedIndex]
+                ? srcSel.options[srcSel.selectedIndex].textContent.trim() : '—';
+        }
+        if (destEl && destSel) {
+            destEl.textContent = destSel.options[destSel.selectedIndex]
+                ? destSel.options[destSel.selectedIndex].textContent.trim() : '—';
+        }
+        if (rowsEl) {
+            var tbody = document.getElementById('detailBody');
+            rowsEl.textContent = tbody ? tbody.querySelectorAll('tr').length : 0;
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSaveConfirm();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+            showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+        }
+    });
+</script>
 <script>
 window.WAREHOUSE_DATA = ${warehouseDataJson};
 
@@ -471,6 +599,12 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
     window.onGeneratorChange = onGeneratorChange;
     window.onSourceWarehouseChange = onSourceWarehouseChange;
     window.onDestWarehouseChange = onDestWarehouseChange;
+    window.validateForm = validateForm;
+    window.repopulateGeneratorSelects = repopulateGeneratorSelects;
+    window.filterDestWarehouseOptions = filterDestWarehouseOptions;
+    window.validatePairRealtime = validatePairRealtime;
+    window.updateRowMax = updateRowMax;
+    window.renumberRows = renumberRows;
 
     document.addEventListener('DOMContentLoaded', function () {
         renumberRows();
@@ -480,17 +614,6 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
         filterDestWarehouseOptions(initialSrc);
         validatePairRealtime();
     });
-
-    <c:if test="${not empty sessionScope.toastMessage}">
-    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
-        <c:remove var="toastMessage" scope="session"/>
-        <c:remove var="toastType" scope="session"/>
-    </c:if>
-    <c:if test="${not empty requestScope.toastMessage}">
-    window.SESSION_DATA = window.SESSION_DATA || {};
-    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
-    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
-    </c:if>
 })();
 </script>
 </body>

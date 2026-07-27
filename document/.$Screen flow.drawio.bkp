@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" modified="2026-07-24T14:50:00.000Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.4.0 Chrome/112.0.5615.204 Electron/24.5.1 Safari/537.36" version="21.4.0" type="device" pages="7">
+  
+  <!-- ==================== PAGE 1: Guest screen flow ==================== -->
+  <diagram name="Guest screen flow" id="diag-guest">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-guest" value="Guest Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="300" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="g-access" value="Access System" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="150" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="g-login" value="Login Page" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="200" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-forgot" value="Forgot Password" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="320" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g-reset" value="Reset Confirmation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="320" width="130" height="40" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e-g1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g-access" target="g-login">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-g1" value="Redirect if unauthenticated" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-g2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g-login" target="g-forgot">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-g2" value="Click &quot;Forgot Password&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-g3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="g-forgot" target="g-reset">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="lbl-g3" value="Submit Username / Email" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-g4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;" edge="1" parent="1" source="g-reset" target="g-login">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points"><mxPoint x="785" y="420" /><mxPoint x="515" y="420" /></Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="lbl-g4" value="Return to Login" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-g4"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 2: User screen flow ==================== -->
+  <diagram name="User screen flow" id="diag-user">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-u" value="Authenticated User Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="350" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="u-login" value="Login Success" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="150" y="250" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-prof" value="User Profile" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-pass" value="Change Password" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="250" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-noti" value="Notification List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="340" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="u-logout" value="Logout" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="450" y="430" width="130" height="40" as="geometry" /></mxCell>
+
+        <mxCell id="e-u1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-prof"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u1" value="Click &quot;Profile&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-u2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-pass"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u2" value="Click &quot;Change Password&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-u3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-noti"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u3" value="Click &quot;Notifications&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="e-u4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="u-login" target="u-logout"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-u4" value="Click &quot;Logout&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e-u4"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 3: Sales Staff screen flow ==================== -->
+  <diagram name="Sales Staff screen flow" id="diag-sales-staff">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ss" value="Sales Staff Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="350" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ss-dash" value="Sales Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="100" y="300" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Customer Operations -->
+        <mxCell id="ss-cust" value="Customer List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="380" y="140" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-cust-c" value="Add Customer" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="100" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-cust-e" value="Edit Customer" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="150" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-cust-d" value="Customer Details" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="200" width="130" height="40" as="geometry" /></mxCell>
+
+        <!-- Sales Order Creation -->
+        <mxCell id="ss-ord" value="Sales Order List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="380" y="300" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-ord-c" value="Create Sales Order" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="270" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-ord-e" value="Edit Sales Order" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="330" width="130" height="40" as="geometry" /></mxCell>
+
+        <!-- Proposal Creation -->
+        <mxCell id="ss-prop" value="Proposal List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="380" y="450" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-prop-c" value="Create Proposal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="420" width="130" height="40" as="geometry" /></mxCell>
+        <mxCell id="ss-prop-e" value="Edit Proposal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="480" width="130" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="ess1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-cust"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess1" value="Click &quot;Customers&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess1"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-ord"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess2" value="Click &quot;Sales Orders&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-dash" target="ss-prop"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-ess3" value="Click &quot;Proposals&quot;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ess3"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="ess-c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-cust" target="ss-cust-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ess-c2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-cust" target="ss-cust-e"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ess-c3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-cust" target="ss-cust-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="ess-o1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-ord" target="ss-ord-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ess-o2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-ord" target="ss-ord-e"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="ess-p1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-prop" target="ss-prop-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ess-p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ss-prop" target="ss-prop-e"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 4: Sales Manager screen flow ==================== -->
+  <diagram name="Sales Manager screen flow" id="diag-sales-mgr">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-sm" value="Sales Manager Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="380" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="sm-dash" value="Sales Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="100" y="320" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Order Approval -->
+        <mxCell id="sm-ord" value="Pending Order List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="380" y="140" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-ord-d" value="Review Order Detail" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="140" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-ord-r" value="Reject Reason" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="880" y="140" width="130" height="40" as="geometry" /></mxCell>
+
+        <!-- Proposal Review -->
+        <mxCell id="sm-prop" value="Proposal List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="380" y="320" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-prop-d" value="Review Proposal Detail" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="320" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-prop-r" value="Reject Proposal" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="880" y="320" width="130" height="40" as="geometry" /></mxCell>
+
+        <!-- Purchase Orders -->
+        <mxCell id="sm-pur" value="Purchase Order List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="380" y="500" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-pur-c" value="Review &amp; Create PO" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="470" width="150" height="40" as="geometry" /></mxCell>
+        <mxCell id="sm-pur-d" value="PO Details" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="640" y="530" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="esm1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-ord"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="esm2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-prop"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="esm3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-dash" target="sm-pur"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="esm-o1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-ord" target="sm-ord-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="esm-o2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-ord-d" target="sm-ord-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="lbl-esm-o2" value="Reject Order" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="esm-o2"><mxGeometry x="-0.1" relative="1" as="geometry"><mxPoint as="offset" /></mxGeometry></mxCell>
+
+        <mxCell id="esm-p1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-prop" target="sm-prop-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="esm-p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-prop-d" target="sm-prop-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="esm-pu1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-pur" target="sm-pur-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="esm-pu2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="sm-pur" target="sm-pur-d"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 5: Warehouse Staff screen flow ==================== -->
+  <diagram name="Warehouse Staff screen flow" id="diag-wh-staff">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ws" value="Warehouse Staff Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="380" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ws-dash" value="Warehouse Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="100" y="320" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- Generator List -->
+        <mxCell id="ws-gen" value="Generator Inventory" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="100" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Create Import -->
+        <mxCell id="ws-imp" value="Import Receipt List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="200" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-imp-c" value="Create Import Receipt" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="200" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- Create Export -->
+        <mxCell id="ws-exp" value="Export Receipt List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="300" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-exp-c" value="Create Export Receipt" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="300" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- Internal Transfer Request -->
+        <mxCell id="ws-trans" value="Transfer Request List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="400" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-trans-c" value="Create Transfer Request" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="400" width="160" height="40" as="geometry" /></mxCell>
+
+        <!-- Stock Audit Sheet -->
+        <mxCell id="ws-check" value="Stock Audit Sheet List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="500" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ws-check-c" value="Create Audit Sheet" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="500" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="ews1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-gen"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-imp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-exp"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-trans"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-dash" target="ws-check"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="ews-i" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-imp" target="ws-imp-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews-e" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-exp" target="ws-exp-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews-t" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-trans" target="ws-trans-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ews-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ws-check" target="ws-check-c"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 6: Warehouse Manager screen flow ==================== -->
+  <diagram name="Warehouse Manager screen flow" id="diag-wh-mgr">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-wm" value="Warehouse Manager Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="400" y="30" width="400" height="30" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="wm-dash" value="Warehouse Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="100" y="350" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- Warehouse Info -->
+        <mxCell id="wm-wh" value="Warehouse List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="100" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-wh-u" value="Update Warehouse" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="100" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Inventory Overview & Reports -->
+        <mxCell id="wm-inv" value="Stock Overview" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="180" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-inv-r" value="Inventory Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="180" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Transfer Approval -->
+        <mxCell id="wm-trans" value="Transfer Requests" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="260" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-trans-a" value="Approve Transfer" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="260" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Stock Audit Approval -->
+        <mxCell id="wm-check" value="Stock Audit List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="340" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-check-a" value="Complete &amp; Audit Approval" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="340" width="170" height="40" as="geometry" /></mxCell>
+
+        <!-- Liquidation -->
+        <mxCell id="wm-liq" value="Equipment Liquidation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="420" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-liq-r" value="Liquidation Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="420" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Stock Cards -->
+        <mxCell id="wm-sc" value="Stock Cards" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="500" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-sc-r" value="Stock Card Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="500" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Suppliers -->
+        <mxCell id="wm-sup" value="Supplier List" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="580" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="wm-sup-e" value="Add / Edit Supplier" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="680" y="580" width="140" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="ewm1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-wh"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-inv"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-trans"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-check"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-liq"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-sc"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-dash" target="wm-sup"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="ewm-w" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-wh" target="wm-wh-u"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm-i" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-inv" target="wm-inv-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm-t" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-trans" target="wm-trans-a"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm-c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-check" target="wm-check-a"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm-l" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-liq" target="wm-liq-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm-s" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-sc" target="wm-sc-r"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="ewm-su" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="wm-sup" target="wm-sup-e"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <!-- ==================== PAGE 7: Admin & CEO screen flow ==================== -->
+  <diagram name="Admin &amp; CEO screen flow" id="diag-admin-ceo">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <mxCell id="title-ac" value="System Admin &amp; CEO Screen Flow" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=20;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="400" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Admin Dashboard -->
+        <mxCell id="ac-adm" value="Admin Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="180" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-user" value="User Management" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="120" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-role" value="Role &amp; Permission" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="180" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-cat" value="Category Management" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="240" width="150" height="40" as="geometry" /></mxCell>
+
+        <!-- CEO Dashboard -->
+        <mxCell id="ac-ceo" value="CEO Dashboard" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="120" y="420" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-rep" value="Executive Report" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="360" width="140" height="40" as="geometry" /></mxCell>
+        <mxCell id="ac-appr" value="Final Order &amp; Proposal Approval" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1"><mxGeometry x="400" y="440" width="190" height="40" as="geometry" /></mxCell>
+
+        <!-- Connectors -->
+        <mxCell id="eac-a1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-user"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="eac-a2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-role"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="eac-a3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-adm" target="ac-cat"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <mxCell id="eac-c1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-ceo" target="ac-rep"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="eac-c2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="ac-ceo" target="ac-appr"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

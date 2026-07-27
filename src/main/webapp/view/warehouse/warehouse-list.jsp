@@ -29,11 +29,7 @@
             <h1>Kho hàng</h1>
             <span class="crumb">/ Quản trị / Kho hàng</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
-            </div>
+                </div>
         </header>
         <main>
             <div class="page-head">
@@ -70,7 +66,6 @@
                             <th>Trạng thái</th>
                             <th style="width:100px;">Tổng tồn</th>
                             <th style="width:100px;">Số mặt hàng</th>
-                            <th class="col-actions">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -95,25 +90,6 @@
                                         </td>
                                         <td><span class="qty-cell qty-ok"><fmt:formatNumber value="${w.totalInventory}"/></span></td>
                                         <td><span class="qty-cell qty-ok">${w.itemCount}</span></td>
-                                        <td class="col-actions">
-                                            <div class="row-actions">
-                                                <button class="icon-mini" onclick="location.href = '${pageContext.request.contextPath}/warehouse?action=update&id=${w.warehouseId}'" title="Chỉnh sửa">
-                                                    <svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
-                                                </button>
-                                                <c:choose>
-                                                    <c:when test="${w.status == 'locked'}">
-                                                        <button class="icon-mini" onclick="if(confirm('Mở khóa kho &quot;${fn:escapeXml(w.name)}&quot;? Các máy trong kho sẽ hiển thị lại trong tồn kho.')){location.href='${pageContext.request.contextPath}/warehouse?action=unlock&id=${w.warehouseId}';}" title="Mở khóa kho">
-                                                            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-                                                        </button>
-                                                    </c:when>
-                                                    <c:otherwise>
-                                                        <button class="icon-mini" onclick="if(confirm('Khóa kho &quot;${fn:escapeXml(w.name)}&quot;? Các máy trong kho sẽ bị ẩn khỏi tồn kho cho đến khi mở khóa lại.')){location.href='${pageContext.request.contextPath}/warehouse?action=lock&id=${w.warehouseId}';}" title="Khóa kho">
-                                                            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                                                        </button>
-                                                    </c:otherwise>
-                                                </c:choose>
-                                            </div>
-                                        </td>
                                     </tr>
                                 </c:forEach>
                             </c:otherwise>

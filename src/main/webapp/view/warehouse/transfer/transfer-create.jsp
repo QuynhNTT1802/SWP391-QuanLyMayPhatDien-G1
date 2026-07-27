@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -8,10 +8,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Tạo phiếu luân chuyển — Warehouse OS</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/purchase-detail.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     <style>
         .detail-table {
@@ -19,6 +26,8 @@
             border-collapse: collapse;
             margin-top: 8px;
         }
+        .req { color: var(--danger); font-weight: 700; }
+        .form-field label .req { color: var(--danger); font-weight: 700; }
         .detail-table th {
             text-align: left;
             padding: 8px 10px;
@@ -106,6 +115,25 @@
             font-size: 12.5px;
             margin-bottom: 12px;
         }
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span { color: var(--muted); font-weight: 500; }
+        .confirm-row strong { color: var(--fg); font-weight: 600; text-align: right; word-break: break-word; }
     </style>
 </head>
 <body>
@@ -116,28 +144,36 @@
             <h1>Tạo phiếu luân chuyển</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/transfers">Luân chuyển</a> / Thêm mới</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
                 <jsp:include page="../../common/admin/bell.jsp"/>
             </div>
         </header>
         <main>
-            <a class="back-link" href="${pageContext.request.contextPath}/transfers">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                Quay lại danh sách
+            <a class="receipt-back-link" href="javascript:void(0)" onclick="confirmCancelCreate()">
+                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                Huỷ và quay lại danh sách
             </a>
 
-            <div class="page-head">
-                <div class="eyebrow">Luân chuyển · Phiếu luân chuyển mới</div>
-                <h2 class="page-title">Tạo phiếu đề xuất luân chuyển kho</h2>
+            <div class="hero-body">
+                <div class="hero-meta">
+                    <span>Phiếu đề xuất luân chuyển mới</span>
+                </div>
             </div>
 
             <c:if test="${not empty toastMessage}">
-                <div class="alert-warn" style="${toastType == 'danger' ? 'background:var(--danger-soft);color:var(--danger);border-color:color-mix(in srgb,var(--danger) 25%,transparent);' : ''}">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                    <span><c:out value="${toastMessage}"/></span>
+                <div class="alert alert-error" style="margin: 16px 0;">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <div class="alert-body">
+                        <div class="alert-title">Không thể gửi phiếu</div>
+                        <span><c:out value="${toastMessage}"/></span>
+                        <c:if test="${not empty pendingTransferId}">
+                            <div style="margin-top:10px;">
+                                <a class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;"
+                                   href="${pageContext.request.contextPath}/transfers?action=detail&id=${pendingTransferId}">
+                                    Xem phiếu đang chờ xử lý
+                                </a>
+                            </div>
+                        </c:if>
+                    </div>
                 </div>
             </c:if>
 
@@ -146,20 +182,20 @@
                 <c:set var="inStockJson" value="${inStockJson}${entry.key}:${entry.value},"/>
             </c:forEach>
 
-            <div class="form-layout">
-                <form id="transferForm" class="form-card" action="${pageContext.request.contextPath}/transfers" method="POST">
-                    <input type="hidden" name="action" id="formAction" value="create" />
+            <form id="transferForm" action="${pageContext.request.contextPath}/transfers" method="POST">
+                <input type="hidden" name="action" id="formAction" value="create" />
 
-                    <!-- SECTION 01: THONG TIN CHUNG -->
-                    <div class="form-section">
-                        <div class="form-section-head">
-                            <div class="form-section-num">01 — THÔNG TIN CHUNG</div>
-                            <h3 class="form-section-title">Kho nguồn, kho đích và ghi chú</h3>
+                <div class="content">
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">01 — THÔNG TIN CHUNG</div>
+                                <h3 class="section-title">Kho nguồn, kho đích và ghi chú</h3>
+                            </div>
                         </div>
-
                         <div class="form-grid">
-                            <div class="field">
-                                <label class="field-label">Kho nguồn <span class="req">*</span></label>
+                            <div class="form-field">
+                                <label>Kho nguồn <span class="req">*</span></label>
                                 <select class="input" name="sourceWarehouseId" id="sourceWarehouseId" required onchange="onSourceWarehouseChange()">
                                     <option value="">-- Chọn kho nguồn --</option>
                                     <c:forEach var="w" items="${warehouses}">
@@ -169,42 +205,39 @@
                                         </option>
                                     </c:forEach>
                                 </select>
-                                <c:if test="${scopedWarehouseId > 0}">
-                                    <small style="color:var(--muted);font-size:11.5px;">Kho của bạn: <c:out value="${scopedWarehouseName}"/></small>
-                                </c:if>
                             </div>
 
-                            <div class="field">
-                                <label class="field-label">Kho đích <span class="req">*</span></label>
+                            <div class="form-field">
+                                <label>Kho đích <span class="req">*</span></label>
                                 <select class="input" name="destWarehouseId" id="destWarehouseId" required onchange="onDestWarehouseChange()">
                                     <option value="">-- Chọn kho đích --</option>
-                                    <c:forEach var="w" items="${warehouses}">
+                                    <c:forEach var="w" items="${destWarehouses}">
                                         <option value="${w.warehouseId}" data-warehouse-name="<c:out value='${w.name}'/>"><c:out value="${w.name}"/></option>
                                     </c:forEach>
                                 </select>
                             </div>
+
+                            <div class="form-field full">
+                                <label>Ghi chú phiếu</label>
+                                <textarea class="input" name="note" maxlength="500" rows="2"
+                                          style="min-height: 64px; resize: vertical; font-family: var(--font-ui);"
+                                          placeholder="Lý do luân chuyển, ghi chú thêm..."></textarea>
+                            </div>
                         </div>
 
-                        <div id="warehouseWarning" class="alert-warn" style="display:none; margin-top: 10px;">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+                        <div id="warehouseWarning" class="alert alert-warn" style="display:none; margin-top: 10px;">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                             <span id="warehouseWarningText"></span>
                         </div>
+                    </section>
 
-                        <div class="field" style="margin-top: 14px;">
-                            <label class="field-label">Ghi chú phiếu</label>
-                            <textarea class="input" name="note" maxlength="500" rows="2"
-                                      style="min-height: 64px; resize: vertical; font-family: var(--font-ui);"
-                                      placeholder="Lý do luân chuyển, ghi chú thêm..."></textarea>
+                    <section class="section">
+                        <div class="section-head">
+                            <div>
+                                <div class="section-num">02 — ĐỀ XUẤT SỐ LƯỢNG</div>
+                                <h3 class="section-title">Số lượng từng dòng máy cần chuyển</h3>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- SECTION 02: CHI TIET SO LUONG -->
-                    <div class="form-section">
-                        <div class="form-section-head">
-                            <div class="form-section-num">02 — ĐỀ XUẤT SỐ LƯỢNG</div>
-                            <h3 class="form-section-title">Số lượng từng dòng máy cần chuyển</h3>
-                        </div>
-
 
                         <table class="detail-table">
                             <thead>
@@ -252,13 +285,30 @@
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
                             Thêm dòng
                         </button>
-                    </div>
+                    </section>
+                </div>
+            </form>
 
-                    <div class="form-actions" style="margin-top: 24px; display: flex; gap: 8px; justify-content: flex-end;">
-                        <a class="btn" href="${pageContext.request.contextPath}/transfers">Hủy bỏ</a>
-                        <button type="submit" class="btn btn-primary" onclick="return validateForm()">Gửi CEO duyệt</button>
+            <div class="modal-host" id="saveConfirmModal" onclick="if (event.target === this) closeSaveConfirm();">
+                <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+                    <h3 id="saveConfirmTitle">Xác nhận gửi phiếu luân chuyển</h3>
+                    <p class="modal-sub">Vui lòng kiểm tra thông tin trước khi gửi phiếu cho CEO duyệt.</p>
+                    <div class="modal-actions">
+                        <button type="button" class="btn" onclick="closeSaveConfirm()">Hủy</button>
+                        <button type="button" class="btn btn-primary" id="saveConfirmBtn" onclick="doConfirmSave()">
+                            <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                            Xác nhận gửi
+                        </button>
                     </div>
-                </form>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <a class="btn" href="javascript:void(0)" onclick="confirmCancelCreate()">Huỷ</a>
+                <button type="submit" form="transferForm" class="btn btn-primary" onclick="return openSaveConfirm()">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                    Gửi CEO duyệt
+                </button>
             </div>
         </main>
     </div>
@@ -530,6 +580,12 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
     window.onGeneratorChange = onGeneratorChange;
     window.onSourceWarehouseChange = onSourceWarehouseChange;
     window.onDestWarehouseChange = onDestWarehouseChange;
+    window.validateForm = validateForm;
+    window.repopulateGeneratorSelects = repopulateGeneratorSelects;
+    window.filterDestWarehouseOptions = filterDestWarehouseOptions;
+    window.validatePairRealtime = validatePairRealtime;
+    window.updateRowMax = updateRowMax;
+    window.renumberRows = renumberRows;
 
     document.addEventListener('DOMContentLoaded', function () {
         renumberRows();
@@ -542,6 +598,80 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
 })();
 </script>
 <div class="toast-host" id="toastHost"></div>
+<script>
+    <c:if test="${not empty sessionScope.toastMessage}">
+    window.SESSION_DATA = { message: '<c:out value="${sessionScope.toastMessage}"/>', type: '<c:out value="${sessionScope.toastType}"/>' };
+        <c:remove var="toastMessage" scope="session"/>
+        <c:remove var="toastType" scope="session"/>
+    </c:if>
+    <c:if test="${not empty requestScope.toastMessage}">
+    window.SESSION_DATA = window.SESSION_DATA || {};
+    window.SESSION_DATA.message = '<c:out value="${requestScope.toastMessage}"/>';
+    window.SESSION_DATA.type = '<c:out value="${requestScope.toastType}"/>';
+    </c:if>
+</script>
+<script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
 <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+<script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+<script>
+    function confirmCancelCreate() {
+        if (confirm('Bạn có chắc muốn huỷ tạo phiếu luân chuyển?')) {
+            location.href = window.APP_CTX + '/transfers';
+        }
+    }
+
+    // ========== Confirm Save Modal ==========
+    function openSaveConfirm() {
+        if (typeof validateForm === 'function' && !validateForm()) {
+            return false;
+        }
+        populateSaveSummary();
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.add('show');
+        return false;
+    }
+
+    function closeSaveConfirm() {
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function doConfirmSave() {
+        closeSaveConfirm();
+        var form = document.getElementById('transferForm');
+        if (form) form.submit();
+    }
+
+    function populateSaveSummary() {
+        var srcEl = document.getElementById('saveSummarySource');
+        var destEl = document.getElementById('saveSummaryDest');
+        var rowsEl = document.getElementById('saveSummaryRows');
+        var srcSel = document.getElementById('sourceWarehouseId');
+        var destSel = document.getElementById('destWarehouseId');
+        if (srcEl && srcSel) {
+            srcEl.textContent = srcSel.options[srcSel.selectedIndex]
+                ? srcSel.options[srcSel.selectedIndex].textContent.trim() : '—';
+        }
+        if (destEl && destSel) {
+            destEl.textContent = destSel.options[destSel.selectedIndex]
+                ? destSel.options[destSel.selectedIndex].textContent.trim() : '—';
+        }
+        if (rowsEl) {
+            var tbody = document.getElementById('detailBody');
+            rowsEl.textContent = tbody ? tbody.querySelectorAll('tr').length : 0;
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSaveConfirm();
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
+            showToast(window.SESSION_DATA.message, window.SESSION_DATA.type || 'info');
+        }
+    });
+</script>
 </body>
 </html>

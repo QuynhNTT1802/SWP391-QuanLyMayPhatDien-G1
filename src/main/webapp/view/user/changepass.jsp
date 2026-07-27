@@ -262,10 +262,6 @@
   .toast-icon svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
   /* Theme toggle */
-  .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
-  [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-  [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-
   @media (max-width: 1100px) {
     .layout { grid-template-columns: 1fr; gap: 20px; }
     aside.toc { position: static; }
@@ -291,10 +287,6 @@
       <span class="crumb">/ <a href="<%=request.getContextPath()%>/profile">Hồ sơ</a> · Đổi mật khẩu</span>
 
       <div class="top-actions">
-        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-        </button>
         <a href="<%=request.getContextPath()%>/profile" class="btn">
           <svg class="icon" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
           Quay về hồ sơ
@@ -514,10 +506,7 @@
   // Theme toggle (synced with dashboard)
   const root = document.documentElement;
   const stored = localStorage.getItem('wh-theme');
-  if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
-  document.getElementById('themeToggle').addEventListener('click', () => {
-    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
+  if (stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);root.setAttribute('data-theme', next);
     localStorage.setItem('wh-theme', next);
   });
 

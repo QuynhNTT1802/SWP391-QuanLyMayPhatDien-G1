@@ -7,12 +7,12 @@ package com.quanlymayphatdien.g1.controller.report;
 
 import com.quanlymayphatdien.g1.dal.ExportReportDAO;
 import com.quanlymayphatdien.g1.dal.ImportReportDAO;
-import com.quanlymayphatdien.g1.dal.InventoryCheckReportDAO;
 import com.quanlymayphatdien.g1.dal.InventoryReportDAO;
 import com.quanlymayphatdien.g1.dal.PurchaseReportDAO;
 import com.quanlymayphatdien.g1.dal.SalesReportDAO;
 import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.utils.ReportExcelSupport;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.io.OutputStream;
 import jakarta.servlet.ServletException;
@@ -30,7 +30,7 @@ public class ReportController extends HttpServlet {
     private final InventoryReportDAO inventoryReportDAO = new InventoryReportDAO();
     private final ImportReportDAO importReportDAO = new ImportReportDAO();
     private final ExportReportDAO exportReportDAO = new ExportReportDAO();
-    private final InventoryCheckReportDAO inventoryCheckReportDAO = new InventoryCheckReportDAO();
+    
     private final PurchaseReportDAO purchaseReportDAO = new PurchaseReportDAO();
     private final SalesReportDAO salesReportDAO = new SalesReportDAO();
     private final WarehouseDAO warehouseDAO = new WarehouseDAO();
@@ -112,6 +112,7 @@ public class ReportController extends HttpServlet {
         req.setAttribute("search", search);
         req.setAttribute("warehouses", warehouseDAO.findAll());
 
+        Gson gson = new Gson();
         switch (type) {
             case "inventory": {
                 totalItems = inventoryReportDAO.countInventoryReport(warehouseId, month, year, search);
@@ -121,6 +122,7 @@ public class ReportController extends HttpServlet {
                 }
                 req.setAttribute("inventoryItems", inventoryReportDAO.getInventoryReport(warehouseId, month, year, page, pageSize, search));
                 req.setAttribute("summary", inventoryReportDAO.getInventorySummary(warehouseId, month, year));
+                req.setAttribute("trendJson", gson.toJson(inventoryReportDAO.trendInventory(warehouseId, year)));
                 break;
             }
             case "import": {
@@ -130,6 +132,7 @@ public class ReportController extends HttpServlet {
                     page = totalPages;
                 }
                 req.setAttribute("importItems", importReportDAO.getImportReport(warehouseId, month, year, page, pageSize, search));
+                req.setAttribute("trendJson", gson.toJson(importReportDAO.trendImport(warehouseId, year)));
                 break;
             }
             case "export": {
@@ -139,15 +142,7 @@ public class ReportController extends HttpServlet {
                     page = totalPages;
                 }
                 req.setAttribute("exportItems", exportReportDAO.getExportReport(warehouseId, month, year, page, pageSize, search));
-                break;
-            }
-            case "inventory-check": {
-                totalItems = inventoryCheckReportDAO.countInventoryCheckReport(warehouseId, month, year, search);
-                totalPages = Math.max(1, (int) Math.ceil((double) totalItems / pageSize));
-                if (page > totalPages) {
-                    page = totalPages;
-                }
-                req.setAttribute("checkItems", inventoryCheckReportDAO.getInventoryCheckReport(warehouseId, month, year, page, pageSize, search));
+                req.setAttribute("trendJson", gson.toJson(exportReportDAO.trendExport(warehouseId, year)));
                 break;
             }
             case "purchase": {
@@ -158,6 +153,7 @@ public class ReportController extends HttpServlet {
                 }
                 req.setAttribute("poItems", purchaseReportDAO.getPurchaseReport(warehouseId, month, year, page, pageSize, search));
                 req.setAttribute("summary", purchaseReportDAO.getPurchaseSummary(warehouseId, month, year));
+                req.setAttribute("trendJson", gson.toJson(purchaseReportDAO.trendPurchase(warehouseId, year)));
                 break;
             }
             case "sales": {
@@ -168,6 +164,7 @@ public class ReportController extends HttpServlet {
                 }
                 req.setAttribute("saleItems", salesReportDAO.getSalesReport(month, year, page, pageSize, search));
                 req.setAttribute("summary", salesReportDAO.getSalesSummary(month, year));
+                req.setAttribute("trendJson", gson.toJson(salesReportDAO.trendSales(year)));
                 break;
             }
         }
@@ -227,12 +224,6 @@ public class ReportController extends HttpServlet {
                 var data = exportReportDAO.getExportExcelData(warehouseId, month, year);
                 workbook = ReportExcelSupport.exportExport(data, month, year, warehouseName);
                 filename = "BaoCaoXuat_T" + month + "_" + year + ".xlsx";
-                break;
-            }
-            case "inventory-check": {
-                var data = inventoryCheckReportDAO.getAllInventoryCheckReport(warehouseId, month, year);
-                workbook = ReportExcelSupport.exportInventoryCheck(data, month, year, warehouseName);
-                filename = "BaoCaoKiemKe_T" + month + "_" + year + ".xlsx";
                 break;
             }
             case "purchase": {

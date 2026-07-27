@@ -1,8 +1,6 @@
 package com.quanlymayphatdien.g1.dal;
 
 import com.quanlymayphatdien.g1.entity.Liquidation;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -84,7 +82,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi lấy danh sách", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -118,7 +116,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 return resultSet.getInt(1);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countTotal", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -157,7 +155,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findWithPagination", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -182,7 +180,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 kpis.put(resultSet.getString(1), resultSet.getInt(2));
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getKpiCounts", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -211,7 +209,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 return getFromResultSet(resultSet);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findById", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -241,7 +239,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             }
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateStatus", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -293,7 +291,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             statement.setInt(6, liquidationId);
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCeoReject", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -314,7 +312,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             statement.setInt(4, liquidationId);
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateReasonAndStatus", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -343,7 +341,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             statement.setInt(2, liquidationId);
             return statement.executeUpdate() > 0;
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi updateCustomer", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -432,7 +430,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             m.put("totalLoss", loss);
             m.put("recoveryRate", recoveryRate);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportSummary", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -470,7 +468,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(r);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportByReason", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -512,7 +510,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(r);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportByWarehouse", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -551,7 +549,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(r);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportByModel", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -591,7 +589,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(r);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportMonthlyTrend", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -661,7 +659,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(r);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportDetailList", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -687,7 +685,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             resultSet = statement.executeQuery();
             if (resultSet.next()) return resultSet.getInt(1);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countReportDetailList", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -721,7 +719,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 }
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi tạo đơn", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -749,7 +747,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             resultSet = statement.executeQuery();
             if (resultSet.next()) return resultSet.getInt(1);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countReportFlatTable", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -812,7 +810,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(r);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi getReportFlatTable", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -867,7 +865,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi findApprovedAvailableFiltered", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -908,7 +906,7 @@ public class LiquidationDAO extends DBContext implements I_DAO<Liquidation> {
             resultSet = statement.executeQuery();
             if (resultSet.next()) return resultSet.getInt(1);
         } catch (Exception e) {
-            SystemLogger.error(LogModule.LIQUIDATION, "Lỗi countApprovedAvailableFiltered", e.getMessage(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }

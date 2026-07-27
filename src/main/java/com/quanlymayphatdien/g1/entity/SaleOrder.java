@@ -40,6 +40,8 @@ public class SaleOrder {
     private Date createdAt;
     private Date updatedAt;
     private Customer customer;
+    private String warehouseName;
+    private int totalQuantity;
 
     public SaleOrder() {
     }
@@ -111,6 +113,22 @@ public class SaleOrder {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+
+    public String getWarehouseName() {
+        return warehouseName;
+    }
+
+    public void setWarehouseName(String warehouseName) {
+        this.warehouseName = warehouseName;
+    }
+
+    public int getTotalQuantity() {
+        return totalQuantity;
+    }
+
+    public void setTotalQuantity(int totalQuantity) {
+        this.totalQuantity = totalQuantity;
     }
 
     public int getOrderId() {

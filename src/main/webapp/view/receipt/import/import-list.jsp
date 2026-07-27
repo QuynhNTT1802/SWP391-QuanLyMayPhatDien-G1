@@ -28,10 +28,6 @@
                     <span class="crumb">/ Kho / Phiếu nhập</span>
                     <div class="top-actions">
                         <jsp:include page="../../common/admin/bell.jsp"/>
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
                         <a class="btn" href="${pageContext.request.contextPath}/import-receipt?action=selectPurchase">
                             Tạo từ đơn mua
                         </a>
@@ -81,19 +77,6 @@
                             <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã từ chối</option>
                         </select>
 
-                        <select class="filter-select" name="warehouse" onchange="this.form.submit()" <c:if test="${not empty scopedWarehouseId}">disabled</c:if>>
-                            <c:choose>
-                                <c:when test="${not empty scopedWarehouseId}">
-                                    <option value="${scopedWarehouseId}" selected>Kho: <c:out value="${scopedWarehouseName}"/></option>
-                                </c:when>
-                                <c:otherwise>
-                                    <option value="">Kho: Tất cả</option>
-                                    <c:forEach var="wh" items="${warehouses}">
-                                        <option value="${wh.warehouseId}" <c:if test="${whFilter == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                                    </c:forEach>
-                                </c:otherwise>
-                            </c:choose>
-                        </select>
 
                         <div class="spacer"></div>
                         <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/import-receipt?action=list'">
@@ -108,7 +91,7 @@
                                 <tr>
                                     <th>Mã phiếu</th>
                                     <th>Kho</th>
-                                    <th>Phiếu mua</th>
+                                    <th>Đơn liên quan</th>
                                     <th class="col-reason">Lý do</th>
                                     <th class="col-creator">Người tạo</th>
                                     <th class="col-status">Trạng thái</th>
@@ -129,6 +112,9 @@
                                                     <c:choose>
                                                         <c:when test="${not empty r.purchaseOrderCode}">
                                                             <a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="code-link"><c:out value="${r.purchaseOrderCode}"/></a>
+                                                        </c:when>
+                                                        <c:when test="${not empty r.transferCode}">
+                                                            <a href="${pageContext.request.contextPath}/transfers?action=detail&id=${r.linkedTransferId}" class="code-link"><c:out value="${r.transferCode}"/></a>
                                                         </c:when>
                                                         <c:otherwise><span class="muted">—</span></c:otherwise>
                                                     </c:choose>

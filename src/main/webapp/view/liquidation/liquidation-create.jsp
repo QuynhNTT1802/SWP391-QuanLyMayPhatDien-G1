@@ -80,9 +80,6 @@
         .empty-state .icon-wrap svg { width: 22px; height: 22px; stroke: var(--muted); }
         .empty-state strong { color: var(--fg); font-size: 14px; }
 
-        .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
-        [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-        [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
         @media (max-width: 900px) {
             .table-toolbar { flex-direction: column; align-items: stretch; }
             .search-input { min-width: 0; }
@@ -128,10 +125,6 @@
             <h1>Tạo đơn thanh lý</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/liquidations">Thanh lý</a> / Thêm mới</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
                 <jsp:include page="../common/admin/bell.jsp"/>
             </div>
         </header>
@@ -251,7 +244,7 @@
                                 <input type="text" id="serialSearchInput" placeholder="Tìm số serial hoặc mẫu máy..." autocomplete="off"/>
                             </div>
                             <select class="info-input" id="condFilter" style="width:auto;min-width:160px;" ${empty selectedWarehouseId ? 'disabled' : ''}
-                                    onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond='+this.value">
+                                    onchange="location.href='${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond='+this.value+'&page=1<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>">
                                 <option value="all" ${condFilter == 'all' ? 'selected' : ''}>Tất cả (${condCountAll})</option>
                                 <option value="DAMAGED" ${condFilter == 'DAMAGED' ? 'selected' : ''}>Hỏng (${condCountDamaged})</option>
                                 <option value="POOR" ${condFilter == 'POOR' ? 'selected' : ''}>Kém (${condCountPoor})</option>
@@ -350,6 +343,32 @@
                                     </tfoot>
                                 </table>
                                 <div id="condWarn" class="liq-cond-warn"></div>
+                                <c:if test="${totalPages > 1}">
+                                    <div class="pagination">
+                                        <div class="info">
+                                            Hiển thị <strong>${(currentPage-1)*pageSize + 1}</strong>–<strong>${currentPage*pageSize > totalItems ? totalItems : currentPage*pageSize}</strong> / <strong>${totalItems}</strong> máy
+                                        </div>
+                                        <div class="controls">
+                                            <c:choose>
+                                                <c:when test="${currentPage <= 1}">
+                                                    <button class="page-btn" disabled>« Trước</button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond=${condFilter}&page=${currentPage-1}<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>">« Trước</a>
+                                                </c:otherwise>
+                                            </c:choose>
+                                            <span class="page-indicator">Trang ${currentPage} / ${totalPages}</span>
+                                            <c:choose>
+                                                <c:when test="${currentPage >= totalPages}">
+                                                    <button class="page-btn" disabled>Sau »</button>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=create&warehouseId=${selectedWarehouseId}&cond=${condFilter}&page=${currentPage+1}<c:if test="${not empty selectedReasonId}">&reasonId=${selectedReasonId}</c:if>">Sau »</a>
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </div>
+                                    </div>
+                                </c:if>
                             </c:otherwise>
                         </c:choose>
                         <div class="section-action-bar">

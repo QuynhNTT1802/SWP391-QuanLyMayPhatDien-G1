@@ -36,9 +36,7 @@
         <main>
             <div class="page-head">
                 <div class="left">
-                    <div class="eyebrow">Kho · Phiếu nhập</div>
-                    <h2 class="page-title">Chọn phiếu luân chuyển đã xuất kho</h2>
-                    <div class="page-sub">${totalItems} phiếu</div>
+                    <h2 class="page-title">Phiếu luân chuyển</h2>
                 </div>
             </div>
 

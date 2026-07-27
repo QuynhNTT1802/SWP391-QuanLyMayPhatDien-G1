@@ -4,7 +4,6 @@
  */
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.entity.OrderDetail;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -31,7 +30,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -50,7 +49,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 list.add(getFromResultSet(resultSet));
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -77,7 +76,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 list.add(d);
             }
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -99,7 +98,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
             statement.executeUpdate();
             return true;
         } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -124,27 +123,11 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 return resultSet.getInt(1);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
         return -1;
-    }
-
-    public boolean deleteByOrderId(int orderId) {
-        String sql = "DELETE FROM order_detail WHERE order_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, orderId);
-            statement.executeUpdate();
-            return true;
-        } catch (Exception e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-        } finally {
-            closeResources();
-        }
-        return false;
     }
 
     public boolean insertBatch(List<OrderDetail> list) {
@@ -166,13 +149,13 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 return true;
             } catch (SQLException e) {
                 conn.rollback(); 
-                com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+                e.printStackTrace();
                 return false;
             } finally {
                 conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+            e.printStackTrace();
             return false;
         }
     }
@@ -187,5 +170,21 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
         d.setUnitPrice(resultSet.getDouble("unit_price"));
         d.setNote(resultSet.getString("note"));
         return d;
+    }
+    
+    public boolean deleteByOrderId(int orderId) {
+        String sql = "DELETE FROM order_detail WHERE order_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, orderId);
+            statement.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return false;
     }
 }

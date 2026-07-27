@@ -15,14 +15,10 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report.css">
-    <style>
-      .summary-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
-      .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
-      .summary-label { font-size: 12px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; }
-      .summary-value { font-family: var(--font-mono); font-size: 22px; font-weight: 600; color: var(--fg); margin-top: 6px; }
-      .summary-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="${pageContext.request.contextPath}/assets/js/report.js"></script>
 </head>
 <body>
 <div class="app">
@@ -34,10 +30,9 @@
         <div class="page-head">
             <h2>
                 <c:choose>
-                    <c:when test="${reportType == 'inventory'}">Báo cáo tồn kho</c:when>
+                    <c:when test="${reportType == 'inventory'}">Báo cáo xuất nhập tồn</c:when>
                     <c:when test="${reportType == 'import'}">Báo cáo nhập kho</c:when>
                     <c:when test="${reportType == 'export'}">Báo cáo xuất kho</c:when>
-                    <c:when test="${reportType == 'inventory-check'}">Báo cáo kiểm kê</c:when>
                     <c:when test="${reportType == 'purchase'}">Báo cáo mua hàng</c:when>
                     <c:when test="${reportType == 'sales'}">Báo cáo bán hàng</c:when>
                 </c:choose>
@@ -45,53 +40,44 @@
         </div>
 
         <div class="report-filter-bar">
-            <form method="GET" action="${pageContext.request.contextPath}/reports" class="filter-form">
+            <form method="GET" action="${pageContext.request.contextPath}/reports" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
                 <input type="hidden" name="type" value="${reportType}"/>
+                <input type="hidden" name="page" value="1"/>
 
-                <div class="filter-group">
-                    <label>Kì báo cáo</label>
-                    <div class="filter-row">
-                        <select name="month" class="edit-input" style="width:100px;">
-                            <c:forEach var="m" begin="1" end="12">
-                                <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
-                            </c:forEach>
-                        </select>
-                        <input type="number" name="year" value="${year}" class="edit-input" style="width:110px;">
-                    </div>
+                <div class="search-input">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    <input name="search" value="<c:out value="${search}"/>" placeholder="Mã phiếu, tên máy, serial..." autocomplete="off" />
                 </div>
 
                 <c:if test="${reportType != 'sales'}">
-                    <div class="filter-group">
-                        <label>Kho</label>
-                        <select name="warehouseId" class="edit-input" style="width:200px;">
-                            <option value="">Tất cả</option>
-                            <c:forEach var="wh" items="${warehouses}">
-                                <option value="${wh.warehouseId}" ${wh.warehouseId == selWarehouseId ? 'selected' : ''}>
-                                    <c:out value="${wh.name}"/>
-                                </option>
-                            </c:forEach>
-                        </select>
-                    </div>
+                    <select name="warehouseId" class="filter-select" onchange="this.form.submit()">
+                        <option value="">Kho: Tất cả</option>
+                        <c:forEach var="wh" items="${warehouses}">
+                            <option value="${wh.warehouseId}" ${wh.warehouseId == selWarehouseId ? 'selected' : ''}>
+                                <c:out value="${wh.name}"/>
+                            </option>
+                        </c:forEach>
+                    </select>
                 </c:if>
 
-                <div class="filter-group">
-                    <label>Tìm kiếm</label>
-                    <input type="text" name="search" value="<c:out value="${search}"/>" class="edit-input" placeholder="Mã phiếu, model, serial..."
-                           style="width:220px;">
-                </div>
+                <select name="month" class="filter-select" style="width:auto;">
+                    <c:forEach var="m" begin="1" end="12">
+                        <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
+                    </c:forEach>
+                </select>
+                <input type="number" name="year" value="${year}" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--fg);font-size:13px;font-family:var(--font-ui);font-weight:600;">
 
-                <div class="filter-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-                        Xem
+                <div class="spacer"></div>
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                    Xem
+                </button>
+                <c:if test="${sessionScope.userPermissions.contains('reports.export')}">
+                    <button type="button" class="btn btn-success" onclick="RPT.exportExcel()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Xuất Excel
                     </button>
-                    <c:if test="${sessionScope.userPermissions.contains('reports.export')}">
-                        <button type="button" class="btn btn-success" onclick="exportExcel()">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                            Xuất Excel
-                        </button>
-                    </c:if>
-                </div>
+                </c:if>
             </form>
         </div>
 
@@ -101,23 +87,40 @@
                 <c:when test="${reportType == 'inventory'}">
                     <div class="summary-cards">
                         <div class="summary-card">
-                            <div class="summary-label">Tổng model</div>
+                            <div class="summary-label">Tổng mẫu máy</div>
                             <div class="summary-value">${summary.totalModels}</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Tổng serial tồn kho</div>
+                            <div class="summary-label">Tồn đầu kì</div>
+                            <div class="summary-value"><fmt:formatNumber value="${summary.totalOpen}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Nhập trong kì</div>
+                            <div class="summary-value" style="color:var(--accent)"><fmt:formatNumber value="${summary.totalImport}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Xuất trong kì</div>
+                            <div class="summary-value" style="color:var(--info)"><fmt:formatNumber value="${summary.totalExport}" pattern="#,##0"/></div>
+                        </div>
+                        <div class="summary-card">
+                            <div class="summary-label">Tồn cuối kì</div>
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalSerials}" pattern="#,##0"/></div>
                         </div>
                     </div>
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart0" height="80"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart0',data:${trendJson},report:'inventory'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
                                 <th>Kho</th>
-                                <th>Mã máy</th>
-                                <th>Model</th>
+                                <th>Mẫu máy</th>
                                 <th>Thương hiệu</th>
                                 <th>Tồn đầu kì</th>
+                                <th>Nhập</th>
+                                <th>Xuất</th>
                                 <th>Tồn cuối kì</th>
                             </tr>
                         </thead>
@@ -126,28 +129,32 @@
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${item.warehouseName}"/></td>
-                                    <td>${item.generatorId}</td>
                                     <td><c:out value="${item.model}"/></td>
                                     <td><c:out value="${item.brand}"/></td>
                                     <td class="num">${item.openQuantity}</td>
+                                    <td class="num" style="color:var(--accent)">${item.importQuantity}</td>
+                                    <td class="num" style="color:var(--info)">${item.exportQuantity}</td>
                                     <td class="num">${item.closeQuantity}</td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty inventoryItems}">
-                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
                 </c:when>
 
-                <%-- NHẬP KHO (chi tiết serial) --%>
                 <c:when test="${reportType == 'import'}">
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart1" height="80"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart1',data:${trendJson},report:'import_'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Serial</th>
-                                <th>Model</th>
+                                <th>Máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn mua</th>
                                 <th>Ngày</th>
@@ -161,8 +168,8 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.serialNumber}"/></td>
                                     <td><c:out value="${r.model}"/></td>
-                                    <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><c:out value="${r.purchaseOrderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/import-receipt?action=detail&id=${r.receiptId}" class="code-link"><c:out value="${r.receiptCode}"/></a></td>
+                                    <td><c:choose><c:when test="${not empty r.purchaseOrderId}"><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${r.purchaseOrderId}" class="code-link"><c:out value="${r.purchaseOrderCode}"/></a></c:when><c:otherwise><c:out value="${r.purchaseOrderCode}"/></c:otherwise></c:choose></td>
                                     <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <td><c:out value="${r.createdByName}"/></td>
@@ -175,14 +182,17 @@
                     </table>
                 </c:when>
 
-                <%-- XUẤT KHO (chi tiết serial) --%>
                 <c:when test="${reportType == 'export'}">
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart2" height="80"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart2',data:${trendJson},report:'export_'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Serial</th>
-                                <th>Model</th>
+                                <th>Máy</th>
+                                <th>Mẫu máy</th>
                                 <th>Mã phiếu</th>
                                 <th>Mã đơn hàng</th>
                                 <th>Ngày</th>
@@ -196,8 +206,8 @@
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
                                     <td><c:out value="${r.serialNumber}"/></td>
                                     <td><c:out value="${r.model}"/></td>
-                                    <td><c:out value="${r.receiptCode}"/></td>
-                                    <td><c:out value="${r.orderCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/export-receipt?action=detail&id=${r.receiptId}" class="code-link"><c:out value="${r.receiptCode}"/></a></td>
+                                    <td><c:choose><c:when test="${not empty r.orderId}"><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${r.orderId}" class="code-link"><c:out value="${r.orderCode}"/></a></c:when><c:otherwise><c:out value="${r.orderCode}"/></c:otherwise></c:choose></td>
                                     <td>${r.createdAt.format(rptFmt)}</td>
                                     <td><c:out value="${r.warehouseName}"/></td>
                                     <td><c:out value="${r.createdByName}"/></td>
@@ -210,48 +220,6 @@
                     </table>
                 </c:when>
 
-                <c:when test="${reportType == 'inventory-check'}">
-                    <table class="report-table">
-                        <thead>
-                            <tr>
-                                <th>STT</th>
-                                <th>Mã phiếu</th>
-                                <th>Kho</th>
-                                <th>Mã máy</th>
-                                <th>Model</th>
-                                <th>SL hệ thống</th>
-                                <th>SL thực tế</th>
-                                <th>Chênh lệch</th>
-                                <th>Người tạo</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="item" items="${checkItems}" varStatus="st">
-                                <tr>
-                                    <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${item.checkCode}"/></td>
-                                    <td><c:out value="${item.warehouseName}"/></td>
-                                    <td>${item.generatorId}</td>
-                                    <td><c:out value="${item.generatorModel}"/></td>
-                                    <td class="num">${item.systemQuantity}</td>
-                                    <td class="num">${item.actualQuantity}</td>
-                                    <td class="num ${item.discrepancy != 0 ? 'text-danger' : ''}">${item.discrepancy}</td>
-                                    <td><c:out value="${item.createdByName}"/></td>
-                                    <td>
-                                        <span class="status-badge ${item.status == 'completed' ? 'status-completed' : 'status-doing'}">
-                                            ${item.status == 'completed' ? 'Hoàn thành' : 'Đang kiểm kê'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                            <c:if test="${empty checkItems}">
-                                <tr><td colspan="10" class="empty">Không có dữ liệu</td></tr>
-                            </c:if>
-                        </tbody>
-                    </table>
-                </c:when>
-
                 <c:when test="${reportType == 'purchase'}">
                     <div class="summary-cards">
                         <div class="summary-card">
@@ -259,52 +227,48 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Model mua nhiều nhất</div>
+                            <div class="summary-label">Mẫu máy mua nhiều nhất</div>
                             <div class="summary-value"><c:out value="${summary.topModel}"/></div>
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
                     </div>
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart4" height="80"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart4',data:${trendJson},report:'purchase'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
                                 <th>Mã phiếu</th>
                                 <th>Kho</th>
-                                <th>Kỳ</th>
+                                <th>Nhà cung cấp</th>
                                 <th>Số lượng</th>
+                                <th>Tổng tiền</th>
                                 <th>Người tạo</th>
                                 <th>Ngày tạo</th>
-                                <th>Trạng thái</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="po" items="${poItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${po.poCode}"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/purchase-order?action=detail&id=${po.poId}" class="code-link"><c:out value="${po.poCode}"/></a></td>
                                     <td><c:out value="${po.warehouseName}"/></td>
-                                    <td><c:out value="${po.period}"/></td>
+                                    <td><c:out value="${not empty po.supplierName ? po.supplierName : '—'}"/></td>
                                     <td class="num">${po.totalQuantity}</td>
+                                    <td class="num"><fmt:formatNumber value="${po.totalAmount}" pattern="#,##0"/> ₫</td>
                                     <td><c:out value="${po.createdByName}"/></td>
                                     <td>${po.createdAt.format(rptFmt)}</td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(po.status)}">
-                                        <c:choose>
-                                            <c:when test="${po.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                            <c:when test="${po.status == 'PENDING'}">Chờ duyệt</c:when>
-                                            <c:when test="${po.status == 'CANCELLED'}">Đã hủy</c:when>
-                                            <c:when test="${po.status == 'DRAFT'}">Bản nháp</c:when>
-                                            <c:otherwise><c:out value="${po.status}"/></c:otherwise>
-                                        </c:choose>
-                                    </span></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty poItems}">
                                 <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
-   git pull ỏiig                 </table>
+                    </table>
                 </c:when>
-
+                
                 <c:when test="${reportType == 'sales'}">
                     <div class="summary-cards">
                         <div class="summary-card">
@@ -312,80 +276,80 @@
                             <div class="summary-value"><fmt:formatNumber value="${summary.totalAmount}" pattern="#,##0"/> ₫</div>
                         </div>
                         <div class="summary-card">
-                            <div class="summary-label">Model bán nhiều nhất</div>
+                            <div class="summary-label">Máy bán nhiều nhất</div>
                             <div class="summary-value"><c:out value="${summary.topModel}"/></div>
                             <div class="summary-sub">${summary.topModelQty} máy</div>
                         </div>
                     </div>
+                    <c:if test="${not empty trendJson}">
+                    <div class="rpt-chart"><canvas id="chart5" height="80"></canvas></div>
+                    <script>RPT.charts=RPT.charts||[];RPT.charts.push({id:'chart5',data:${trendJson},report:'sales'});</script>
+                    </c:if>
                     <table class="report-table">
                         <thead>
                             <tr>
                                 <th>STT</th>
-                                <th>Mã đơn</th>
-                                <th>Ngày đặt</th>
+                                <th>Mã phiếu</th>
+                                <th>Kho</th>
                                 <th>Khách hàng</th>
+                                <th>Số lượng</th>
                                 <th>Tổng tiền</th>
                                 <th>Người tạo</th>
-                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
                             </tr>
                         </thead>
                         <tbody>
                             <c:forEach var="so" items="${saleItems}" varStatus="st">
                                 <tr>
                                     <td>${st.index + 1 + (currentPage - 1) * 15}</td>
-                                    <td><c:out value="${so.orderCode}"/></td>
-                                    <td><fmt:formatDate value="${so.orderDate}" pattern="dd/MM/yyyy"/></td>
+                                    <td><a href="${pageContext.request.contextPath}/sales-order?action=detail&id=${so.orderId}" class="code-link"><c:out value="${so.orderCode}"/></a></td>
+                                    <td><c:out value="${so.warehouseName}"/></td>
                                     <td><c:out value="${so.customer.name}"/></td>
-                                    <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/></td>
+                                    <td class="num">${so.totalQuantity}</td>
+                                    <td class="num"><fmt:formatNumber value="${so.totalAmount}" pattern="#,##0"/> ₫</td>
                                     <td><c:out value="${so.createdByName}"/></td>
-                                    <td><span class="status-badge status-${fn:toLowerCase(so.status)}">
-                                        <c:choose>
-                                            <c:when test="${so.status == 'COMPLETED'}">Hoàn thành</c:when>
-                                            <c:when test="${so.status == 'PENDING'}">Chờ duyệt</c:when>
-                                            <c:when test="${so.status == 'CANCELLED'}">Đã hủy</c:when>
-                                            <c:when test="${so.status == 'APPROVED'}">Đã duyệt</c:when>
-                                            <c:otherwise><c:out value="${so.status}"/></c:otherwise>
-                                        </c:choose>
-                                    </span></td>
+                                    <td><fmt:formatDate value="${so.createdAt}" pattern="dd/MM/yyyy"/></td>
                                 </tr>
                             </c:forEach>
                             <c:if test="${empty saleItems}">
-                                <tr><td colspan="7" class="empty">Không có dữ liệu</td></tr>
+                                <tr><td colspan="8" class="empty">Không có dữ liệu</td></tr>
                             </c:if>
                         </tbody>
                     </table>
                 </c:when>
             </c:choose>
+            <c:if test="${totalPages > 1}">
+                <c:set var="q" value="type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}"/>
+                <c:if test="${not empty search}"><c:set var="q" value="${q}&search=${fn:escapeXml(search)}"/></c:if>
+                <div class="pagination">
+                    <div class="info">Hiển thị <strong>${(currentPage - 1) * 15 + 1}</strong>–<strong>${currentPage * 15 > totalItems ? totalItems : currentPage * 15}</strong> / <strong>${totalItems}</strong> kết quả</div>
+                    <div class="controls">
+                        <c:if test="${currentPage > 1}">
+                            <a href="?${q}&page=${currentPage - 1}" class="page-btn">‹</a>
+                        </c:if>
+                        <c:forEach begin="1" end="${totalPages}" var="p">
+                            <c:choose>
+                                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                                <c:otherwise><a href="?${q}&page=${p}" class="page-btn">${p}</a></c:otherwise>
+                            </c:choose>
+                        </c:forEach>
+                        <c:if test="${currentPage < totalPages}">
+                            <a href="?${q}&page=${currentPage + 1}" class="page-btn">›</a>
+                        </c:if>
+                    </div>
+                </div>
+            </c:if>
         </div>
-
-        <c:if test="${totalPages > 1}">
-            <c:set var="q" value="type=${reportType}&month=${month}&year=${year}&warehouseId=${selWarehouseId}"/>
-            <c:if test="${not empty search}"><c:set var="q" value="${q}&search=${fn:escapeXml(search)}"/></c:if>
-            <div class="pagination">
-                <c:if test="${currentPage > 1}">
-                    <a href="?${q}&page=${currentPage - 1}" class="page-link">Trước</a>
-                </c:if>
-                <c:forEach var="p" begin="1" end="${totalPages}">
-                    <c:if test="${p >= currentPage - 2 && p <= currentPage + 2}">
-                        <a href="?${q}&page=${p}" class="page-link ${p == currentPage ? 'active' : ''}">${p}</a>
-                    </c:if>
-                </c:forEach>
-                <c:if test="${currentPage < totalPages}">
-                    <a href="?${q}&page=${currentPage + 1}" class="page-link">Sau</a>
-                </c:if>
-                <span class="page-info">${totalItems} bản ghi</span>
-            </div>
-        </c:if>
     </main>
 </div>
 
 <script>
-    function exportExcel() {
-        var url = '${pageContext.request.contextPath}/reports?action=export&type=${reportType}'
-            + '&month=${month}&year=${year}'
-            + '&warehouseId=${selWarehouseId}';
-        window.location.href = url;
-    }
+RPT.ctx = '${pageContext.request.contextPath}';
+RPT.type = '${reportType}';
+RPT.month = ${month};
+RPT.year = ${year};
+RPT.warehouseId = '${selWarehouseId}';
+RPT.initCharts();
 </script>
 </body>
 </html>

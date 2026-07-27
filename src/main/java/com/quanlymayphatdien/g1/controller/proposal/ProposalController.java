@@ -18,10 +18,8 @@ import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.PeriodUtils;
 import com.quanlymayphatdien.g1.utils.ProposalExcelSupport;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
 import com.quanlymayphatdien.g1.dal.UserDAO;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -98,7 +96,6 @@ public class ProposalController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doGet", e.getMessage(), e);
             e.printStackTrace();
             if (!response.isCommitted()) {
                 session.setAttribute("toastMessage", "Lỗi hệ thống: " + e.getMessage());
@@ -165,7 +162,6 @@ public class ProposalController extends HttpServlet {
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.doPost", e.getMessage(), e);
             e.printStackTrace();
             session.setAttribute("toastMessage", "Lỗi: " + e.getMessage());
             session.setAttribute("toastType", "danger");
@@ -557,19 +553,20 @@ public class ProposalController extends HttpServlet {
         boolean anyNotifFailed = false;
         for (User u : approvers) {
             try {
-                boolean ok = NotificationService.send(
-                        u.getId(),
-                        "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
-                        "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
-                        request.getContextPath() + "/proposal?action=detail&id=" + newId,
-                        "proposal",
-                        newId
+
+                boolean ok = NotificationUtil.send(
+                    u.getId(),
+                    "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
+                    "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
+                    request.getContextPath() + "/proposal?action=detail&id=" + newId,
+                    "proposal",
+                    newId
                 );
                 if (!ok) {
                     anyNotifFailed = true;
                 }
             } catch (Exception e) {
-                SystemLogger.error(LogModule.PROPOSAL, "ProposalController.saveProposal.sendNotification", e.getMessage(), e);
+                e.printStackTrace();
                 anyNotifFailed = true;
             }
         }
@@ -841,16 +838,18 @@ public class ProposalController extends HttpServlet {
             if (p != null && p.getCreatedBy() > 0) {
                 boolean notifOk = false;
                 try {
-                    notifOk = NotificationService.send(
-                            p.getCreatedBy(),
-                            "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
-                            "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
-                            request.getContextPath() + "/proposal?action=detail&id=" + id,
-                            "proposal",
-                            id
+
+                    notifOk = NotificationUtil.send(
+                        p.getCreatedBy(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
+                        "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
+                        request.getContextPath() + "/proposal?action=detail&id=" + id,
+                        "proposal",
+                        id
+
                     );
                 } catch (Exception e) {
-                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.approveProposal.sendNotification", e.getMessage(), e);
+                    e.printStackTrace();
                 }
                 if (!notifOk) {
                     session.setAttribute("toastMessage", "Đã duyệt nhưng không gửi được thông báo cho nhân viên tạo");
@@ -911,16 +910,18 @@ public class ProposalController extends HttpServlet {
             if (p != null && p.getCreatedBy() > 0) {
                 boolean notifOk = false;
                 try {
-                    notifOk = NotificationService.send(
-                            p.getCreatedBy(),
-                            "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
-                            "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",
-                            request.getContextPath() + "/proposal?action=detail&id=" + id,
-                            "proposal",
-                            id
+
+                    notifOk = NotificationUtil.send(
+                        p.getCreatedBy(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
+                        "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",
+                        request.getContextPath() + "/proposal?action=detail&id=" + id,
+                        "proposal",
+                        id
+
                     );
                 } catch (Exception e) {
-                    SystemLogger.error(LogModule.PROPOSAL, "ProposalController.rejectProposal.sendNotification", e.getMessage(), e);
+                    e.printStackTrace();
                 }
                 if (!notifOk) {
                     session.setAttribute("toastMessage", "Đã từ chối nhưng không gửi được thông báo cho nhân viên tạo");
@@ -1560,7 +1561,7 @@ public class ProposalController extends HttpServlet {
             safeWriteJson(response, "{\"ok\":true,\"existing\":false,\"id\":" + newId
                     + ",\"model\":\"" + escapeJson(model.trim()) + "\"}");
         } catch (Exception e) {
-            SystemLogger.error(LogModule.PROPOSAL, "ProposalController.quickCreateGenerator", e.getMessage(), e);
+            e.printStackTrace();
             try {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 safeWriteJson(response, "{\"ok\":false,\"error\":\"Lỗi hệ thống: " + escapeJson(e.getMessage()) + "\"}");

@@ -44,6 +44,18 @@ public class ExportReportDAO extends BaseReportDAO {
         return queryExportReportDetail(warehouseId, month, year, -1, -1, null);
     }
 
+    public List<Object[]> trendExport(Integer warehouseId, int year) {
+        List<Object> p = new ArrayList<>();
+        p.add(year);
+        if (warehouseId != null) p.add(warehouseId);
+        return queryFlat(
+            "SELECT DATE_FORMAT(r.created_at,'%Y-%m'),COUNT(*)"
+            + " FROM receipt r WHERE r.receipt_type='EXPORT'"
+            + " AND YEAR(r.created_at)=?"
+            + (warehouseId != null ? " AND r.warehouse_id=?" : "")
+            + " GROUP BY 1 ORDER BY 1", p);
+    }
+
     public List<Object[]> getExportExcelData(Integer warehouseId, int month, int year) {
         String sql = "SELECT r.receipt_code, DATE_FORMAT(r.created_at, '%d/%m/%Y'), w.name,"
                 + " c.name, g.model, i2.serial_number, u.name"
@@ -69,9 +81,9 @@ public class ExportReportDAO extends BaseReportDAO {
         params.add(lastDay(month, year));
         if (warehouseId != null) params.add(warehouseId);
         String searchWhere = searchClause(search, params);
-        String sql = "SELECT r.receipt_code, r.created_at, w.name AS warehouse_name,"
+        String sql = "SELECT r.receipt_id, r.receipt_code, r.created_at, w.name AS warehouse_name,"
                 + " g.model, i2.serial_number, u.name AS created_by_name, r.status,"
-                + " so.order_code, c.name AS customer_name"
+                + " r.order_id, so.order_code, c.name AS customer_name"
                 + " FROM receipt r"
                 + " JOIN warehouse w ON r.warehouse_id = w.warehouse_id"
                 + " JOIN user u ON r.created_by = u.id"
@@ -100,6 +112,7 @@ public class ExportReportDAO extends BaseReportDAO {
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 ReceiptDetailReportItem item = new ReceiptDetailReportItem();
+                item.setReceiptId(resultSet.getInt("receipt_id"));
                 item.setReceiptCode(resultSet.getString("receipt_code"));
                 if (resultSet.getTimestamp("created_at") != null)
                     item.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
@@ -108,6 +121,7 @@ public class ExportReportDAO extends BaseReportDAO {
                 item.setSerialNumber(resultSet.getString("serial_number"));
                 item.setCreatedByName(resultSet.getString("created_by_name"));
                 item.setStatus(resultSet.getString("status"));
+                try { item.setOrderId(resultSet.getInt("order_id")); } catch (SQLException ignored) {}
                 item.setOrderCode(resultSet.getString("order_code"));
                 item.setCustomerName(resultSet.getString("customer_name"));
                 list.add(item);

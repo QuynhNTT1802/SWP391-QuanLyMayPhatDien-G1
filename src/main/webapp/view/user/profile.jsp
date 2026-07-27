@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="com.quanlymayphatdien.g1.entity.User"%>
 <%@page import="com.quanlymayphatdien.g1.entity.Role"%>
 <%@page import="java.util.List"%>
@@ -100,10 +100,6 @@
   .icon-btn { width: 32px; height: 32px; border: 1px solid var(--border); background: var(--surface); color: var(--fg-soft); border-radius: var(--radius-sm); display: grid; place-items: center; cursor: pointer; }
   .icon-btn:hover { background: var(--surface-2); color: var(--fg); }
   .icon-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.6; }
-  .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
-  [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-  [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-
   /* Main */
   main { padding: 24px 32px 120px; }
   .page-head { margin-bottom: 20px; }
@@ -344,12 +340,7 @@
       <span class="crumb">/ Tài khoản · <%=userIdDisplay%></span>
 
       <div class="top-actions">
-        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-        </button>
-        
-      </div>
+        </div>
     </header>
 
     <main>
@@ -421,9 +412,6 @@
                 <div class="avatar-lg-wrap">
                   <div class="avatar-lg" id="avatarLg"><%=initials%></div>
                   <div class="status-dot" title="Đang online"></div>
-                  <button class="avatar-edit" id="avatarEdit" title="Đổi ảnh đại diện">
-                    <svg viewBox="0 0 24 24"><path d="M14.7 3a2.4 2.4 0 0 1 3.4 0l2.9 2.9a2.4 2.4 0 0 1 0 3.4L9.8 19.5l-5.6 1.4 1.4-5.6z"/></svg>
-                  </button>
                 </div>
                 <div class="hero-info">
                   <div class="name-row">
@@ -540,6 +528,24 @@
                 <% } %>
               </div>
               <% } %>
+              <div style="margin-top:14px; padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface-2); display:flex; align-items:center; gap:12px;">
+                <div style="width:34px; height:34px; border-radius:8px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Kho đang công tác</div>
+                  <% if (request.getAttribute("scopedWarehouseId") != null && ((Integer) request.getAttribute("scopedWarehouseId")) > 0) { %>
+                    <div style="font-size:14px; font-weight:600; color:var(--fg); margin-top:2px;"><%= request.getAttribute("scopedWarehouseName") != null ? request.getAttribute("scopedWarehouseName") : "Kho #" + request.getAttribute("scopedWarehouseId") %></div>
+                    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Bạn chỉ có thể thao tác trên kho được phân công.</div>
+                  <% } else if (request.getAttribute("scopedWarehouseId") != null && ((Integer) request.getAttribute("scopedWarehouseId")) == 0) { %>
+                    <div style="font-size:14px; font-weight:600; color:var(--danger); margin-top:2px;">Chưa được gán kho</div>
+                    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Vai trò của bạn yêu cầu được gán vào một kho cụ thể. Liên hệ quản trị viên.</div>
+                  <% } else { %>
+                    <div style="font-size:14px; font-weight:600; color:var(--fg); margin-top:2px;">Không giới hạn kho</div>
+                    <div style="font-size:11.5px; color:var(--muted); margin-top:2px;">Bạn có thể thao tác trên tất cả các kho trong hệ thống.</div>
+                  <% } %>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -563,10 +569,7 @@
   // ===== Theme toggle =====
   const root = document.documentElement;
   const storedTheme = localStorage.getItem('wh-theme');
-  if (storedTheme === 'dark' || storedTheme === 'light') root.setAttribute('data-theme', storedTheme);
-  document.getElementById('themeToggle').addEventListener('click', () => {
-    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
+  if (storedTheme === 'dark' || storedTheme === 'light') root.setAttribute('data-theme', storedTheme);root.setAttribute('data-theme', next);
     localStorage.setItem('wh-theme', next);
   });
 

@@ -36,9 +36,7 @@
 
             <div class="page-head">
                 <div class="left">
-                    <div class="eyebrow">Kho</div>
-                    <h2 class="page-title">Chọn đơn thanh lý đã duyệt</h2>
-                    <div class="page-sub">${totalItems} đơn thanh lý</div>
+                    <h2 class="page-title">Đơn thanh lý</h2>
                 </div>
             </div>
 

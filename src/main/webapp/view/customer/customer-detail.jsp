@@ -26,7 +26,6 @@
             <h1>Chi tiết khách hàng</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/customers?action=list">Khách hàng</a> / <span id="crumbId"><c:out value="${customer.name}"/></span></span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/warehouse/customers?action=update&id=${customer.id}">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                     Chỉnh sửa
@@ -82,52 +81,57 @@
                 </div>
 
                 <div class="tab-panel active" id="tab-info">
-                    <div class="info-grid">
-                        <div class="info-field">
-                            <div class="info-label">Tên khách hàng</div>
-                            <div class="info-value"><c:out value="${customer.name}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Số điện thoại</div>
-                            <div class="info-value mono"><c:out value="${customer.phone}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Email</div>
-                            <div class="info-value"><c:out value="${not empty customer.email ? customer.email : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Địa chỉ</div>
-                            <div class="info-value"><c:out value="${not empty customer.address ? customer.address : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Loại khách hàng</div>
-                            <div class="info-value"><c:out value="${customerTypeName}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Tên công ty</div>
-                            <div class="info-value"><c:out value="${not empty customer.companyName ? customer.companyName : '—'}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Trạng thái</div>
-                            <div class="info-value">
-                                <c:choose>
-                                    <c:when test="${customer.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                    <c:when test="${customer.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
-                                </c:choose>
+                    <div class="section">
+                        <div class="section-body">
+                            <div class="form-grid cols-5">
+                                <div class="info-field">
+                                    <label>Tên khách hàng</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${customer.name}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Số điện thoại</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${customer.phone}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Email</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty customer.email ? customer.email : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Loại khách hàng</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${customerTypeName}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Trạng thái</label>
+                                    <input class="info-input" type="text" disabled value="${customer.status == 'active' ? 'Đang hoạt động' : (customer.status == 'locked' ? 'Bị khóa' : '')}">
+                                </div>
                             </div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Ngày tạo</div>
-                            <div class="info-value mono"><c:out value="${createdDate}"/></div>
-                        </div>
-                        <div class="info-field">
-                            <div class="info-label">Cập nhật cuối</div>
-                            <div class="info-value mono"><c:out value="${updatedDate}"/></div>
+                            <div class="form-grid cols-5" style="margin-top:14px;">
+                                <div class="info-field">
+                                    <label>Tên công ty</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty customer.companyName ? customer.companyName : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Địa chỉ</label>
+                                    <input class="info-input" type="text" disabled value="<c:out value='${not empty customer.address ? customer.address : "—"}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Ngày tạo</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${createdDate}'/>">
+                                </div>
+                                <div class="info-field">
+                                    <label>Cập nhật cuối</label>
+                                    <input class="info-input mono" type="text" disabled value="<c:out value='${updatedDate}'/>">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-panel" id="tab-orders">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="font-size:15px;font-weight:700;margin:0;">Đơn hàng</h3>
+                        <a href="${pageContext.request.contextPath}/order" class="btn" style="font-size:12px;">Xem tất cả →</a>
+                    </div>
                     <c:if test="${empty customerOrders}">
                         <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Khách hàng chưa có đơn hàng nào.</div>
                     </c:if>

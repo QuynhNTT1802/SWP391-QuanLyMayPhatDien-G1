@@ -78,7 +78,6 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         );
         List<Object> param = new ArrayList<>();
 
-        // Soft-delete: only creator sees their own DELETED orders
         sql.append(" AND (so.status != ? OR so.created_by = ?)");
         param.add(GlobalUtils.STATUS_DELETED);
         param.add(loggedUserId);

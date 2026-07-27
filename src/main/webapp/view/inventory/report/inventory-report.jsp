@@ -41,9 +41,6 @@
         .report-filter > select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
         .report-filter .btn { padding: 6px 12px; }
         .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-        .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
-        [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-        [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
         .section-label { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
         .rpt-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
         .rpt-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; position: relative; }
@@ -74,10 +71,6 @@
             <h1>Báo cáo tồn kho</h1>
             <span class="crumb">/ Kho / Tồn kho / Báo cáo chi tiết</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-                </button>
                 <jsp:include page="../../common/admin/bell.jsp"/>
             </div>
         </header>

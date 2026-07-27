@@ -1,1 +1,6 @@
 target/
+target/.claude/
+AGENTS.md
+CLAUDE.md
+src/main/java/com/quanlymayphatdien/g1/dal/DBContext.java
+.claude/

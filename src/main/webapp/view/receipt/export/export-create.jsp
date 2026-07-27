@@ -17,6 +17,35 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/receipt.css">
+    <style>
+        .confirm-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 14px 16px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            margin: 6px 0 4px;
+        }
+        .confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .confirm-row span {
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .confirm-row strong {
+            color: var(--fg);
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+    </style>
 </head>
 <body>
 <div class="app">
@@ -28,8 +57,7 @@
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Tạo mới</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-            </div>
+                </div>
         </header>
 
                 <main>
@@ -46,7 +74,7 @@
                     </div>
                 </div>
 
-            <form id="receiptForm" action="${pageContext.request.contextPath}/export-receipt?action=save" method="POST" onsubmit="return validateReceiptForm()">
+            <form id="receiptForm" action="${pageContext.request.contextPath}/export-receipt?action=save" method="POST" onsubmit="return openSaveConfirm();">
                 <c:if test="${not empty errors}">
                     <div class="alert alert-error" style="margin: 16px 0;">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -76,7 +104,6 @@
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
                         <div>
                             <div style="font-weight: 700; margin-bottom: 4px;">Tạo phiếu xuất từ phiếu đề xuất luân chuyển <c:out value="${transferCode}"/></div>
-                            <div style="font-size: 12.5px;">Quét các serial từ kho nguồn <strong><c:out value="${transfer.sourceWarehouseName}"/></strong>. Khi lưu, phiếu đề xuất sẽ chuyển sang trạng thái <strong>ĐÃ XUẤT</strong> và kho đích sẽ nhận thông báo để tạo phiếu nhập.</div>
                         </div>
                     </div>
                 </c:if>
@@ -234,15 +261,6 @@
                         </div>
                         </c:if>
 
-                        <div class="scanner-box" id="scannerBox">
-                            <label>Quét mã vạch</label>
-                            <div class="scanner-input-wrap">
-                                <input type="text" id="scanBox" autocomplete="off"
-                                       placeholder="Đặt con trỏ vào đây rồi quét mã vạch (hoặc gõ tay rồi Enter)..." />
-                            </div>
-                            <small id="scanStatus"></small>
-                        </div>
-
                         <div id="detailGroups" class="detail-groups">
                             <div id="emptyState" class="empty-state" style="display:flex;">
                                 <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
@@ -271,6 +289,20 @@
                 </button>
             </div>
         </main>
+    </div>
+</div>
+
+<div class="modal-host" id="saveConfirmModal" onclick="if (event.target === this) closeSaveConfirm();">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="saveConfirmTitle">
+        <h3 id="saveConfirmTitle">Xác nhận lưu phiếu xuất</h3>
+        <p class="modal-sub">Vui lòng kiểm tra thông tin trước khi lưu phiếu.</p>
+        <div class="modal-actions">
+            <button type="button" class="btn" onclick="closeSaveConfirm()">Hủy</button>
+            <button type="button" class="btn btn-primary" onclick="doConfirmSave()">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+                Xác nhận lưu
+            </button>
+        </div>
     </div>
 </div>
 
@@ -494,7 +526,6 @@
         if (!whId) {
             generatorCache = [];
             warn.style.display = 'flex';
-            refreshScannerState();
             validateInventoryRealtime();
             return;
         }
@@ -576,68 +607,55 @@
 
     // ========== Scanner ==========
     var exportScannerLocked = false;
+    var exportScanBuf = '';
+    var exportScanLastKey = 0;
+    var EXPORT_SCAN_THRESHOLD = 50;
+    var EXPORT_SCAN_MIN_LEN = 2;
 
     function initExportScanner() {
-        var scanInput = document.getElementById('scanBox');
-        var scanBox = document.getElementById('scannerBox');
-        if (!scanInput) return;
+        // Global scanner: bắt mọi keydown ở document, phân biệt scanner (gõ
+        // nhanh < 50ms/char) với người gõ tay (chậm > 100ms). Khi Enter/Tab
+        // xuất hiện và buffer đủ dài → xử lý như scan.
+        document.addEventListener('keydown', function (e) {
+            var now = Date.now();
+            var gap = now - exportScanLastKey;
+            exportScanLastKey = now;
 
-        refreshScannerState();
-        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        if (whSelect && whSelect.tagName === 'SELECT') {
-            whSelect.addEventListener('change', refreshScannerState);
-        }
+            if (e.ctrlKey || e.altKey || e.metaKey) {
+                exportScanBuf = '';
+                return;
+            }
 
-        scanInput.addEventListener('keydown', function (e) {
-            if (e.key !== 'Enter') return;
-            e.preventDefault();
-            if (exportScannerLocked) return;
-            var serial = scanInput.value.trim();
-            if (!serial) return;
-            handleExportScan(serial);
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                if (exportScanBuf.length >= EXPORT_SCAN_MIN_LEN) {
+                    var serial = exportScanBuf.trim();
+                    exportScanBuf = '';
+                    if (serial && !exportScannerLocked) {
+                        e.preventDefault();
+                        handleExportScan(serial);
+                    }
+                    return;
+                }
+                exportScanBuf = '';
+                return;
+            }
+
+            if (gap > EXPORT_SCAN_THRESHOLD) exportScanBuf = '';
+
+            if (e.key && e.key.length === 1 && !e.isComposing) {
+                exportScanBuf += e.key;
+            } else if (e.key === 'Backspace' && exportScanBuf.length > 0) {
+                exportScanBuf = exportScanBuf.slice(0, -1);
+            }
         });
 
-        scanInput.addEventListener('input', function () {
-            scanInput.classList.remove('success', 'error');
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) exportScanBuf = '';
         });
-
-        setTimeout(function () {
-            if (!scanInput.disabled) scanInput.focus();
-        }, 100);
     }
 
-    function refreshScannerState() {
-        var scanInput = document.getElementById('scanBox');
-        var scanBox = document.getElementById('scannerBox');
-        if (!scanInput) return;
-        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
-        var wh = whSelect ? whSelect.value : '';
-
-        if (!wh) {
-            scanBox.classList.add('disabled');
-            scanInput.disabled = true;
-            scanInput.placeholder = 'Vui lòng chọn kho trước khi quét...';
-        } else {
-            scanBox.classList.remove('disabled');
-            scanInput.disabled = false;
-            scanInput.placeholder = 'Đặt con trỏ vào đây rồi quét mã vạch (hoặc gõ tay rồi Enter)...';
-        }
-    }
-
-    function setScanStatus(msg, type) {
-        var el = document.getElementById('scanStatus');
-        if (!el) return;
-        el.textContent = msg;
-        el.className = '';
-        if (type) el.classList.add(type);
-    }
-
-    function flashScanBox(type) {
-        var inp = document.getElementById('scanBox');
-        if (!inp) return;
-        inp.classList.remove('success', 'error');
-        inp.classList.add(type);
-        setTimeout(function () { inp.classList.remove(type); }, 900);
+    function clearScanBuf() {
+        exportScanBuf = '';
     }
 
     function flashRowSuccess(row) {
@@ -645,13 +663,6 @@
         row.classList.remove('flash');
         void row.offsetWidth;
         row.classList.add('flash');
-    }
-
-    function focusScanBox() {
-        var scanEl = document.getElementById('scanBox');
-        if (scanEl && !scanEl.disabled) {
-            scanEl.focus();
-        }
     }
 
     function handleExportScan(serial) {
@@ -666,8 +677,8 @@
         var whId = whSelect ? whSelect.value : '';
         if (!whId) {
             exportScannerLocked = false;
-            setScanStatus('Vui lòng chọn kho trước khi quét.', 'error');
-            flashScanBox('error');
+            toast('Vui lòng chọn kho trước khi quét.', 'danger');
+            clearScanBuf();
             return;
         }
 
@@ -679,10 +690,8 @@
         if (dupFound) {
             exportScannerLocked = false;
             var dupMsg = 'Số serial "' + serial + '" đã tồn tại trong phiếu này.';
-            setScanStatus(dupMsg, 'error');
-            flashScanBox('error');
             toast(dupMsg, 'danger');
-            focusScanBox();
+            clearScanBuf();
             return;
         }
 
@@ -694,27 +703,20 @@
                 exportScannerLocked = false;
 
                 if (!data || !data.found) {
-                    setScanStatus((data && data.message) ? data.message : 'Số serial không tồn tại trong hệ thống', 'error');
-                    flashScanBox('error');
-                    toast('Số serial "' + serial + '" không tồn tại trong hệ thống', 'danger');
-                    focusScanBox();
+                    toast((data && data.message) ? data.message : ('Số serial "' + serial + '" không tồn tại trong hệ thống'), 'danger');
+                    clearScanBuf();
                     return;
                 }
 
                 if (data.inTargetWarehouse === false) {
-                    setScanStatus('Số serial "' + data.serialNumber + '" không có trong kho này.', 'error');
-                    flashScanBox('error');
                     toast('Số serial "' + data.serialNumber + '" không có trong kho này.', 'danger');
-                    focusScanBox();
+                    clearScanBuf();
                     return;
                 }
 
                 if (data.status !== 'IN_STOCK') {
-                    var msg = 'Số serial "' + data.serialNumber + '" không ở trạng thái IN_STOCK (đang ' + (data.status || 'unknown') + ').';
-                    setScanStatus(msg, 'error');
-                    flashScanBox('error');
-                    toast(msg, 'danger');
-                    focusScanBox();
+                    toast('Số serial "' + data.serialNumber + '" không ở trạng thái IN_STOCK (đang ' + (data.status || 'unknown') + ').', 'danger');
+                    clearScanBuf();
                     return;
                 }
 
@@ -725,17 +727,13 @@
                         if (String(req.genId) === String(data.generatorId)) genOk = true;
                     });
                     if (!genOk) {
-                        setScanStatus('Số serial "' + data.serialNumber + '" (' + (data.generatorModel || '') + ') không thuộc đơn hàng này.', 'error');
-                        flashScanBox('error');
-                        toast('Số serial không thuộc đơn hàng.', 'danger');
-                        focusScanBox();
+                        toast('Số serial "' + data.serialNumber + '" (' + (data.generatorModel || '') + ') không thuộc đơn hàng này.', 'danger');
+                        clearScanBuf();
                         return;
                     }
                     if (isOrderScannedFull(data.generatorId)) {
-                        setScanStatus('Đã quét đủ số lượng ' + (data.generatorModel || 'mẫu này') + ' theo đơn hàng.', 'error');
-                        flashScanBox('error');
-                        toast('Đã đủ số lượng cho mẫu này.', 'danger');
-                        focusScanBox();
+                        toast('Đã quét đủ số lượng ' + (data.generatorModel || 'mẫu này') + ' theo đơn hàng.', 'danger');
+                        clearScanBuf();
                         return;
                     }
                 }
@@ -746,17 +744,13 @@
                         if (String(req.genId) === String(data.generatorId)) genOkT = true;
                     });
                     if (!genOkT) {
-                        setScanStatus('Số serial "' + data.serialNumber + '" (' + (data.generatorModel || '') + ') không thuộc phiếu đề xuất này.', 'error');
-                        flashScanBox('error');
-                        toast('Số serial không thuộc phiếu đề xuất.', 'danger');
-                        focusScanBox();
+                        toast('Số serial "' + data.serialNumber + '" (' + (data.generatorModel || '') + ') không thuộc phiếu đề xuất này.', 'danger');
+                        clearScanBuf();
                         return;
                     }
                     if (isTransferScannedFull(data.generatorId)) {
-                        setScanStatus('Đã quét đủ số lượng ' + (data.generatorModel || 'mẫu này') + ' theo phiếu đề xuất.', 'error');
-                        flashScanBox('error');
-                        toast('Đã đủ số lượng cho mẫu này.', 'danger');
-                        focusScanBox();
+                        toast('Đã quét đủ số lượng ' + (data.generatorModel || 'mẫu này') + ' theo phiếu đề xuất.', 'danger');
+                        clearScanBuf();
                         return;
                     }
                 }
@@ -771,21 +765,17 @@
                 var addedRow = addRowToGroup(group, data.serialNumber, '', data.inventoryId);
                 group.setAttribute('open', '');
                 flashRowSuccess(addedRow);
-                flashScanBox('success');
-                setScanStatus('✓ Đã thêm số serial "' + data.serialNumber + '" (' + (data.generatorModel || '') + ').', 'success');
+                toast('Đã thêm số serial "' + data.serialNumber + '" (' + (data.generatorModel || '') + ')', 'success');
                 updateTotalCounter();
                 validateInventoryRealtime();
 
-                var scanEl = document.getElementById('scanBox');
-                if (scanEl) scanEl.value = '';
-                focusScanBox();
+                clearScanBuf();
             })
             .catch(function (err) {
                 exportScannerLocked = false;
                 console.error(err);
-                setScanStatus('Lỗi kết nối: ' + err.message, 'error');
-                flashScanBox('error');
-                focusScanBox();
+                toast('Lỗi kết nối: ' + err.message, 'danger');
+                clearScanBuf();
             });
     }
 
@@ -1028,6 +1018,78 @@
 
         return valid;
     }
+
+    // ========== Confirm Save Modal ==========
+    function openSaveConfirm() {
+        if (typeof validateReceiptForm === 'function' && !validateReceiptForm()) {
+            return false;
+        }
+        populateSaveSummary();
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.add('show');
+        return false;
+    }
+
+    function closeSaveConfirm() {
+        var modal = document.getElementById('saveConfirmModal');
+        if (modal) modal.classList.remove('show');
+    }
+
+    function doConfirmSave() {
+        closeSaveConfirm();
+        var form = document.getElementById('receiptForm');
+        if (form) form.submit();
+    }
+
+    function populateSaveSummary() {
+        var whEl = document.getElementById('saveSummaryWh');
+        var reasonEl = document.getElementById('saveSummaryReason');
+        var totalEl = document.getElementById('saveSummaryTotal');
+
+        var whSelect = document.querySelector('select[name="warehouseId"], input[name="warehouseId"][type="hidden"]');
+        if (whEl) {
+            if (whSelect && whSelect.tagName === 'SELECT') {
+                whEl.textContent = whSelect.options[whSelect.selectedIndex]
+                    ? whSelect.options[whSelect.selectedIndex].textContent.trim()
+                    : '—';
+            } else if (whSelect) {
+                var disp = document.querySelector('.readonly-field strong');
+                whEl.textContent = disp ? disp.textContent.trim() : '—';
+            } else {
+                whEl.textContent = '—';
+            }
+        }
+
+        var reasonSelect = document.querySelector('select[name="reasonId"], input[name="reasonId"][type="hidden"]');
+        if (reasonEl) {
+            if (reasonSelect && reasonSelect.tagName === 'SELECT') {
+                reasonEl.textContent = reasonSelect.options[reasonSelect.selectedIndex]
+                    ? reasonSelect.options[reasonSelect.selectedIndex].textContent.trim()
+                    : '—';
+            } else if (reasonSelect) {
+                var rdisp = reasonSelect.closest('.form-field');
+                if (rdisp) {
+                    var ssel = rdisp.querySelector('select');
+                    reasonEl.textContent = (ssel && ssel.options[ssel.selectedIndex])
+                        ? ssel.options[ssel.selectedIndex].textContent.trim()
+                        : '—';
+                } else {
+                    reasonEl.textContent = '—';
+                }
+            } else {
+                reasonEl.textContent = '—';
+            }
+        }
+
+        if (totalEl) {
+            var totalSource = document.getElementById('totalRowCount') || document.getElementById('orderScannedCount') || document.getElementById('transferScannedCount') || document.getElementById('plainScannedCount');
+            totalEl.textContent = totalSource ? totalSource.textContent.trim() : '0';
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeSaveConfirm();
+    });
 
     // ========== DOM Ready ==========
     document.addEventListener('DOMContentLoaded', function () {

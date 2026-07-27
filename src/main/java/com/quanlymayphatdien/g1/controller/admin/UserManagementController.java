@@ -5,13 +5,13 @@ import com.quanlymayphatdien.g1.dal.ActivityLogDAO;
 import com.quanlymayphatdien.g1.dal.PermissionDAO;
 import com.quanlymayphatdien.g1.dal.RoleDAO;
 import com.quanlymayphatdien.g1.dal.UserDAO;
+import com.quanlymayphatdien.g1.dal.WarehouseDAO;
 import com.quanlymayphatdien.g1.entity.ActivityLog;
 import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
-import com.quanlymayphatdien.g1.utils.SystemLogger;
-import com.quanlymayphatdien.g1.utils.LogModule;
+
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -59,7 +59,7 @@ public class UserManagementController extends HttpServlet {
                 try {
                     showUpdateForm(request, response);
                 } catch (SQLException ex) {
-                    SystemLogger.error(LogModule.USER, "UserManagementController.showUpdateForm", ex.getMessage(), ex);
+                    ex.printStackTrace();
                     Logger.getLogger(UserManagementController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -181,6 +181,7 @@ public class UserManagementController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         RoleDAO roleDAO = new RoleDAO();
         request.setAttribute("allRoles", roleDAO.findAll());
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.getRequestDispatcher("/view/admin/admin-user-create.jsp").forward(request, response);
     }
 
@@ -216,7 +217,8 @@ public class UserManagementController extends HttpServlet {
             newUser.setStatus(status);
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
-            newUser.setCreatedBy(1);
+            User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+            newUser.setCreatedBy(loggedUser.getId());
             
             UserDAO userDAO = new UserDAO();
             int newUserId = userDAO.insert(newUser);
@@ -239,7 +241,7 @@ public class UserManagementController extends HttpServlet {
             }
 
         } catch (Exception e) {
-            SystemLogger.error(LogModule.USER, "UserManagementController.createUser", e.getMessage(), e);
+            e.printStackTrace();
             request.getSession().setAttribute("message", e.getMessage());
         }
         response.sendRedirect(request.getContextPath() + "/admin/users?action=list");
@@ -257,6 +259,9 @@ public class UserManagementController extends HttpServlet {
                 user.setRoles(roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
                 request.setAttribute("allRoles", roleDAO.findAll());
+
+                WarehouseDAO warehouseDAO = new WarehouseDAO();
+                request.setAttribute("warehouses", warehouseDAO.findAll());
 
                 PermissionDAO perDAO = new PermissionDAO();
                 List<Permission> allPermissions = perDAO.findAll();
@@ -291,6 +296,7 @@ public class UserManagementController extends HttpServlet {
             String phone = request.getParameter("phone");
             String address = request.getParameter("address");
             String status = request.getParameter("status");
+            String warehouseIdStr = request.getParameter("warehouseId");
 
             UserDAO userDAO = new UserDAO();
             RoleDAO roleDAO = new RoleDAO();
@@ -337,8 +343,14 @@ public class UserManagementController extends HttpServlet {
                 user.setPhone(phone);
                 user.setAddress(address);
                 user.setStatus(status);
+                if (warehouseIdStr != null && !warehouseIdStr.isEmpty()) {
+                    user.setWarehouseId(Integer.parseInt(warehouseIdStr));
+                } else {
+                    user.setWarehouseId(null);
+                }
                 user.setUpdatedAt(LocalDateTime.now());
-                user.setUpdatedBy(1);
+                User loggedUserForUpdate = (User) request.getSession().getAttribute("loggedUser");
+                user.setUpdatedBy(loggedUserForUpdate.getId());
 
                 boolean isUpdated = userDAO.update(user);
 
@@ -398,7 +410,7 @@ public class UserManagementController extends HttpServlet {
                 request.getSession().setAttribute("message", "Không tìm thấy tài khoản!");
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.USER, "UserManagementController.updateUser", e.getMessage(), e);
+            e.printStackTrace();
             request.getSession().setAttribute("Error", e.getMessage());
         }
 
@@ -604,8 +616,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                SystemLogger.warn(LogModule.USER, "UserManagementController.listUsers", "Lỗi định dạng trang: " + e.getMessage());
-                page = 1;
+                e.printStackTrace();
             }
         }
 

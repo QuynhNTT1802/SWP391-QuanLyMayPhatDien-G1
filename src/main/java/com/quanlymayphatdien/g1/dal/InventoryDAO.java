@@ -22,6 +22,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
     public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
             String search, String brand, int page, int pageSize) {
+        return findGeneratorSummary(warehouseId, search, brand, null, page, pageSize);
+    }
+
+    public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
+            String search, String brand, String stockStatus, int page, int pageSize) {
         List<GeneratorSummary> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
                 "SELECT g.id, g.model, "
@@ -46,7 +51,21 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             sql.append("AND EXISTS (SELECT 1 FROM generator_category gc JOIN category c ON gc.category_id = c.id WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?) ");
             params.add("%" + brand.trim() + "%");
         }
-        sql.append("GROUP BY g.id, g.model ORDER BY g.model LIMIT ? OFFSET ?");
+        sql.append("GROUP BY g.id, g.model ");
+        if (stockStatus != null) {
+            switch (stockStatus) {
+                case "low":
+                    sql.append("HAVING total_serials > 0 AND total_serials <= 5 ");
+                    break;
+                case "out":
+                    sql.append("HAVING total_serials = 0 ");
+                    break;
+                case "attention":
+                    sql.append("HAVING total_serials <= 5 ");
+                    break;
+            }
+        }
+        sql.append("ORDER BY total_serials ASC, g.model LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
         try {
@@ -73,6 +92,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     }
 
     public int countGeneratorSummary(Integer warehouseId, String search, String brand) {
+        return countGeneratorSummary(warehouseId, search, brand, null);
+    }
+
+    public int countGeneratorSummary(Integer warehouseId, String search, String brand, String stockStatus) {
         StringBuilder sql = new StringBuilder(
                 "SELECT COUNT(DISTINCT g.id) "
               + "FROM generator g "
@@ -92,9 +115,24 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             sql.append("AND EXISTS (SELECT 1 FROM generator_category gc JOIN category c ON gc.category_id = c.id WHERE gc.generator_id = g.id AND c.type = 'brand' AND c.name LIKE ?) ");
             params.add("%" + brand.trim() + "%");
         }
+        sql.append("GROUP BY g.id, g.model ");
+        if (stockStatus != null) {
+            switch (stockStatus) {
+                case "low":
+                    sql.append("HAVING COUNT(i.inventory_id) > 0 AND COUNT(i.inventory_id) <= 5 ");
+                    break;
+                case "out":
+                    sql.append("HAVING COUNT(i.inventory_id) = 0 ");
+                    break;
+                case "attention":
+                    sql.append("HAVING COUNT(i.inventory_id) <= 5 ");
+                    break;
+            }
+        }
+        String countSql = "SELECT COUNT(*) FROM (" + sql.toString() + ") sub";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql.toString());
+            statement = connection.prepareStatement(countSql);
             for (int i = 0; i < params.size(); i++) {
                 statement.setObject(i + 1, params.get(i));
             }
@@ -366,6 +404,115 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return list;
     }
 
+    public int countEligibleForLiquidation(int warehouseId, int minMonthsInStock, String condition) {
+        StringBuilder sql = new StringBuilder(
+                "SELECT COUNT(*) FROM inventory i "
+                + "WHERE i.warehouse_id = ? AND i.status = ? "
+                + "AND i.`condition` IS NOT NULL "
+                + "AND (i.`condition` IN ('DAMAGED','POOR') "
+                + "OR i.created_at <= DATE_SUB(NOW(), INTERVAL ? MONTH))");
+        if (condition != null && !condition.isEmpty() && !"all".equals(condition)) {
+            sql.append(" AND i.`condition` = ?");
+        }
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            int idx = 1;
+            statement.setInt(idx++, warehouseId);
+            statement.setString(idx++, STATUS_IN_STOCK);
+            statement.setInt(idx++, minMonthsInStock);
+            if (condition != null && !condition.isEmpty() && !"all".equals(condition)) {
+                statement.setString(idx++, condition);
+            }
+            resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return 0;
+    }
+
+    public Map<String, Integer> countEligibleByCondition(int warehouseId, int minMonthsInStock) {
+        Map<String, Integer> map = new HashMap<>();
+        String sql = "SELECT i.`condition`, COUNT(*) AS cnt FROM inventory i "
+                + "WHERE i.warehouse_id = ? AND i.status = ? "
+                + "AND i.`condition` IS NOT NULL "
+                + "AND (i.`condition` IN ('DAMAGED','POOR') "
+                + "OR i.created_at <= DATE_SUB(NOW(), INTERVAL ? MONTH)) "
+                + "GROUP BY i.`condition`";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, warehouseId);
+            statement.setString(2, STATUS_IN_STOCK);
+            statement.setInt(3, minMonthsInStock);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                map.put(resultSet.getString(1), resultSet.getInt(2));
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return map;
+    }
+
+    public List<Inventory> findEligibleForLiquidation(int warehouseId, int minMonthsInStock,
+            String condition, int page, int pageSize) {
+        List<Inventory> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder(
+                "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
+                + "FROM inventory i "
+                + "JOIN generator g ON i.generator_id = g.id "
+                + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
+                + "WHERE i.warehouse_id = ? AND i.status = ? "
+                + "AND i.`condition` IS NOT NULL "
+                + "AND (i.`condition` IN ('DAMAGED','POOR') "
+                + "OR i.created_at <= DATE_SUB(NOW(), INTERVAL ? MONTH)) ");
+        if (condition != null && !condition.isEmpty() && !"all".equals(condition)) {
+            sql.append("AND i.`condition` = ? ");
+        }
+        sql.append("ORDER BY FIELD(i.`condition`,'DAMAGED','POOR','GOOD'), g.model, i.created_at, i.inventory_id ");
+        sql.append("LIMIT ? OFFSET ?");
+        int offset = (page - 1) * pageSize;
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql.toString());
+            int idx = 1;
+            statement.setInt(idx++, warehouseId);
+            statement.setString(idx++, STATUS_IN_STOCK);
+            statement.setInt(idx++, minMonthsInStock);
+            if (condition != null && !condition.isEmpty() && !"all".equals(condition)) {
+                statement.setString(idx++, condition);
+            }
+            statement.setInt(idx++, pageSize);
+            statement.setInt(idx++, offset);
+            resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Inventory inv = getFromResultSet(resultSet);
+                try {
+                    inv.setGeneratorModel(resultSet.getString("generator_model"));
+                } catch (SQLException ignored) {
+                }
+                try {
+                    inv.setWarehouseName(resultSet.getString("warehouse_name"));
+                } catch (SQLException ignored) {
+                }
+                list.add(inv);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return list;
+    }
+
     public List<Map<String, Object>> findPendingLiquidationSerialsByWarehouse(int warehouseId) {
         List<Map<String, Object>> result = new ArrayList<>();
         String sql = "SELECT i.serial_number, i.generator_id, i.created_at, g.model AS generator_model, "
@@ -414,12 +561,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return result;
     }
 
-    /**
-     * Lấy tình trạng kiểm kê (GOOD/POOR/DAMAGED) của lần kiểm kê hoàn thành gần
-     * nhất cho từng serial trong danh sách, bất kể trạng thái tồn kho hiện tại.
-     * Dùng cho màn sửa đơn: máy đã nằm trong đơn (PENDING_LIQUIDATION) vẫn cần
-     * hiển thị đúng tình trạng. Trả về Map serial -> status.
-     */
     public Map<String, String> findLatestConditionBySerials(List<String> serials) {
         Map<String, String> result = new HashMap<>();
         if (serials == null || serials.isEmpty()) {

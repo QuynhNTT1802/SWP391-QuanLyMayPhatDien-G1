@@ -29,8 +29,7 @@
                         <h1>Chỉnh sửa máy phát điện</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/generators?action=list">Máy phát điện</a> / <span><c:out value="${generator.model}"/></span></span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                    </div>
+                        </div>
                 </header>
 
                 <main>
@@ -92,15 +91,6 @@
                                         <select class="select" name="originId">
                                             <option value="">-- Chọn xuất xứ --</option>
                                             <c:forEach var="c" items="${origins}">
-                                                <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </div>
-                                    <div class="field">
-                                        <label class="field-label">Tình trạng</label>
-                                        <select class="select" name="conditionId">
-                                            <option value="">-- Chọn tình trạng --</option>
-                                            <c:forEach var="c" items="${conditions}">
                                                 <option value="${c.id}" <c:if test="${selectedCatIds.contains(c.id)}">selected</c:if>>${c.name}</option>
                                             </c:forEach>
                                         </select>
