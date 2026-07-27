@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -52,13 +52,13 @@
                 </div>
 
                 <c:if test="${not empty sessionScope.toastMessage}">
-                    <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                    <div class="toast toast-success">
                         <c:out value="${sessionScope.toastMessage}"/>
                     </div>
                     <c:remove var="toastMessage" scope="session"/>
                 </c:if>
 
-                <form method="get" action="${pageContext.request.contextPath}/inventory-check" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                <form method="get" action="${pageContext.request.contextPath}/inventory-check" class="filter-form">
                     <input type="hidden" name="action" value="list" />
                     <input type="hidden" name="page" value="1" />
                     <div class="search-input">
@@ -76,12 +76,12 @@
                         <option value="doing" <c:if test="${selectedStatus == 'doing'}">selected</c:if>>Đang kiểm kê</option>
                         <option value="completed" <c:if test="${selectedStatus == 'completed'}">selected</c:if>>Đã hoàn thành</option>
                     </select>
-                    <select name="month" class="filter-select" style="width:auto;">
+                    <select name="month" class="filter-select filter-select-auto">
                         <c:forEach var="m" begin="1" end="12">
                             <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
                         </c:forEach>
                     </select>
-                    <input type="number" name="year" value="${year}" class="edit-input" style="width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg);color:var(--text);font-size:13px;">
+                    <input type="number" name="year" value="${year}" class="year-input-inline">
                     <div class="spacer"></div>
                     <c:if test="${not empty search or not empty selectedWarehouse or not empty selectedStatus}">
                         <a href="${pageContext.request.contextPath}/inventory-check" class="btn">
@@ -89,17 +89,17 @@
                             Xoá lọc
                         </a>
                     </c:if>
-                    <button type="button" class="btn" style="background:#fff;color:#000;border:1px solid #ddd;" onclick="exportExcel()">
+                    <button type="button" class="btn btn-export-outline" onclick="exportExcel()">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                         Xuất Excel
                     </button>
                 </form>
 
-                <div class="table-card" style="margin-top:16px;">
+                <div class="table-card">
                     <table class="users">
                         <thead>
                             <tr>
-                                <th style="width:40px;">#</th>
+                                <th class="col-40">#</th>
                                 <th>Mã phiếu</th>
                                 <th>Trạng thái</th>
                                 <th>Người thực hiện</th>
@@ -118,7 +118,7 @@
                                 </c:when>
                                 <c:otherwise>
                                     <c:forEach var="c" items="${checkList}" varStatus="st">
-                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" style="cursor:pointer;">
+                                        <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/inventory-check?action=detail&id=${c.id}'" class="clickable-row">
                                             <td>${fromIndex + st.index}</td>
                                             <td><strong><c:out value="${c.checkCode}"/></strong></td>
                                             <td>

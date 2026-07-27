@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : generator-list
     Created on : May 23, 2026
     Author     : Admin
@@ -20,21 +20,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
-        <style>
-            .alert {
-                display: flex; gap: 12px;
-                padding: 14px 16px;
-                border-radius: var(--radius);
-                border: 1px solid;
-                align-items: flex-start;
-            }
-            .alert-icon { width: 22px; height: 22px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.8; }
-            .alert-body { flex: 1; min-width: 0; }
-            .alert-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-            .alert-text { font-size: 13px; line-height: 1.45; opacity: 0.9; margin-bottom: 10px; }
-            .alert-warn { background: var(--warn-soft, #fff8e1); color: var(--warn, #b45309); border-color: color-mix(in srgb, var(--warn, #b45309) 30%, transparent); }
-            .btn-sm { padding: 4px 10px !important; font-size: 12px !important; }
-        </style>
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/generator.css">
     </head>
     <body>
         <div class="app">
@@ -72,13 +58,13 @@
                     </div>
 
                     <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                        <div class="alert-success">
                             <c:out value="${sessionScope.message}"/>
                         </div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
 
-                    <form method="get" action="${pageContext.request.contextPath}/warehouse/generators" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                    <form method="get" action="${pageContext.request.contextPath}/warehouse/generators" class="filter-form">
                         <input type="hidden" name="action" value="list" />
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
@@ -133,7 +119,7 @@
                                         </c:when>
                                         <c:otherwise>
                                             <c:forEach var="g" items="${generators}">
-                                            <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'" style="cursor:pointer;">
+                                            <tr class="clickable-row" onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/generators?action=view&id=${g.id}'">
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-name-block">

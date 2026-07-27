@@ -94,7 +94,7 @@
                                 <input class="info-input mono" type="text" disabled value="${details.size()} máy">
                             </div>
                         </div>
-                        <div class="form-grid cols-5" style="margin-top: 14px;">
+                        <div class="form-grid cols-5 mt-14">
                             <div class="info-field">
                                 <label>Thời gian bắt đầu</label>
                                 <input class="info-input mono" type="text" disabled value="${check.startedAt}">
@@ -113,8 +113,8 @@
                             </div>
                         </div>
                         <c:if test="${not empty check.notes}">
-                            <div style="padding: 0 20px 18px; margin-top: 14px;">
-                                <div class="info-label" style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;">Ghi chú</div>
+                            <div class="note-section-wrap">
+                                <div class="info-label">Ghi chú</div>
                                 <div class="note-soft"><c:out value="${check.notes}"/></div>
                             </div>
                         </c:if>
@@ -184,14 +184,14 @@
                         <table class="detail-table">
                             <thead>
                                 <tr>
-                                    <th style="width:40px;">#</th>
+                                    <th class="col-40">#</th>
                                     <th>Mã máy</th>
                                     <th>Thương hiệu</th>
                                     <th>SL sổ sách</th>
                                     <th>SL thực tế</th>
                                     <th>Chênh lệch</th>
                                     <th>Ghi chú</th>
-                                    <th style="width:50px;"></th>
+                                    <th class="col-50"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -211,7 +211,7 @@
                                             <td class="qty-actual">
                                                 <c:choose>
                                                     <c:when test="${not empty d.actualQuantity}">${d.actualQuantity}</c:when>
-                                                    <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                    <c:otherwise><span class="text-muted">—</span></c:otherwise>
                                                 </c:choose>
                                             </td>
                                             <td class="col-diff">
@@ -222,19 +222,19 @@
                                                         <c:otherwise><span class="diff-pos">+${-diff}</span></c:otherwise>
                                                     </c:choose>
                                                 </c:if>
-                                                <c:if test="${empty d.actualQuantity}"><span style="color:var(--muted);">—</span></c:if>
+                                                <c:if test="${empty d.actualQuantity}"><span class="text-muted">—</span></c:if>
                                             </td>
                                             <td><c:out value="${not empty d.notes ? d.notes : '—'}"/></td>
                                             <td>
                                                 <button type="button" class="icon-btn toggle-serials"
                                                         data-detail-id="${d.id}"
                                                         title="Xem serials">
-                                                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="6 9 12 15 18 9"/></svg>
+                                                    <svg viewBox="0 0 24 24" class="icon-collapse"><polyline points="6 9 12 15 18 9"/></svg>
                                                 </button>
                                             </td>
                                         </tr>
                                         <tr class="serial-row" data-detail-id="${d.id}">
-                                            <td colspan="8" style="padding: 0;">
+                                            <td colspan="8" class="no-padding">
                                                 <div class="serial-container">
                                                     <c:choose>
                                                         <c:when test="${empty serialsByDetail[d.id]}">
@@ -244,7 +244,7 @@
                                                             <table class="serial-table">
                                                                 <thead>
                                                                     <tr>
-                                                                        <th style="width:30px;">#</th>
+                                                                        <th class="col-30">#</th>
                                                                         <th>Serial</th>
                                                                         <th>Trạng thái</th>
                                                                         <th>Ghi chú</th>
@@ -260,7 +260,7 @@
                                                                                     <c:when test="${s.status == 'GOOD'}"><span class="status-good">Tốt</span></c:when>
                                                                                     <c:when test="${s.status == 'POOR'}"><span class="status-poor">Kém</span></c:when>
                                                                                     <c:when test="${s.status == 'DAMAGED'}"><span class="status-damaged">Hỏng</span></c:when>
-                                                                                    <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
+                                                                                    <c:otherwise><span class="text-muted">—</span></c:otherwise>
                                                                                 </c:choose>
                                                                             </td>
                                                                             <td><c:out value="${not empty s.notes ? s.notes : '—'}"/></td>
@@ -312,7 +312,7 @@
                                             </div>
                                             <div class="history-meta">${log.createdAt}</div>
                                             <c:if test="${not empty log.details}">
-                                                <div style="font-size:12px;color:var(--fg-soft);margin-top:2px;"><c:out value="${log.details}"/></div>
+                                                <div class="history-detail"><c:out value="${log.details}"/></div>
                                             </c:if>
                                         </div>
                                     </div>
@@ -343,22 +343,22 @@
         <div class="modal-card">
             <h3>Trích xuất báo cáo</h3>
             <div class="modal-sub">Chọn khoảng thời gian để xuất báo cáo stock card cho tất cả máy trong phiếu kiểm kê.</div>
-            <form method="GET" action="${pageContext.request.contextPath}/inventory-check?action=exportReport" class="export-form" style="padding: 12px; background: var(--surface-2); border-radius: var(--radius-sm);">
+            <form method="GET" action="${pageContext.request.contextPath}/inventory-check?action=exportReport" class="export-form export-group">
                 <input type="hidden" name="action" value="exportReport" />
                 <input type="hidden" name="checkId" value="${check.id}" />
                 <input type="hidden" name="warehouseId" value="${check.warehouseId}" />
                 <input type="hidden" name="warehouseName" value="<c:out value="${check.warehouseName}"/>" />
-                <div style="display:flex;gap:8px;align-items:center;">
-                    <input type="date" name="fromDate" class="edit-input" style="flex:1;" required max="${today}" />
+                <div class="flex-date-row">
+                    <input type="date" name="fromDate" class="edit-input flex-1" required max="${today}" />
                     <span>→</span>
-                    <input type="date" name="toDate" class="edit-input" style="flex:1;" required max="${today}" />
-                    <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
+                    <input type="date" name="toDate" class="edit-input flex-1" required max="${today}" />
+                    <button type="submit" class="btn btn-primary nowrap">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                         Xuất Excel
                     </button>
                 </div>
             </form>
-            <div class="modal-actions" style="margin-top:12px;">
+            <div class="modal-actions mt-12">
                 <button type="button" class="btn" onclick="closeModal('exportModal')">Đóng</button>
             </div>
         </div>

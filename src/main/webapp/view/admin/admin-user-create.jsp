@@ -19,6 +19,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     </head>
     <body>
@@ -38,14 +39,14 @@
                 <main>
                     <c:if test="${not empty sessionScope.errors}">
                         <c:forEach var="err" items="${sessionScope.errors}">
-                            <div style="background:var(--danger-soft);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 30%,transparent);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                            <div class="alert-danger-soft">
                                 <c:out value="${err.value}"/>
                             </div>
                         </c:forEach>
                     </c:if>
 
                     <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                        <div class="alert-success">
                             <c:out value="${sessionScope.message}"/>
                         </div>
                         <c:remove var="errors" scope="session"/>
@@ -162,7 +163,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                            <div class="form-section form-actions-end">
                                 <a class="btn" href="${pageContext.request.contextPath}/admin/users?action=list">Huỷ</a>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>

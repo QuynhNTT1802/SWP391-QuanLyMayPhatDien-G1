@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : generator-edit
     Created on : May 23, 2026
     Author     : Admin
@@ -18,6 +18,8 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/generator.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
     </head>
     <body>
@@ -37,7 +39,7 @@
 
                     <c:if test="${not empty sessionScope.errors}">
                         <c:forEach var="err" items="${sessionScope.errors}">
-                            <div style="background:#ffeaea;color:#e74c3c;border:1px solid #e7b4b4;border-radius:6px;padding:10px 16px;margin-bottom:8px;font-size:13px;font-weight:600;">
+                            <div class="alert-danger">
                                 <c:out value="${err.value}"/>
                             </div>
                         </c:forEach>
@@ -162,7 +164,7 @@
                                     </div>
                                 </div>
 
-                                <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                                <div class="form-section form-actions-end">
                                     <a class="btn" href="${pageContext.request.contextPath}/warehouse/generators?action=view&id=${generator.id}">Hủy</a>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
