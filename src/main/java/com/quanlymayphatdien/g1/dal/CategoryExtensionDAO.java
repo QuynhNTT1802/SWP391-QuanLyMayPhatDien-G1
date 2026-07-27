@@ -25,12 +25,12 @@ public class CategoryExtensionDAO extends DBContext {
             if (brand.getFoundedYear() != null) {
                 statement.setInt(4, brand.getFoundedYear());
             } else {
-                statement.setNull(4, java.sql.Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
             if (brand.getWarrantyPeriod() != null) {
                 statement.setInt(5, brand.getWarrantyPeriod());
             } else {
-                statement.setNull(5, java.sql.Types.INTEGER);
+                statement.setNull(5, Types.INTEGER);
             }
             statement.executeUpdate();
         } catch (SQLException e) {

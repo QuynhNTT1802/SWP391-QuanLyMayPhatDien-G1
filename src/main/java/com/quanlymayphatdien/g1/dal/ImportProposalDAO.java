@@ -15,6 +15,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -156,11 +158,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND proposal_date >= ?");
-            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+            params.add(Timestamp.valueOf(LocalDate.parse(dateFrom).atStartOfDay()));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND proposal_date < ?");
-            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
+            params.add(Timestamp.valueOf(LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         try {
             connection = getConnection();
@@ -230,7 +232,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             if (t.getSupplierId() != null) {
                 statement.setInt(4, t.getSupplierId());
             } else {
-                statement.setNull(4, java.sql.Types.INTEGER);
+                statement.setNull(4, Types.INTEGER);
             }
             statement.setInt(5, t.getCreatedBy());
             statement.setTimestamp(6, t.getProposalDate() != null
@@ -479,11 +481,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND p.proposal_date >= ?");
-            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+            params.add(Timestamp.valueOf(LocalDate.parse(dateFrom).atStartOfDay()));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND p.proposal_date < ?");
-            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
+            params.add(Timestamp.valueOf(LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         sql.append(" ORDER BY p.proposal_date DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
@@ -540,11 +542,11 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
         }
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND p.proposal_date >= ?");
-            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateFrom).atStartOfDay()));
+            params.add(Timestamp.valueOf(LocalDate.parse(dateFrom).atStartOfDay()));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND p.proposal_date < ?");
-            params.add(java.sql.Timestamp.valueOf(java.time.LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
+            params.add(Timestamp.valueOf(LocalDate.parse(dateTo).plusDays(1).atStartOfDay()));
         }
         try {
             connection = getConnection();
@@ -597,14 +599,14 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                         if (d.getSupplierId() != null) {
                             ps.setInt(3, d.getSupplierId());
                         } else {
-                            ps.setNull(3, java.sql.Types.INTEGER);
+                            ps.setNull(3, Types.INTEGER);
                         }
                         ps.setInt(4, d.getQuantity());
                         ps.setInt(5, d.getCurrentStock());
                         if (d.getUnitPrice() != null) {
                             ps.setBigDecimal(6, d.getUnitPrice());
                         } else {
-                            ps.setNull(6, java.sql.Types.DECIMAL);
+                            ps.setNull(6, Types.DECIMAL);
                         }
                         ps.setString(7, d.getNote());
                         ps.addBatch();
@@ -633,14 +635,14 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
                 if (d.getSupplierId() != null) {
                     ps.setInt(3, d.getSupplierId());
                 } else {
-                    ps.setNull(3, java.sql.Types.INTEGER);
+                    ps.setNull(3, Types.INTEGER);
                 }
                 ps.setInt(4, d.getQuantity());
                 ps.setInt(5, d.getCurrentStock());
                 if (d.getUnitPrice() != null) {
                     ps.setBigDecimal(6, d.getUnitPrice());
                 } else {
-                    ps.setNull(6, java.sql.Types.DECIMAL);
+                    ps.setNull(6, Types.DECIMAL);
                 }
                 ps.setString(7, d.getNote());
                 ps.addBatch();
@@ -836,7 +838,7 @@ public class ImportProposalDAO extends DBContext implements I_DAO<ImportProposal
             if (t.getSupplierId() != null) {
                 statement.setInt(3, t.getSupplierId());
             } else {
-                statement.setNull(3, java.sql.Types.INTEGER);
+                statement.setNull(3, Types.INTEGER);
             }
             statement.setInt(4, t.getProposalId());
             statement.setString(5, GlobalUtils.STATUS_NEEDS_REVISION);

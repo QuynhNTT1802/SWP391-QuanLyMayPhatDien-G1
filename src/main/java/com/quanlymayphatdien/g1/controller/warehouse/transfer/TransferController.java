@@ -150,7 +150,7 @@ public class TransferController extends HttpServlet {
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean isCeo = perms != null && perms.contains("transfers.approve_ceo");
 
-        int scopedWarehouseId = com.quanlymayphatdien.g1.utils.WarehouseAccessUtil.getScopedWarehouseId(session);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
 
         Integer filterUserId = (isCeo && scopedWarehouseId <= 0) ? null : loggedUser.getId();
 
@@ -197,7 +197,7 @@ public class TransferController extends HttpServlet {
         request.setAttribute("destWarehouses", allWarehouses);
         List<Warehouse> sourceWarehouses;
         if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
                 request.setAttribute("scopedWarehouseName", scoped.getName());
@@ -218,7 +218,6 @@ public class TransferController extends HttpServlet {
                 : new LinkedHashMap<>();
         request.setAttribute("inStockByGen", inStockByGen);
 
-        // Build warehouse -> generator (with stock) JSON for client-side filter
         Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
         warehouseData.put(0, new ArrayList<>());
         for (Warehouse w : sourceWarehouses) {
@@ -271,7 +270,6 @@ public class TransferController extends HttpServlet {
         Map<Integer, Integer> inStockByGen = inventoryDAO.countInStockMapByWarehouse(sourceWhId);
         request.setAttribute("inStockByGen", inStockByGen);
 
-        // Build warehouse -> generator (with stock) JSON for client-side filter
         Map<Integer, List<Map<String, Object>>> warehouseData = new LinkedHashMap<>();
         warehouseData.put(0, new ArrayList<>());
         for (Warehouse w : allWarehouses) {
@@ -288,11 +286,10 @@ public class TransferController extends HttpServlet {
         }
         request.setAttribute("warehouseDataJson", new com.google.gson.Gson().toJson(warehouseData));
 
-        // Aggregate transfer details by generatorId to pre-fill quantities
         Map<Integer, Integer> detailQtyMap = new LinkedHashMap<>();
         Map<Integer, String> detailNoteMap = new LinkedHashMap<>();
         if (t.getDetails() != null) {
-            for (com.quanlymayphatdien.g1.entity.TransferDetail d : t.getDetails()) {
+            for (TransferDetail d : t.getDetails()) {
                 int gid = d.getGeneratorId();
                 detailQtyMap.put(gid, detailQtyMap.getOrDefault(gid, 0) + 1);
                 String existingNote = detailNoteMap.get(gid);
@@ -331,7 +328,7 @@ public class TransferController extends HttpServlet {
 
         boolean isOwner = (t.getCreatedBy() == user.getId());
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
-        int scopedWarehouseId = com.quanlymayphatdien.g1.utils.WarehouseAccessUtil.getScopedWarehouseId(session);
+        int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
         boolean isCeo = perms != null && perms.contains("transfers.approve_ceo");
         boolean isUnrestricted = scopedWarehouseId <= 0;
         boolean isSourceStaff = isUnrestricted || (scopedWarehouseId == t.getSourceWarehouseId());
@@ -969,7 +966,7 @@ public class TransferController extends HttpServlet {
             }
             Integer scopedWh = null;
             try {
-                scopedWh = new com.quanlymayphatdien.g1.dal.UserDAO().getScopedWarehouseId(u.getId());
+                scopedWh = new UserDAO().getScopedWarehouseId(u.getId());
             } catch (Exception ex) {
                 continue;
             }

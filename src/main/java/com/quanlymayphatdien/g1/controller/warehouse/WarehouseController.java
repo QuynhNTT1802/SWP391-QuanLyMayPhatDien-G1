@@ -16,6 +16,7 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet(name = "WarehouseController", urlPatterns = {"/warehouse"})
@@ -323,7 +324,7 @@ public class WarehouseController extends HttpServlet {
             StringBuilder desc = new StringBuilder();
             desc.append(username).append(" đã cập nhật kho '").append(oldName).append("'");
 
-            java.util.List<String> changes = new java.util.ArrayList<>();
+            List<String> changes = new ArrayList<>();
             if (nameChanged) {
                 changes.add("Tên: " + normalizeLogString(oldName) + " -> " + normalizeLogString(newName));
             }

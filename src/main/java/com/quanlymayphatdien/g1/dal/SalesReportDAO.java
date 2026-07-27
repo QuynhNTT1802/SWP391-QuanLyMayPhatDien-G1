@@ -1,5 +1,6 @@
 package com.quanlymayphatdien.g1.dal;
 
+import com.quanlymayphatdien.g1.entity.Customer;
 import com.quanlymayphatdien.g1.entity.SaleOrder;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -172,7 +173,7 @@ public class SalesReportDAO extends BaseReportDAO {
                     so.setOrderDate(resultSet.getTimestamp("order_date"));
                 }
                 try {
-                    com.quanlymayphatdien.g1.entity.Customer c = new com.quanlymayphatdien.g1.entity.Customer();
+                    Customer c = new Customer();
                     c.setName(resultSet.getString("customer_name"));
                     so.setCustomer(c);
                 } catch (Exception e) {

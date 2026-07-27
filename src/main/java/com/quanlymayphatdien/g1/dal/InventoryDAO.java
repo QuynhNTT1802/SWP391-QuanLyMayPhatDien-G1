@@ -3,6 +3,8 @@ package com.quanlymayphatdien.g1.dal;
 import com.quanlymayphatdien.g1.entity.GeneratorSummary;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -908,11 +910,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return result;
     }
 
-    /**
-     * Kiem tra serial co dang IN_STOCK o dung kho khong (dung cho xuat kho).
-     * Tra ve true neu OK, false neu khong ton tai hoac khong o trang thai
-     * IN_STOCK.
-     */
     public boolean isInStockAtWarehouse(Connection conn, String serialNumber, int warehouseId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ? AND warehouse_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -1418,11 +1415,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
         if (from != null) {
             w.append(" AND DATE(i.created_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(i.created_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND i.warehouse_id = ?");
@@ -1548,11 +1545,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
         if (from != null) {
             w.append(" AND DATE(sc.created_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(sc.created_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND sc.warehouse_id = ?");
@@ -1620,7 +1617,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             while (resultSet.next()) {
                 Map<String, Object> r = new java.util.HashMap<>();
                 r.put("inventoryId", resultSet.getInt("inventory_id"));
@@ -1631,7 +1628,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 r.put("warehouseName", resultSet.getString("warehouse_name"));
                 r.put("importReceiptCode", resultSet.getString("import_receipt_code"));
                 r.put("condition", resultSet.getString("condition"));
-                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                LocalDateTime createdAt = resultSet.getObject("created_at", LocalDateTime.class);
                 r.put("createdAtStr", createdAt != null ? createdAt.toLocalDate().format(df) : "");
                 list.add(r);
             }

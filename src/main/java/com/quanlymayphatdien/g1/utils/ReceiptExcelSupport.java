@@ -4,11 +4,13 @@
  */
 package com.quanlymayphatdien.g1.utils;
 
+import com.quanlymayphatdien.g1.entity.Category;
 import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.PurchaseOrderDetail;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -194,22 +196,11 @@ public class ReceiptExcelSupport {
         return result;
     }
 
-    /**
-     * Bo dau " (*)" o cuoi header (template tu danh dau cot bat buoc).
-     * "Ma may (*)" -> "Ma may", "Serial (*)" -> "Serial".
-     */
     private static String stripRequiredMarker(String s) {
         if (s == null) return "";
         return s.replaceAll("\\s*\\(\\*\\)\\s*$", "").trim();
     }
 
-    /**
-     * Map mot ten cot Excel ve canonical key (COL_MODEL / COL_SERIAL / COL_NOTE)
-     * de controller co the tra cuu nhat quan. So khop khong phan biet hoa thuong
-     va khong dau (Vi khong dau).
-     *
-     * Tra ve null neu khong nhan dien duoc.
-     */
     public static String canonicalHeader(String header) {
         if (header == null) return null;
         String normalized = removeDiacritics(header.trim().toLowerCase());
@@ -236,7 +227,7 @@ public class ReceiptExcelSupport {
 
     private static String removeDiacritics(String s) {
         if (s == null) return "";
-        String normalized = java.text.Normalizer.normalize(s, java.text.Normalizer.Form.NFD);
+        String normalized = Normalizer.normalize(s, Normalizer.Form.NFD);
         return normalized.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 
@@ -282,7 +273,7 @@ public class ReceiptExcelSupport {
             row.createCell(1).setCellValue(g != null ? g.getModel() : "");
             String brand = "";
             if (g != null && g.getCategories() != null) {
-                for (com.quanlymayphatdien.g1.entity.Category c : g.getCategories()) {
+                for (Category c : g.getCategories()) {
                     if ("brand".equals(c.getType())) {
                         brand = c.getName();
                         break;
