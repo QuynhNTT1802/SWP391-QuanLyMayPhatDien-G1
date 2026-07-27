@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
@@ -26,10 +26,27 @@
                 <h1>Chi tiết kiểm kê</h1>
                 <span class="crumb">/ <a href="${pageContext.request.contextPath}/inventory-check">Kiểm kê</a> / <span><c:out value="${check.checkCode}"/></span></span>
                 <div class="top-actions">
-                    </div>
+                    <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
+                        <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
+                    </button>
+                </div>
             </header>
 
             <main>
+                <c:if test="${not empty sessionScope.error}">
+                    <div class="toast toast-danger">
+                        <c:out value="${sessionScope.error}"/>
+                    </div>
+                    <c:remove var="error" scope="session"/>
+                </c:if>
+                <c:if test="${not empty sessionScope.toastMessage}">
+                    <div class="toast ${sessionScope.toastType == 'danger' ? 'toast-danger' : 'toast-success'}">
+                        <c:out value="${sessionScope.toastMessage}"/>
+                    </div>
+                    <c:remove var="toastMessage" scope="session"/>
+                    <c:remove var="toastType" scope="session"/>
+                </c:if>
                 <div class="header-bar">
                     <div class="left">
                         <a class="back-link" href="${pageContext.request.contextPath}/inventory-check">

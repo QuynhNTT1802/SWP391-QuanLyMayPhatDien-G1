@@ -19,21 +19,18 @@ import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import java.time.LocalDate;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 @WebServlet(name = "InventoryCheckController", urlPatterns = {"/inventory-check"})
@@ -484,20 +481,6 @@ public class InventoryCheckController extends HttpServlet {
             return;
         }
 
-        int nullStatusCount = checkDAO.countNullStatusByCheckId(checkId);
-        if (nullStatusCount < 0) {
-            session.setAttribute("error",
-                    "Không thể hoàn thành: lỗi khi kiểm tra trạng thái số serial, vui lòng thử lại");
-            response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
-            return;
-        }
-        if (nullStatusCount > 0) {
-            session.setAttribute("error",
-                    "Không thể hoàn thành: còn " + nullStatusCount + " số serial chưa được đánh giá tình trạng (Tốt/Kém/Hỏng)");
-            response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
-            return;
-        }
-
         boolean ok = checkDAO.complete(checkId);
         if (ok) {
             for (InventoryCheckSerial s : checkDAO.findSerialsByCheckId(checkId)) {
@@ -527,7 +510,7 @@ public class InventoryCheckController extends HttpServlet {
                             + " phát hiện chênh lệch máy " + d.getGeneratorModel()
                             + " (" + (diff > 0 ? "thiếu " + diff : "thừa " + (-diff)) + ")."
                             + " Vui lòng kiểm tra và tạo phiếu nhập/xuất bù.";
-                    String link = "/inventory-check?action=detail&id=" + checkId;
+                    String link = request.getContextPath() + "/inventory-check?action=detail&id=" + checkId;
                     NotificationUtil.sendToRole("warehouse_staff", title, message, link,
                             "inventory_check", checkId);
                 }

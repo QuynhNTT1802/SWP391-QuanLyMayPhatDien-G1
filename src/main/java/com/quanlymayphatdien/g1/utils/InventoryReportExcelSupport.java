@@ -63,12 +63,6 @@ public class InventoryReportExcelSupport {
         numStyle.setFont(dataFont);
         numStyle.setAlignment(HorizontalAlignment.CENTER);
 
-        CellStyle totalStyle = wb.createCellStyle();
-        totalStyle.setFont(dataFont);
-        totalStyle.setFillForegroundColor(new XSSFColor(new byte[]{(byte) 242, (byte) 242, (byte) 242}, null));
-        totalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        totalStyle.setBorderTop(BorderStyle.MEDIUM);
-
         String range = DF.format(fromDate) + " - " + DF.format(toDate);
         String wh = warehouseName != null && !warehouseName.isEmpty() ? warehouseName : "Tất cả kho";
 

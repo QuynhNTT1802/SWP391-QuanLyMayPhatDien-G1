@@ -27,6 +27,7 @@
             <h1>Chi tiết nhà cung cấp</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Nhà cung cấp</a> / <span id="crumbId"><c:out value="${supplier.name}"/></span></span>
             <div class="top-actions">
+                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=update&id=${supplier.id}">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                     Chỉnh sửa
@@ -52,23 +53,7 @@
                 <div class="hero-body">
                     <h2 class="hero-name">
                         <c:out value="${supplier.name}"/>
-                        <c:if test="${not empty supplierTypeName}">
-                            <span class="verified"><c:out value="${supplierTypeName}"/></span>
-                        </c:if>
                     </h2>
-                    <div class="hero-meta">
-                        <span class="mono"><c:out value="${supplier.phone}"/></span>
-                        <span class="sep">·</span>
-                        <span class="id">#<c:out value="${supplier.id}"/></span>
-                        <span class="sep">·</span>
-                        <span>Tạo ngày <c:out value="${createdDate}"/></span>
-                    </div>
-                    <div class="hero-pills">
-                        <c:choose>
-                            <c:when test="${supplier.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${supplier.status == 'locked'}"><span class="pill status-locked"><span class="pdot"></span>Bị khóa</span></c:when>
-                        </c:choose>
-                    </div>
                 </div>
             </div>
 
@@ -76,7 +61,7 @@
                 <div class="tabs">
                     <button type="button" class="tab active" data-tab="info">Thông tin cơ bản</button>
                     <button type="button" class="tab" data-tab="orders">Đơn hàng</button>
-                    <button type="button" class="tab" data-tab="history">Nhật ký hoạt động</button>
+                    <button type="button" class="tab" data-tab="history">Nhật ký chỉnh sửa</button>
                 </div>
 
                 <div class="tab-panel active" id="tab-info">

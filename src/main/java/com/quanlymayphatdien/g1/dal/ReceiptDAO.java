@@ -437,20 +437,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
             }
         }
-        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        String latestSql = "SELECT quantity_after FROM stock_card WHERE warehouse_id = ? AND generator_id = ? ORDER BY created_at DESC, stock_card_id DESC LIMIT 1";
         for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
             int genId = entry.getKey();
             int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+            int prevQty = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(latestSql)) {
                 qtyPs.setInt(1, warehouseId);
                 qtyPs.setInt(2, genId);
                 try (ResultSet qtyRs = qtyPs.executeQuery()) {
                     if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
+                        prevQty = qtyRs.getInt(1);
                     }
                 }
             }
+            int qtyAfter = Math.max(0, prevQty - totalQty);
             StockCard sc = new StockCard();
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);
@@ -746,20 +747,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
             }
         }
-        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        String latestSql = "SELECT quantity_after FROM stock_card WHERE warehouse_id = ? AND generator_id = ? ORDER BY created_at DESC, stock_card_id DESC LIMIT 1";
         for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
             int genId = entry.getKey();
             int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+            int prevQty = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(latestSql)) {
                 qtyPs.setInt(1, warehouseId);
                 qtyPs.setInt(2, genId);
                 try (ResultSet qtyRs = qtyPs.executeQuery()) {
                     if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
+                        prevQty = qtyRs.getInt(1);
                     }
                 }
             }
+            int qtyAfter = prevQty + totalQty;
             StockCard sc = new StockCard();
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);
@@ -777,7 +779,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     /**
      * Ghi stock_card theo generator cho mot phieu xuat (EXPORT) moi tao.
      * Moi generator_id se tao mot stock_card voi quantity_change = -size(group)
-     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
+     * va quantity_after = so luong luy ke tru di luong xuat.
      *
      * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
      * de dam bao atomic.
@@ -793,20 +795,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
             }
         }
-        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        String latestSql = "SELECT quantity_after FROM stock_card WHERE warehouse_id = ? AND generator_id = ? ORDER BY created_at DESC, stock_card_id DESC LIMIT 1";
         for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
             int genId = entry.getKey();
             int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+            int prevQty = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(latestSql)) {
                 qtyPs.setInt(1, warehouseId);
                 qtyPs.setInt(2, genId);
                 try (ResultSet qtyRs = qtyPs.executeQuery()) {
                     if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
+                        prevQty = qtyRs.getInt(1);
                     }
                 }
             }
+            int qtyAfter = Math.max(0, prevQty - totalQty);
             StockCard sc = new StockCard();
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);

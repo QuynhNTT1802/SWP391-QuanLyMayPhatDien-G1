@@ -87,7 +87,7 @@
                             </div>
                             <div class="field">
                                 <label class="field-label">Tên công ty</label>
-                                <input class="input" name="companyName" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldCompanyName}"/>" />
+                                <input maxlength ="255" class="input" name="companyName" placeholder="VD: Công ty TNHH ABC" value="<c:out value="${sessionScope.fieldCompanyName}"/>" />
                             </div>
                             <div class="field full-width">
                                 <label class="field-label">Địa chỉ</label>

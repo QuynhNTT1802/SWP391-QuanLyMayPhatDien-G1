@@ -63,6 +63,7 @@ public class ProposalController extends HttpServlet {
 
         try {
             request.setAttribute("activePage", "proposal");
+            request.setAttribute("propFmt", java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
             switch (action) {
                 case "create":
                     showCreateForm(request, response);

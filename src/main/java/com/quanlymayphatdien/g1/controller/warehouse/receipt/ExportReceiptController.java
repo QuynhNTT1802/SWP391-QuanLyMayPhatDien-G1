@@ -391,6 +391,14 @@ public class ExportReceiptController extends HttpServlet {
             LiquidationDAO liqDAO = new LiquidationDAO();
             Liquidation liq = liqDAO.findById(liqId);
             if (liq != null && GlobalUtils.LIQUIDATION_STATUS_APPROVED.equalsIgnoreCase(liq.getStatus())) {
+                if (scopedWarehouseId > 0 && scopedWarehouseId != liq.getWarehouseId()) {
+                    response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                    return;
+                }
+                Warehouse liqWh = warehouseDAO.findById(liq.getWarehouseId());
+                if (liqWh != null) {
+                    request.setAttribute("warehouses", Collections.singletonList(liqWh));
+                }
                 LiquidationDetailDAO liqDetailDAO = new LiquidationDetailDAO();
                 List<LiquidationDetail> liqDetails = liqDetailDAO.findByLiquidationId(liqId);
                 Receipt prefill = new Receipt();
@@ -770,18 +778,19 @@ public class ExportReceiptController extends HttpServlet {
         if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
             errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
         }
+        int liquidationId = parseId(request.getParameter("liquidationId"));
+        boolean isLiquidation = liquidationId > 0;
         if (errors.isEmpty() && warehouseId > 0) {
-            validateInventoryAvailability(warehouseId, details, errors);
+            validateInventoryAvailability(warehouseId, details, errors, isLiquidation);
+        }
+
+        if (liquidationId > 0) {
+            validateLiquidationCompleteness(liquidationId, details, errors);
         }
 
         int orderId = parseId(request.getParameter("orderId"));
         if (orderId > 0) {
             validateOrderCompleteness(orderId, details, errors);
-        }
-
-        int liquidationId = parseId(request.getParameter("liquidationId"));
-        if (liquidationId > 0) {
-            validateLiquidationCompleteness(liquidationId, details, errors);
         }
 
         if (!errors.isEmpty()) {
@@ -1239,7 +1248,7 @@ public class ExportReceiptController extends HttpServlet {
         return details;
     }
 
-    private void validateInventoryAvailability(int warehouseId, List<ReceiptDetail> details, List<String> errors) {
+    private void validateInventoryAvailability(int warehouseId, List<ReceiptDetail> details, List<String> errors, boolean isLiquidation) {
         if (warehouseId <= 0 || details == null || details.isEmpty()) {
             return;
         }
@@ -1254,7 +1263,7 @@ public class ExportReceiptController extends HttpServlet {
         for (Map.Entry<Integer, Integer> entry : requiredByGen.entrySet()) {
             int genId = entry.getKey();
             int required = entry.getValue();
-            int onHand = inventoryDAO.findInStockByWarehouseAndGenerator(warehouseId, genId).size();
+            int onHand = inventoryDAO.findAvailableForExportByWarehouseAndGenerator(warehouseId, genId, isLiquidation).size();
             if (onHand < required) {
                 Generator gen = genDAO.findById(genId);
                 String model = (gen != null && gen.getModel() != null && !gen.getModel().isEmpty())

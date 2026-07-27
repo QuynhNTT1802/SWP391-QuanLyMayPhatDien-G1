@@ -653,42 +653,7 @@ td.col-actions, th.col-actions {
 }
 
 .user-cell {
-    display: flex;
-    align-items: center;
-    gap: 10px;
     min-width: 0;
-}
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--bg);
-}
-.user-avatar.green {
-    background: oklch(60% 0.16 145);
-}
-.user-avatar.blue {
-    background: oklch(58% 0.14 250);
-}
-.user-avatar.orange {
-    background: oklch(64% 0.15 50);
-}
-.user-avatar.purple {
-    background: oklch(58% 0.16 295);
-}
-.user-avatar.pink {
-    background: oklch(62% 0.18 0);
-}
-.user-avatar.teal {
-    background: oklch(58% 0.13 195);
-}
-.user-avatar.grey {
-    background: oklch(55% 0.01 240);
 }
 .user-name-block {
     line-height: 1.3;

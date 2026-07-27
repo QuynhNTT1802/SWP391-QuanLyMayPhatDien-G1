@@ -75,7 +75,7 @@ public class ProposalExcelSupport {
             Row row = sheet.createRow(1);
             int col = 0;
             row.createCell(col++).setCellValue(1);
-            row.createCell(col++).setCellValue("EG4500CX");
+            row.createCell(col++).setCellValue("Cummins GEN83D2K");
             row.createCell(col++).setCellValue(2);
             row.createCell(col++).setCellValue(18_000_000);
         }

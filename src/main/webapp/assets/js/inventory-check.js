@@ -1,5 +1,3 @@
-const APP_CTX = window.APP_CTX || '';
-
 function exportExcel() {
     var form = document.querySelector('form.filter-form[action*="inventory-check"]');
     if (!form) return;

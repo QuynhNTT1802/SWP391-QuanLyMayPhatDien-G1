@@ -270,19 +270,23 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
 
     public List<Inventory> findInStockByWarehouseAndGenerator(int warehouseId, int generatorId) {
+        return findAvailableForExportByWarehouseAndGenerator(warehouseId, generatorId, false);
+    }
+
+    public List<Inventory> findAvailableForExportByWarehouseAndGenerator(int warehouseId, int generatorId, boolean isLiquidation) {
         List<Inventory> list = new ArrayList<>();
         String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE i.warehouse_id = ? AND i.generator_id = ? AND i.status = ? "
+                + "WHERE i.warehouse_id = ? AND i.generator_id = ? "
+                + (isLiquidation ? "AND i.status IN ('IN_STOCK', 'PENDING_LIQUIDATION') " : "AND i.status = 'IN_STOCK' ")
                 + "ORDER BY i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
             statement.setInt(2, generatorId);
-            statement.setString(3, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);

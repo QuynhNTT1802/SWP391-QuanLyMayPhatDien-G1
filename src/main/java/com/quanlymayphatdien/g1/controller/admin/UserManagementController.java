@@ -11,8 +11,6 @@ import com.quanlymayphatdien.g1.entity.Permission;
 import com.quanlymayphatdien.g1.entity.Role;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.BCryptUtils;
-
-import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -120,18 +118,6 @@ public class UserManagementController extends HttpServlet {
                 user.setRoles(roleDAO.getRolesByUserId(userId));
                 request.setAttribute("user", user);
 
-                String name = user.getName() != null ? user.getName().trim() : "";
-                String initials = "";
-
-                if (!name.isEmpty()) {
-                    String[] parts = name.split(" ");
-                    if (parts.length == 1) {
-                        initials = parts[0].substring(0, 1);
-                    } else {
-                        initials = parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1);
-                    }
-                }
-                request.setAttribute("userInitials", initials.toUpperCase());
                 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 request.setAttribute("createdDate", user.getCreatedAt() != null ? user.getCreatedAt().format(dtf) : "—");
                 request.setAttribute("updatedDate", user.getUpdatedAt() != null ? user.getUpdatedAt().format(dtf) : "—");
@@ -623,8 +609,6 @@ public class UserManagementController extends HttpServlet {
         UserDAO userDAO = new UserDAO();
         List<User> users = userDAO.findUsersWithRoles(roleFilter, statusFilter, searchFilter, page, pageSize);
 
-        prepareUserDisplayData(users, request);
-
         int totalUsers = userDAO.getTotalFilteredUsers(roleFilter, statusFilter, searchFilter);
         int totalPages = (int) Math.ceil((double) totalUsers / pageSize);
 
@@ -641,35 +625,6 @@ public class UserManagementController extends HttpServlet {
         request.getRequestDispatcher("/view/admin/admin-user.jsp").forward(request, response);
     }
 
-    private void prepareUserDisplayData(List<User> users, HttpServletRequest request) {
-        List<String> userInitials = new ArrayList<>();
-        List<String> userAvatarClass = new ArrayList<>();
-        String[] avatarColors = {"green", "blue", "orange", "purple", "pink", "teal", "grey"};
-
-        for (int i = 0; i < users.size(); i++) {
-            User u = users.get(i);
-
-            String name = u.getName() != null ? u.getName().trim() : "";
-            String initials = "";
-
-            if (!name.isEmpty()) {
-                String[] parts = name.split(" ");
-                if (parts.length == 1) {
-                    initials = parts[0].substring(0, 1);
-                } else {
-                    initials = parts[0].substring(0, 1) + parts[parts.length - 1].substring(0, 1);
-                }
-            } else {
-                initials = "?";
-            }
-
-            userInitials.add(initials.toUpperCase());
-            userAvatarClass.add(avatarColors[i % avatarColors.length]);
-        }
-
-        request.setAttribute("userInitials", userInitials);
-        request.setAttribute("userAvatarClass", userAvatarClass);
-    }
 
     private void logActivity(HttpServletRequest request, String entityType,
             int entityId, String entityName, String action, String details) {

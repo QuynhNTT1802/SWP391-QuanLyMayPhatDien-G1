@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : admin-user
     Created on : May 15, 2026, 9:23:11 AM
     Author     : Aadmin
@@ -72,6 +72,7 @@
                                 <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
                                 <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên bán hàng</option>
                                 <option value="sale_manager" <c:if test="${roleFilter == 'sale_manager'}">selected</c:if>>Quản lý bán hàng</option>
+                                <option value="ceo" <c:if test="${roleFilter == 'ceo'}">selected</c:if>>CEO</option>
                             </select>
                                 <select class="filter-select" name="status" onchange="this.form.submit()">
                                     <option value="">Trạng thái: Tất cả</option>
@@ -88,7 +89,7 @@
                         <table class="users" id="usersTable">
                             <thead>
                                 <tr>
-                                    <th class="sortable" data-sort="name">Người dùng <span class="sort-ind"></span></th>
+                                    <th>Người dùng</th>
                                     <th>Vai trò</th>
                                     <th>Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
@@ -99,13 +100,10 @@
                                     <c:when test="${empty users}">
                                     </c:when>
                                     <c:otherwise>
-                                        <c:forEach var="user" items="${users}" varStatus="loop">
+                                        <c:forEach var="user" items="${users}">
                                             <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a')) location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'">
                                                 <td>
                                                     <div class="user-cell">
-                                                        <div class="user-avatar <c:out value="${userAvatarClass[loop.index]}"/>">
-                                                            <c:out value="${userInitials[loop.index]}"/>
-                                                        </div>
                                                         <div class="user-name-block">
                                                             <div class="user-name"><c:out value="${user.name}"/></div>
                                                             <div class="user-email"><c:out value="${user.email}"/></div>
@@ -117,9 +115,9 @@
                                                         <c:choose>
                                                             <c:when test="${role.roleName == 'admin'}"><span class="pill role-admin"><span class="pdot"></span>Quản trị viên</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kho</span></c:when>
-                                                            <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Thủ kho</span></c:when>
-                                                            <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý bán hàng</span></c:when>
-                                                            <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên</span></c:when>
+                                                            <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Nhân viên kho</span></c:when>
+                                                            <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kinh doanh</span></c:when>
+                                                            <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên kinh doanh</span></c:when>
                                                             <c:when test="${role.roleName == 'ceo'}"><span class="pill role-ceo"><span class="pdot"></span>CEO</span></c:when>
                                                             <c:otherwise><span class="pill role-staff"><span class="pdot"></span><c:out value="${role.roleName}"/></span></c:otherwise>
                                                             </c:choose>
