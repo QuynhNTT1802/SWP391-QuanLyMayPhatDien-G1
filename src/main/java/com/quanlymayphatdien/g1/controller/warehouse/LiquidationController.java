@@ -25,6 +25,7 @@ import com.quanlymayphatdien.g1.entity.Generator;
 import com.quanlymayphatdien.g1.entity.Receipt;
 import com.quanlymayphatdien.g1.entity.ReceiptDetail;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -322,11 +323,11 @@ public class LiquidationController extends HttpServlet {
         List<Liquidation> list = liquidationDAO.findWithPagination(limit, offset, search, statusFilter, filterUserId);
 
         java.util.Map<String, Integer> kpis = liquidationDAO.getKpiCounts(filterUserId);
-        int kpiPendingCeo = kpis.getOrDefault("PENDING_CEO", 0);
-        int kpiApproved = kpis.getOrDefault("APPROVED", 0);
-        int kpiCompleted = kpis.getOrDefault("COMPLETED", 0);
-        int kpiRequestEdit = kpis.getOrDefault("CEO_REQUEST_EDIT", 0);
-        int kpiRejected = kpis.getOrDefault("CANCELLED", 0);
+        int kpiPendingCeo = kpis.getOrDefault(GlobalUtils.LIQUIDATION_STATUS_PENDING_CEO, 0);
+        int kpiApproved = kpis.getOrDefault(GlobalUtils.LIQUIDATION_STATUS_APPROVED, 0);
+        int kpiCompleted = kpis.getOrDefault(GlobalUtils.LIQUIDATION_STATUS_COMPLETED, 0);
+        int kpiRequestEdit = kpis.getOrDefault(GlobalUtils.LIQUIDATION_STATUS_CEO_REQUEST_EDIT, 0);
+        int kpiRejected = kpis.getOrDefault(GlobalUtils.LIQUIDATION_STATUS_CANCELLED, 0);
 
         request.setAttribute("kpiPendingCeo", kpiPendingCeo);
         request.setAttribute("kpiApproved", kpiApproved);
@@ -388,10 +389,10 @@ public class LiquidationController extends HttpServlet {
 
         // === EDIT MODE DATA (inline editing on detail page, replacing separate edit page) ===
         String st = l.getStatus();
-        boolean isEditMode = "CEO_REQUEST_EDIT".equals(st);
+        boolean isEditMode = GlobalUtils.LIQUIDATION_STATUS_CEO_REQUEST_EDIT.equals(st);
         request.setAttribute("isEditMode", isEditMode);
 
-        boolean isApproved = "APPROVED".equals(st);
+        boolean isApproved = GlobalUtils.LIQUIDATION_STATUS_APPROVED.equals(st);
         request.setAttribute("isApproved", isApproved);
 
         if (isEditMode) {
@@ -418,8 +419,37 @@ public class LiquidationController extends HttpServlet {
                     selectedSerials.add(d.getSerialNumber());
                 }
             }
+            String pageParam = request.getParameter("page");
+            int page = 1;
+            if (pageParam != null && !pageParam.trim().isEmpty()) {
+                try { page = Integer.parseInt(pageParam.trim()); } catch (NumberFormatException ignore) {}
+            }
+            if (page < 1) page = 1;
+            int pageSize = 6;
 
-            List<Inventory> inStock = inventoryDAO.findInStockByWarehouse(whId);
+            String condParam = request.getParameter("cond");
+            String condSqlFilter = (condParam != null && !condParam.trim().isEmpty()) ? condParam.trim() : "all";
+            String condSql = !"all".equals(condSqlFilter) ? condSqlFilter : null;
+            request.setAttribute("condFilter", condSqlFilter);
+
+            Map<String, Integer> condCounts = inventoryDAO.countEligibleByCondition(whId, 6);
+            int cGood = condCounts.getOrDefault("GOOD", 0);
+            int cPoor = condCounts.getOrDefault("POOR", 0);
+            int cDamaged = condCounts.getOrDefault("DAMAGED", 0);
+            int cAll = cGood + cPoor + cDamaged;
+            request.setAttribute("condCountGood", cGood);
+            request.setAttribute("condCountPoor", cPoor);
+            request.setAttribute("condCountDamaged", cDamaged);
+            request.setAttribute("condCountAll", cAll);
+
+            int totalItems = inventoryDAO.countEligibleForLiquidation(whId, 6, condSql);
+            int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("totalItems", totalItems);
+            request.setAttribute("totalPages", totalPages);
+
+            List<Inventory> inStock = inventoryDAO.findEligibleForLiquidation(whId, 6, condSql, page, pageSize);
             List<Map<String, Object>> pickRows = buildPickRows(inStock, selectedSerials);
 
             // Add missing serials (PENDING_LIQUIDATION) for same warehouse
@@ -713,7 +743,7 @@ public class LiquidationController extends HttpServlet {
             conn = inventoryDAO.getConnection();
             conn.setAutoCommit(false);
 
-            int affected = inventoryDAO.claimInStockBatch(conn, serialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
+            int affected = inventoryDAO.claimInStockBatch(conn, serialList, warehouseId, GlobalUtils.INVENTORY_STATUS_PENDING_LIQUIDATION);
             if (affected != serialList.size()) {
                 List<String> bad = inventoryDAO.findUnavailableSerials(conn, serialList, warehouseId);
                 conn.rollback();
@@ -730,7 +760,7 @@ public class LiquidationController extends HttpServlet {
             l.setCreatedBy(user.getId());
             l.setReasonId(reasonId);
             l.setWarehouseId(warehouseId);
-            l.setStatus("PENDING_CEO");
+            l.setStatus(GlobalUtils.LIQUIDATION_STATUS_PENDING_CEO);
             l.setCustomerId(resolvedCustomerId);
 
             int insertedId = liquidationDAO.insert(l);
@@ -861,7 +891,7 @@ public class LiquidationController extends HttpServlet {
             return;
         }
 
-        liquidationDAO.updateStatus(liquidationId, "APPROVED", user.getId(), null);
+        liquidationDAO.updateStatus(liquidationId, GlobalUtils.LIQUIDATION_STATUS_APPROVED, user.getId(), null);
 
         NotificationUtil.send(
                 l.getCreatedBy(),
@@ -908,7 +938,7 @@ public class LiquidationController extends HttpServlet {
                 try {
                     conn = inventoryDAO.getConnection();
                     conn.setAutoCommit(false);
-                    inventoryDAO.updateStatusBatch(conn, serials, InventoryDAO.STATUS_IN_STOCK);
+                    inventoryDAO.updateStatusBatch(conn, serials, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
                     conn.commit();
                 } catch (Exception ex) {
                     if (conn != null) try { conn.rollback(); } catch (Exception ignored) {}
@@ -932,7 +962,7 @@ public class LiquidationController extends HttpServlet {
         ActivityLog log = new ActivityLog();
         log.setUserId(user.getId());
         log.setEntityType("liquidation");
-        log.setAction(isPermanent ? "CANCELLED" : "CEO_REQUEST_EDIT");
+        log.setAction(isPermanent ? GlobalUtils.LIQUIDATION_STATUS_CANCELLED : GlobalUtils.LIQUIDATION_STATUS_CEO_REQUEST_EDIT);
         log.setEntityId(liquidationId);
         log.setEntityName(l.getLiquidationCode());
         log.setDetails(isPermanent ? "CEO từ chối và huỷ bỏ đơn thanh lý vĩnh viễn" : "CEO yêu cầu sửa đơn thanh lý");
@@ -968,7 +998,7 @@ public class LiquidationController extends HttpServlet {
         String[] liquidationPrices = request.getParameterValues("liquidationPrice");
 
         Liquidation l = liquidationDAO.findById(liquidationId);
-        if (l == null || !"CEO_REQUEST_EDIT".equals(l.getStatus())) {
+        if (l == null || !GlobalUtils.LIQUIDATION_STATUS_CEO_REQUEST_EDIT.equals(l.getStatus())) {
             response.sendRedirect(request.getContextPath() + "/liquidations");
             return;
         }
@@ -1047,10 +1077,10 @@ public class LiquidationController extends HttpServlet {
                 oldSerials.add(oldD.getSerialNumber());
             }
             if (!oldSerials.isEmpty()) {
-                inventoryDAO.updateStatusBatch(conn, oldSerials, InventoryDAO.STATUS_IN_STOCK);
+                inventoryDAO.updateStatusBatch(conn, oldSerials, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             }
 
-            int affected = inventoryDAO.claimInStockBatch(conn, newSerialList, warehouseId, InventoryDAO.STATUS_PENDING_LIQUIDATION);
+            int affected = inventoryDAO.claimInStockBatch(conn, newSerialList, warehouseId, GlobalUtils.INVENTORY_STATUS_PENDING_LIQUIDATION);
             if (affected != newSerialList.size()) {
                 List<String> bad = inventoryDAO.findUnavailableSerials(conn, newSerialList, warehouseId);
                 conn.rollback();
@@ -1061,7 +1091,7 @@ public class LiquidationController extends HttpServlet {
                 return;
             }
 
-            String targetStatus = "PENDING_CEO";
+            String targetStatus = GlobalUtils.LIQUIDATION_STATUS_PENDING_CEO;
             boolean updated = liquidationDAO.updateReasonAndStatus(conn, liquidationId, reasonId, targetStatus);
             if (!updated) {
                 conn.rollback();

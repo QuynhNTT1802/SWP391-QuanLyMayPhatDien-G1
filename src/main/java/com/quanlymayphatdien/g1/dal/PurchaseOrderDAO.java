@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -261,7 +263,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     if (d.getProposalDetailId() != null) {
                         ps.setInt(2, d.getProposalDetailId());
                     } else {
-                        ps.setNull(2, java.sql.Types.INTEGER);
+                        ps.setNull(2, Types.INTEGER);
                     }
                     ps.setInt(3, d.getGeneratorId());
                     ps.setInt(4, d.getProposedQuantity());
@@ -269,7 +271,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                     if (d.getUnitPrice() != null) {
                         ps.setBigDecimal(6, d.getUnitPrice());
                     } else {
-                        ps.setNull(6, java.sql.Types.DECIMAL);
+                        ps.setNull(6, Types.DECIMAL);
                     }
                     ps.setInt(7, d.getFinalQuantity());
                     ps.setString(8, d.getNote());
@@ -343,7 +345,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 if (d.getProposalDetailId() != null) {
                     statement.setInt(2, d.getProposalDetailId());
                 } else {
-                    statement.setNull(2, java.sql.Types.INTEGER);
+                    statement.setNull(2, Types.INTEGER);
                 }
                 statement.setInt(3, d.getGeneratorId());
                 statement.setInt(4, d.getProposedQuantity());
@@ -351,7 +353,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
                 if (d.getUnitPrice() != null) {
                     statement.setBigDecimal(6, d.getUnitPrice());
                 } else {
-                    statement.setNull(6, java.sql.Types.DECIMAL);
+                    statement.setNull(6, Types.DECIMAL);
                 }
                 statement.setInt(7, d.getFinalQuantity());
                 statement.setString(8, d.getNote());
@@ -566,11 +568,11 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         List<Object> params = new ArrayList<>();
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND p.period_start >= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+            params.add(Date.valueOf(LocalDate.parse(dateFrom)));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND p.period_start <= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
+            params.add(Date.valueOf(LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND p.warehouse_id = ?");
@@ -617,11 +619,11 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         List<Object> params = new ArrayList<>();
         if (dateFrom != null && !dateFrom.isEmpty()) {
             sql.append(" AND period_start >= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateFrom)));
+            params.add(Date.valueOf(LocalDate.parse(dateFrom)));
         }
         if (dateTo != null && !dateTo.isEmpty()) {
             sql.append(" AND period_start <= ?");
-            params.add(java.sql.Date.valueOf(java.time.LocalDate.parse(dateTo)));
+            params.add(Date.valueOf(LocalDate.parse(dateTo)));
         }
         if (warehouseId > 0) {
             sql.append(" AND warehouse_id = ?");
@@ -924,9 +926,9 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
                     + "WHERE purchase_order_id = ? AND status = ?");
-            statement.setString(1, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
+            statement.setString(1, GlobalUtils.IMPORT_PROPOSAL_STATUS_PENDING_CEO);
             statement.setInt(2, poId);
-            statement.setString(3, GlobalUtils.STATUS_APPROVED);
+            statement.setString(3, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             statement.executeUpdate();
             connection.commit();
             return true;
@@ -957,7 +959,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ? "
                     + "WHERE purchase_order_id = ?");
-            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             statement.setInt(2, poId);
             statement.executeUpdate();
             connection.commit();
@@ -976,7 +978,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE purchase_order SET status = ? "
                     + "WHERE po_id = ? AND status = ?");
-            statement.setString(1, GlobalUtils.STATUS_COMPLETED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_COMPLETED);
             statement.setInt(2, poId);
             statement.setString(3, GlobalUtils.PO_STATUS_APPROVED);
             return statement.executeUpdate() > 0;
@@ -1008,91 +1010,10 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
             statement = connection.prepareStatement(
                     "UPDATE import_proposal SET status = ?, reject_reason = ? "
                     + "WHERE purchase_order_id = ?");
-            statement.setString(1, GlobalUtils.STATUS_REJECTED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_REJECTED);
             statement.setString(2, reason);
             statement.setInt(3, poId);
             statement.executeUpdate();
-            connection.commit();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            closeResources();
-        }
-    }
-
-    public boolean cancelWithMode(int poId, int ceoId, String mode, String reason) {
-        if (poId <= 0 || ceoId <= 0 || mode == null
-                || (!mode.equals("REBUILD") && !mode.equals("KILL"))) {
-            return false;
-        }
-        try {
-            connection = getConnection();
-            connection.setAutoCommit(false);
-            statement = connection.prepareStatement(
-                    "UPDATE purchase_order SET status = ?, cancel_mode = ?, cancel_reason = ?, "
-                    + "rejected_by = ?, rejected_at = NOW() "
-                    + "WHERE po_id = ? AND status NOT IN ('CANCELLED', 'APPROVED')");
-            statement.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
-            statement.setString(2, mode);
-            statement.setString(3, reason);
-            statement.setInt(4, ceoId);
-            statement.setInt(5, poId);
-            if (statement.executeUpdate() == 0) {
-                connection.rollback();
-                return false;
-            }
-            statement.close();
-            if ("REBUILD".equals(mode)) {
-                statement = connection.prepareStatement(
-                        "UPDATE import_proposal SET purchase_order_id = NULL, status = ? "
-                        + "WHERE purchase_order_id = ?");
-                statement.setString(1, GlobalUtils.STATUS_APPROVED);
-                statement.setInt(2, poId);
-                statement.executeUpdate();
-            } else {
-                statement = connection.prepareStatement(
-                        "UPDATE import_proposal SET status = ?, rejected_by = ?, rejected_at = NOW(), "
-                        + "reject_reason = ? "
-                        + "WHERE purchase_order_id = ?");
-                statement.setString(1, GlobalUtils.STATUS_REJECTED);
-                statement.setInt(2, ceoId);
-                statement.setString(3, "PO bị hủy hoàn toàn: " + reason);
-                statement.setInt(4, poId);
-                statement.executeUpdate();
-            }
-            connection.commit();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            closeResources();
-        }
-    }
-
-    public boolean cancel(int poId) {
-        try {
-            connection = getConnection();
-            connection.setAutoCommit(false);
-            statement = connection.prepareStatement(
-                    "UPDATE import_proposal SET purchase_order_id = NULL "
-                    + "WHERE purchase_order_id = ? AND status = ?");
-            statement.setInt(1, poId);
-            statement.setString(2, GlobalUtils.PROPOSAL_STATUS_PENDING_CEO);
-            statement.executeUpdate();
-            statement.close();
-            statement = connection.prepareStatement(
-                    "UPDATE purchase_order SET status = ? "
-                    + "WHERE po_id = ? AND status = ?");
-            statement.setString(1, GlobalUtils.PO_STATUS_CANCELLED);
-            statement.setInt(2, poId);
-            statement.setString(3, GlobalUtils.PO_STATUS_PENDING_CEO);
-            if (statement.executeUpdate() == 0) {
-                connection.rollback();
-                return false;
-            }
             connection.commit();
             return true;
         } catch (SQLException e) {
@@ -1121,7 +1042,7 @@ public class PurchaseOrderDAO extends DBContext implements I_DAO<PurchaseOrder> 
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setDate(1, java.sql.Date.valueOf(currentPeriodEnd));
+            statement.setDate(1, Date.valueOf(currentPeriodEnd));
             statement.setString(2, currentPeriod);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {

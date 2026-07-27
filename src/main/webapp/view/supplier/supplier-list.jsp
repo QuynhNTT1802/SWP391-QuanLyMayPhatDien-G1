@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/supplier.css">
 </head>
 <body>
 <div class="app">
@@ -24,10 +25,6 @@
             <h1>Nhà cung cấp</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Quản trị</a> / Nhà cung cấp</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
                 <a class="btn btn-primary" href="${pageContext.request.contextPath}/warehouse/suppliers?action=create">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
                     Thêm nhà cung cấp
@@ -51,13 +48,13 @@
             </div>
 
             <c:if test="${not empty sessionScope.message}">
-                <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                <div class="alert-success">
                     <c:out value="${sessionScope.message}"/>
                 </div>
                 <c:remove var="message" scope="session"/>
             </c:if>
 
-            <form method="get" action="${pageContext.request.contextPath}/warehouse/suppliers" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+            <form method="get" action="${pageContext.request.contextPath}/warehouse/suppliers" class="filter-form">
                 <input type="hidden" name="action" value="list" />
                 <input type="hidden" name="page" value="1" />
                 <div class="search-input">
@@ -105,7 +102,7 @@
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="s" items="${suppliers}">
-                                <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/suppliers?action=view&id=${s.id}'" style="cursor:pointer;">
+                                <tr class="clickable-row" onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/suppliers?action=view&id=${s.id}'">
                                     <td>
                                         <div class="user-cell">
                                             <div class="user-name-block">

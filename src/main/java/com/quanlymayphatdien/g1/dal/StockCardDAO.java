@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -421,11 +422,11 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
         StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
         if (from != null) {
             w.append(" AND DATE(sc.created_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(sc.created_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND sc.warehouse_id = ?");
@@ -630,7 +631,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
             while (resultSet.next()) {
                 Map<String, Object> r = new java.util.HashMap<>();
                 r.put("stockCardId", resultSet.getInt("stock_card_id"));
@@ -642,7 +643,7 @@ public class StockCardDAO extends DBContext implements I_DAO<StockCard> {
                 r.put("receiptCode", resultSet.getString("receipt_code"));
                 r.put("referenceNote", resultSet.getString("reference_note"));
                 r.put("serialList", resultSet.getString("serial_list"));
-                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                LocalDateTime createdAt = resultSet.getObject("created_at", LocalDateTime.class);
                 r.put("createdAtStr", createdAt != null ? createdAt.format(df) : "");
                 list.add(r);
             }

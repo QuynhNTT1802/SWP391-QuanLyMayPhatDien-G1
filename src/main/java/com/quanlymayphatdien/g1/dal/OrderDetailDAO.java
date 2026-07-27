@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,7 +112,7 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
                 + "VALUES (?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setInt(1, d.getOrderId());
             statement.setInt(2, d.getGeneratorId());
             statement.setInt(3, d.getQuantity());
@@ -170,5 +171,21 @@ public class OrderDetailDAO extends DBContext implements I_DAO<OrderDetail> {
         d.setUnitPrice(resultSet.getDouble("unit_price"));
         d.setNote(resultSet.getString("note"));
         return d;
+    }
+    
+    public boolean deleteByOrderId(int orderId) {
+        String sql = "DELETE FROM order_detail WHERE order_id = ?";
+        try {
+            connection = getConnection();
+            statement = connection.prepareStatement(sql);
+            statement.setInt(1, orderId);
+            statement.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return false;
     }
 }

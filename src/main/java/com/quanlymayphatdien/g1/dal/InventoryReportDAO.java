@@ -85,8 +85,8 @@ public class InventoryReportDAO extends BaseReportDAO {
                 int qty = resultSet.getInt("total_qty");
                 String type = resultSet.getString("transaction_type");
                 int[] ie = ieMap.getOrDefault(key, new int[]{0, 0});
-                if ("IMPORT".equals(type)) ie[0] += qty;
-                else if ("EXPORT".equals(type)) ie[1] += qty;
+                if ("IMPORT".equals(type) || "TRANSFER_IN".equals(type)) ie[0] += qty;
+                else if ("EXPORT".equals(type) || "TRANSFER_OUT".equals(type)) ie[1] += Math.abs(qty);
                 ieMap.put(key, ie);
             }
         } catch (SQLException e) {
@@ -95,6 +95,19 @@ public class InventoryReportDAO extends BaseReportDAO {
             closeResources();
         }
         return ieMap;
+    }
+
+    public List<Object[]> trendInventory(Integer warehouseId, int year) {
+        List<Object> p = new ArrayList<>();
+        p.add(year);
+        if (warehouseId != null) p.add(warehouseId);
+        return queryFlat(
+            "SELECT DATE_FORMAT(created_at,'%Y-%m'),"
+            + " SUM(CASE WHEN transaction_type IN ('IMPORT','TRANSFER_IN') THEN quantity_change ELSE 0 END),"
+            + " SUM(CASE WHEN transaction_type IN ('EXPORT','TRANSFER_OUT') THEN -quantity_change ELSE 0 END)"
+            + " FROM stock_card WHERE YEAR(created_at)=?"
+            + (warehouseId != null ? " AND warehouse_id=?" : "")
+            + " GROUP BY 1 ORDER BY 1", p);
     }
 
     public List<InventoryReportItem> getInventoryReport(Integer warehouseId, int month, int year, int page, int pageSize, String search) {

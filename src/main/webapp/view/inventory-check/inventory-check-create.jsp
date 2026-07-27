@@ -1,6 +1,5 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
 <head>
@@ -38,59 +37,51 @@
                     <div class="left">
                         <div class="eyebrow">Kiểm kê</div>
                         <h2 class="page-title">Tạo phiếu kiểm kê mới</h2>
-                        <div class="page-sub">Chọn kho cần kiểm kê</div>
+                        <div class="page-sub">Kho kiểm kê được lấy tự động theo tài khoản của bạn</div>
                     </div>
                 </div>
 
                 <c:if test="${not empty requestScope.toastMessage}">
-                    <div style="background:${requestScope.toastType == 'danger' ? 'var(--danger-soft)' : 'var(--accent)'};color:${requestScope.toastType == 'danger' ? 'var(--danger)' : 'var(--bg)'};border:${requestScope.toastType == 'danger' ? '1px solid color-mix(in srgb,var(--danger) 30%,transparent)' : 'none'};padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                    <div class="toast ${requestScope.toastType == 'danger' ? 'toast-danger' : 'toast-success'}">
                         <c:out value="${requestScope.toastMessage}"/>
                     </div>
                 </c:if>
 
-                <form method="get" action="${pageContext.request.contextPath}/inventory-check" id="warehouseForm" style="margin-bottom: 16px;">
-                    <input type="hidden" name="action" value="create" />
-                    <br>
-                    <div class="form-field" style="max-width: 400px;">
-                        <select name="warehouseId" onchange="this.form.submit()" <c:if test="${not empty inventoryList}">style="border-color: var(--accent);"</c:if>>
-                            <option value="">-- Chọn kho --</option>
-                            <c:forEach var="wh" items="${warehouses}">
-                                <option value="${wh.warehouseId}" <c:if test="${selectedWarehouse == wh.warehouseId}">selected</c:if>>${wh.name}</option>
-                            </c:forEach>
-                        </select>
+                <div class="section section-body mb-16">
+                    <div class="form-field field-max-400">
+                        <label>Kho kiểm kê</label>
+                        <input type="text" class="edit-input" value="${currentWarehouseName}" disabled />
                     </div>
-                </form>
+                </div>
 
-                <c:if test="${not empty selectedWarehouse}">
+                <c:if test="${selectedWarehouse > 0}">
                     <form method="POST" action="${pageContext.request.contextPath}/inventory-check?action=save" id="createForm">
-                        <input type="hidden" name="warehouseId" value="${selectedWarehouse}" />
-
-                        <div class="section" style="padding: 18px 22px;">
+                        <div class="section section-body">
                             <div class="form-field full">
                                 <label>Ghi chú</label>
                                 <textarea name="notes" placeholder="Nhập ghi chú cho phiếu kiểm kê (không bắt buộc)..."><c:out value="${param.notes}"/></textarea>
                             </div>
                         </div>
 
-                        <div class="section" style="padding: 18px 22px; margin-top: 16px;">
-                            <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 700;">Danh sách máy trong kho</h3>
+                        <div class="section section-body-mt">
+                            <h3 class="section-title-sm">Danh sách máy trong kho</h3>
 
                             <c:choose>
                                 <c:when test="${empty inventoryList}">
-                                    <div style="padding: 24px; text-align: center; color: var(--muted);">Kho này hiện không có máy nào.</div>
+                                    <div class="empty-state">Kho này hiện không có máy nào.</div>
                                 </c:when>
                                 <c:otherwise>
                                     <div class="select-all-row">
                                         <input type="checkbox" id="selectAll" />
-                                        <label for="selectAll" style="cursor:pointer;">Chọn tất cả</label>
-                                        <span style="color:var(--muted);font-weight:400;font-size:12px;">(${inventoryList.size()} máy)</span>
+                                        <label for="selectAll" class="cursor-pointer">Chọn tất cả</label>
+                                        <span class="count-label">(${inventoryList.size()} máy)</span>
                                     </div>
 
-                                    <table class="detail-table" style="margin-top: 4px;">
+                                    <table class="detail-table table-mt">
                                         <thead>
                                             <tr>
-                                                <th style="width: 40px;">Chọn</th>
-                                                <th style="width: 40px;">STT</th>
+                                                <th class="col-40">Chọn</th>
+                                                <th class="col-40">STT</th>
                                                 <th>Mẫu máy</th>                                                
                                                 <th>SL trên hệ thống</th>
                                             </tr>
@@ -98,8 +89,8 @@
                                         <tbody>
                                             <c:forEach var="inv" items="${inventoryList}" varStatus="st">
                                                 <tr>
-                                                    <td style="text-align:center;">
-                                                        <input type="checkbox" name="generatorId" value="${inv.generatorId}" class="gen-checkbox" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;" />
+                                                    <td class="text-center">
+                                                        <input type="checkbox" name="generatorId" value="${inv.generatorId}" class="gen-checkbox" />
                                                     </td>
                                                     <td class="col-num">${st.index + 1}</td>
                                                     <td><strong><c:out value="${inv.generatorModel}"/></strong></td>
@@ -113,7 +104,7 @@
                         </div>
 
                         <c:if test="${not empty inventoryList}">
-                            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-bottom:40px;">
+                            <div class="form-actions">
                                 <a href="${pageContext.request.contextPath}/inventory-check" class="btn">Huỷ</a>
                                 <button type="submit" class="btn btn-primary">
                                     <svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>

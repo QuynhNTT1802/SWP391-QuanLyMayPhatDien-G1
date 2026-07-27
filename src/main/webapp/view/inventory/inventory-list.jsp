@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <!doctype html>
@@ -23,11 +23,7 @@
             <h1>Tồn kho</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/inventory">Kho</a> / Tồn kho<c:if test="${selectedWarehouse != null}"> / <c:set var="selectedWhName" value=""/><c:forEach var="w" items="${warehouses}"><c:if test="${w.warehouseId == selectedWarehouse}"><c:set var="selectedWhName" value="${w.name}"/></c:if></c:forEach><c:out value="${selectedWhName}"/></c:if></span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41 1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
-            </div>
+                </div>
         </header>
         <main>
             <c:if test="${not empty lockedWarehouseName}">
@@ -107,7 +103,7 @@
                                                 <td style="text-align:center;font-family:var(--font-mono);color:var(--muted);font-weight:600;">${fromIndex + st.index}</td>
                                                 <td><a href="${pageContext.request.contextPath}/inventory/list?generator=${gs.id}<c:if test="${selectedWarehouse != null}">&warehouse=${selectedWarehouse}</c:if>"><c:out value="${gs.model}"/></a></td>
                                                 <td><c:out value="${gs.brand}"/></td>
-                                                <td style="text-align:center;font-family:var(--font-mono);font-weight:700;">${gs.totalSerials}</td>
+                                                <td style="text-align:center;font-family:var(--font-mono);font-weight:700;${gs.totalSerials <= 3 ? 'color:var(--danger);' : ''}">${gs.totalSerials}</td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>

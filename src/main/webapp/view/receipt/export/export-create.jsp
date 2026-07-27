@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -57,8 +57,7 @@
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/export-receipt">Phiếu xuất</a> / Tạo mới</span>
             <div class="top-actions">
                 <jsp:include page="../../common/admin/bell.jsp"/>
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-            </div>
+                </div>
         </header>
 
                 <main>
@@ -80,7 +79,7 @@
                     <div class="alert alert-error" style="margin: 16px 0;">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                         <div class="alert-body">
-                            <div class="alert-title">Không thể gửi phiếu &mdash; tồn kho không đủ</div>
+                            <div class="alert-title">Không thể gửi phiếu !; tồn kho không đủ</div>
                             <ul>
                                 <c:forEach var="e" items="${errors}">
                                     <li><c:out value="${e}"/></li>
@@ -145,24 +144,12 @@
                             </div>
                             <div class="form-field">
                                 <label>Lý do *</label>
-                                <c:choose>
-                                    <c:when test="${fromLiquidation}">
-                                        <input type="hidden" name="reasonId" value="${receipt.reasonId}" />
-                                        <select class="input" disabled>
-                                            <c:forEach var="r" items="${receiptReasons}">
-                                                <option value="${r.id}" ${r.id == receipt.reasonId ? 'selected' : ''}>${r.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <select name="reasonId" class="input" required onchange="validateField(this)">
-                                            <option value="">-- Chọn lý do --</option>
-                                            <c:forEach var="r" items="${receiptReasons}">
-                                                <option value="${r.id}">${r.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </c:otherwise>
-                                </c:choose>
+                                <select name="reasonId" class="input" required onchange="validateField(this)">
+                                    <option value="">-- Chọn lý do --</option>
+                                    <c:forEach var="r" items="${receiptReasons}">
+                                        <option value="${r.id}" ${r.id == receipt.reasonId ? 'selected' : ''}>${r.name}</option>
+                                    </c:forEach>
+                                </select>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <c:if test="${not empty order}">
@@ -237,6 +224,13 @@
                             </c:forEach>
                         </div>
                         </c:if>
+                        <div id="transferSuggestionBanner" class="alert alert-info" style="display:none; margin: 0 0 14px 0;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
+                            <div class="alert-body">
+                                <div class="alert-title">Đề xuất chuyển kho</div>
+                                <ul id="transferSuggestionList"></ul>
+                            </div>
+                        </div>
                         <c:if test="${not empty stockWarningsTransfer}">
                             <div class="alert alert-warn" style="margin: 0 0 14px 0;">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -327,9 +321,7 @@
 <script>
     var ctx = window.APP_CTX;
     function confirmCancelCreate() {
-        if (confirm('Bạn có chắc muốn huỷ tạo phiếu xuất?')) {
             location.href = ctx + '/export-receipt';
-        }
     }
 
     // ========== DATA from server ==========
@@ -366,6 +358,8 @@
         {genId: ${req.generatorId}, model: '<c:out value="${req.generatorModel}"/>', qty: ${req.quantity}}<c:if test="${!st.last}">,</c:if>
         </c:forEach>
     ];
+    var STOCK_DISTRIBUTION = ${empty stockDistributionJson ? '{}' : stockDistributionJson};
+    var WAREHOUSE_MAP = ${empty warehouseMapJson ? '{}' : warehouseMapJson};
     var TRANSFER_REQUIREMENTS = [
         <c:forEach var="d" items="${transferDetails}" varStatus="st">
         {genId: ${d.generatorId}, qty: ${d.quantity}, model: '<c:out value="${d.generatorModel}"/>'}<c:if test="${!st.last}">,</c:if>
@@ -528,6 +522,7 @@
             generatorCache = [];
             warn.style.display = 'flex';
             validateInventoryRealtime();
+            checkTransferSuggestions('');
             return;
         }
         warn.style.display = 'none';
@@ -540,6 +535,7 @@
                     prefillApplied = true;
                 }
                 validateInventoryRealtime();
+                checkTransferSuggestions(whId);
             })
             .catch(function (err) {
                 console.error(err);
@@ -549,6 +545,7 @@
                     prefillApplied = true;
                 }
                 validateInventoryRealtime();
+                checkTransferSuggestions(whId);
             });
     }
 
@@ -614,9 +611,6 @@
     var EXPORT_SCAN_MIN_LEN = 2;
 
     function initExportScanner() {
-        // Global scanner: bắt mọi keydown ở document, phân biệt scanner (gõ
-        // nhanh < 50ms/char) với người gõ tay (chậm > 100ms). Khi Enter/Tab
-        // xuất hiện và buffer đủ dài → xử lý như scan.
         document.addEventListener('keydown', function (e) {
             var now = Date.now();
             var gap = now - exportScanLastKey;
@@ -721,7 +715,6 @@
                     return;
                 }
 
-                // Check against order/transfer requirements
                 if (isOrderMode && ORDER_REQUIREMENTS && ORDER_REQUIREMENTS.length > 0) {
                     var genOk = false;
                     ORDER_REQUIREMENTS.forEach(function (req) {
@@ -756,7 +749,6 @@
                     }
                 }
 
-                // Auto-create group and add row
                 var genId = data.generatorId;
                 var group = getOrCreateGroup(genId, data.generatorModel, data.generatorBrand);
                 if (!group) {
@@ -826,7 +818,6 @@
             var group = getOrCreateGroup(p.generatorId, p.model, null);
             if (!group) return;
             if (isLiquidationMode && p.serialNumber) {
-                // Liquidation: pre-filled serial, read-only
                 var tr = addRowToGroup(group, p.serialNumber, p.note || '', null);
                 if (tr) {
                     var snInput = tr.querySelector('input[name="serialNumber"]');
@@ -903,6 +894,49 @@
                 + '</strong> máy, chỉ còn <strong>' + info.onHand
                 + '</strong> máy. Vui lòng nhập thêm <strong>' + shortage + '</strong> máy.</li>';
         });
+        list.innerHTML = html;
+        banner.style.display = 'flex';
+    }
+
+    function checkTransferSuggestions(whId) {
+        var banner = document.getElementById('transferSuggestionBanner');
+        var list = document.getElementById('transferSuggestionList');
+        if (!banner || !list) return;
+        if (!whId || !ORDER_REQUIREMENTS || ORDER_REQUIREMENTS.length === 0) {
+            banner.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        var suggestions = [];
+        ORDER_REQUIREMENTS.forEach(function (req) {
+            var genId = String(req.genId);
+            var required = req.qty;
+            var dist = STOCK_DISTRIBUTION[genId];
+            if (!dist) return;
+            var inThisWh = parseInt(dist[whId] || 0, 10);
+            if (inThisWh >= required) return;
+            var shortage = required - inThisWh;
+            var otherWh = [];
+            Object.keys(dist).forEach(function (whKey) {
+                if (whKey === whId) return;
+                var qty = parseInt(dist[whKey], 10);
+                if (qty > 0) {
+                    otherWh.push({ id: whKey, qty: qty, name: WAREHOUSE_MAP[whKey] || ('Kho #' + whKey) });
+                }
+            });
+            if (otherWh.length === 0) return;
+            var totalOther = otherWh.reduce(function (s, o) { return s + o.qty; }, 0);
+            if (totalOther === 0) return;
+            var whNames = otherWh.map(function (o) { return o.name + ' (' + o.qty + ' máy)'; }).join(', ');
+            suggestions.push('Máy <strong>' + escapeHtml(req.model) + '</strong> cần <strong>' + required + '</strong> máy, kho này chỉ có <strong>' + inThisWh + '</strong> máy. Còn <strong>' + shortage + '</strong> máy có tại: ' + whNames + '. Vui lòng tạo phiếu chuyển kho trước khi xuất.');
+        });
+        if (suggestions.length === 0) {
+            banner.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        var html = '';
+        suggestions.forEach(function (s) { html += '<li>' + s + '</li>'; });
         list.innerHTML = html;
         banner.style.display = 'flex';
     }
@@ -1100,7 +1134,6 @@
             }
         }
 
-        // Liquidation mode
         if (isLiquidationMode) {
             generatorCache = [];
             applyPrefill();
@@ -1108,7 +1141,6 @@
         } else if (prefillDetails && prefillDetails.length > 0) {
             var whId = document.getElementById('warehouseSelect').value;
             if (whId) {
-                // onWarehouseChange will call applyPrefill after loading cache
                 onWarehouseChange();
             } else {
                 applyPrefill();
@@ -1120,6 +1152,8 @@
         updateEmptyState();
         updateTotalCounter();
         validateInventoryRealtime();
+        var whId = document.getElementById('warehouseSelect').value;
+        if (whId) checkTransferSuggestions(whId);
     });
 </script>
 </body>

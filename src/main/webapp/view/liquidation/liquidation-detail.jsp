@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -128,10 +128,6 @@
         .liqd .cust-empty-text { display: flex; flex-direction: column; gap: 3px; }
         .liqd .cust-empty-text strong { font-size: 14px; color: var(--fg); }
         .liqd .cust-empty-text span { font-size: 12.5px; color: var(--muted); }
-        .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
-        [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-        [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-
         /* ===== PRINT ===== */
         @media print {
             aside, .sidebar, .topbar, .side-panel, .side-panel-overlay,
@@ -202,14 +198,6 @@
             <h1>Chi tiết đơn thanh lý</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/liquidations">Thanh lý</a> / <span>${liquidation.liquidationCode}</span></span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
-                <button type="button" class="btn" onclick="window.print()" title="In đơn thanh lý">
-                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    In phiếu
-                </button>
                 <jsp:include page="../common/admin/bell.jsp"/>
             </div>
         </header>
@@ -292,13 +280,12 @@
                                     </div>
                                     <div class="info-field">
                                         <label>Lý do thanh lý <span style="color:var(--danger)">*</span></label>
-                                        <select class="info-input" disabled>
+                                        <select class="info-input" name="reasonId" required>
                                             <option value="">-- Chọn lý do --</option>
                                             <c:forEach var="r" items="${reasons}">
                                                 <option value="${r.id}" ${r.id == liquidation.reasonId ? 'selected' : ''}>${r.name}</option>
                                             </c:forEach>
                                         </select>
-                                        <input type="hidden" name="reasonId" value="${liquidation.reasonId}" />
                                     </div>
                                     <div class="info-field">
                                         <label>Ngày tạo</label>
@@ -532,6 +519,22 @@
                                             </c:forEach>
                                         </tbody>
                                     </table>
+                                     <c:if test="${totalPages > 1}">
+                                         <div class="pagination" style="margin-top: 12px;">
+                                             <div class="info">Hiển thị trang ${currentPage} / ${totalPages} (Tổng ${totalItems} máy)</div>
+                                             <div class="controls">
+                                                 <c:if test="${currentPage > 1}">
+                                                     <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}&cond=${condFilter}&page=${currentPage-1}">« Trước</a>
+                                                 </c:if>
+                                                 <c:forEach var="p" begin="1" end="${totalPages}">
+                                                     <a class="page-btn ${p == currentPage ? 'active' : ''}" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}&cond=${condFilter}&page=${p}">${p}</a>
+                                                 </c:forEach>
+                                                 <c:if test="${currentPage < totalPages}">
+                                                     <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}&cond=${condFilter}&page=${currentPage+1}">Sau »</a>
+                                                 </c:if>
+                                             </div>
+                                         </div>
+                                     </c:if>
                                     <div class="section-action-bar">
                                         <div class="action-bar-left">
                                             <span class="bar-count">Đã chọn <strong id="editBarSelectedCount">0</strong> máy</span>
@@ -1229,6 +1232,7 @@
                     showToast('Phải chọn ít nhất 1 máy phát điện.', 'danger');
                     return;
                 }
+
                 var missingPrice = checked.some(function(cb) {
                     var row = cb.closest('.pick-trow');
                     var priceInput = row ? row.querySelector('.liq-price-input') : null;

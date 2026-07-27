@@ -13,6 +13,7 @@ import java.sql.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -297,6 +298,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             detailDAO.batchInsert(conn, details);
             writeStockCardsForImport(conn, receiptId, r.getReceiptCode(), r.getWarehouseId(), userId, details);
+            if (r.getPurchaseOrderId() != null && r.getPurchaseOrderId() > 0) {
+                int poId = r.getPurchaseOrderId();
+                String updatePoSql = "UPDATE purchase_order SET status = 'COMPLETED' WHERE po_id = ?";
+                try (PreparedStatement updatePoPs = conn.prepareStatement(updatePoSql)) {
+                    updatePoPs.setInt(1, poId);
+                    updatePoPs.executeUpdate();
+                }
+            }
             conn.commit();
             return receiptId;
         } catch (SQLException e) {
@@ -381,7 +390,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                     }
                     boolean marked = isTransfer
                             ? invDAO.markAsInTransit(conn, inv.getInventoryId())
-                            : invDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
+                            : invDAO.markAsExported(conn, inv.getInventoryId(), GlobalUtils.INVENTORY_STATUS_SOLD);
                     if (!marked) {
                         throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái IN_STOCK");
                     }
@@ -394,6 +403,13 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 writeStockCardsForTransfer(conn, receiptId, r.getReceiptCode(), r.getWarehouseId(), userId, details);
             } else {
                 writeStockCardsForExport(conn, receiptId, r.getReceiptCode(), r.getWarehouseId(), userId, details);
+            }
+            if (r.getOrderId() != null && r.getOrderId() > 0) {
+                String updateSoSql = "UPDATE sale_order SET status = 'COMPLETED' WHERE order_id = ?";
+                try (PreparedStatement updateSoPs = conn.prepareStatement(updateSoSql)) {
+                    updateSoPs.setInt(1, r.getOrderId());
+                    updateSoPs.executeUpdate();
+                }
             }
             conn.commit();
             return receiptId;
@@ -421,25 +437,26 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
             }
         }
-        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        String latestSql = "SELECT quantity_after FROM stock_card WHERE warehouse_id = ? AND generator_id = ? ORDER BY created_at DESC, stock_card_id DESC LIMIT 1";
         for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
             int genId = entry.getKey();
             int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+            int prevQty = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(latestSql)) {
                 qtyPs.setInt(1, warehouseId);
                 qtyPs.setInt(2, genId);
                 try (ResultSet qtyRs = qtyPs.executeQuery()) {
                     if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
+                        prevQty = qtyRs.getInt(1);
                     }
                 }
             }
+            int qtyAfter = Math.max(0, prevQty - totalQty);
             StockCard sc = new StockCard();
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);
             sc.setReceiptId(receiptId);
-            sc.setTransactionType("TRANSFER_OUT");
+            sc.setTransactionType("EXPORT");
             sc.setQuantityChange(-totalQty);
             sc.setQuantityAfter(qtyAfter);
             sc.setReferenceNote("Phiếu xuất " + receiptCode + " (luân chuyển)");
@@ -458,11 +475,11 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
         // He thong khong co workflow duyet that su, dung created_at lam moc thoi gian
         if (from != null) {
             w.append(" AND DATE(r.created_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(r.created_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND r.warehouse_id = ?");
@@ -659,7 +676,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             while (resultSet.next()) {
                 Map<String, Object> r = new java.util.HashMap<>();
                 r.put("receiptId", resultSet.getInt("receipt_id"));
@@ -673,7 +690,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 r.put("liquidationCode", resultSet.getString("liquidation_code"));
                 r.put("note", resultSet.getString("note"));
                 // He thong khong co workflow duyet that su -> hien thi theo ngay tao
-                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                LocalDateTime createdAt = resultSet.getObject("created_at", LocalDateTime.class);
                 r.put("createdAtStr", createdAt != null ? createdAt.toLocalDate().format(df) : "");
                 list.add(r);
             }
@@ -730,20 +747,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
             }
         }
-        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        String latestSql = "SELECT quantity_after FROM stock_card WHERE warehouse_id = ? AND generator_id = ? ORDER BY created_at DESC, stock_card_id DESC LIMIT 1";
         for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
             int genId = entry.getKey();
             int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+            int prevQty = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(latestSql)) {
                 qtyPs.setInt(1, warehouseId);
                 qtyPs.setInt(2, genId);
                 try (ResultSet qtyRs = qtyPs.executeQuery()) {
                     if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
+                        prevQty = qtyRs.getInt(1);
                     }
                 }
             }
+            int qtyAfter = prevQty + totalQty;
             StockCard sc = new StockCard();
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);
@@ -761,7 +779,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     /**
      * Ghi stock_card theo generator cho mot phieu xuat (EXPORT) moi tao.
      * Moi generator_id se tao mot stock_card voi quantity_change = -size(group)
-     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
+     * va quantity_after = so luong luy ke tru di luong xuat.
      *
      * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
      * de dam bao atomic.
@@ -777,20 +795,21 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
                 grouped.computeIfAbsent(d.getGeneratorId(), k -> new ArrayList<>()).add(d);
             }
         }
-        String qtySql = "SELECT COUNT(*) FROM inventory WHERE warehouse_id = ? AND generator_id = ? AND status = 'IN_STOCK'";
+        String latestSql = "SELECT quantity_after FROM stock_card WHERE warehouse_id = ? AND generator_id = ? ORDER BY created_at DESC, stock_card_id DESC LIMIT 1";
         for (Map.Entry<Integer, List<ReceiptDetail>> entry : grouped.entrySet()) {
             int genId = entry.getKey();
             int totalQty = entry.getValue().size();
-            int qtyAfter = 0;
-            try (PreparedStatement qtyPs = conn.prepareStatement(qtySql)) {
+            int prevQty = 0;
+            try (PreparedStatement qtyPs = conn.prepareStatement(latestSql)) {
                 qtyPs.setInt(1, warehouseId);
                 qtyPs.setInt(2, genId);
                 try (ResultSet qtyRs = qtyPs.executeQuery()) {
                     if (qtyRs.next()) {
-                        qtyAfter = qtyRs.getInt(1);
+                        prevQty = qtyRs.getInt(1);
                     }
                 }
             }
+            int qtyAfter = Math.max(0, prevQty - totalQty);
             StockCard sc = new StockCard();
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);

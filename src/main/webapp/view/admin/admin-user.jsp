@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : admin-user
     Created on : May 15, 2026, 9:23:11 AM
     Author     : Aadmin
@@ -31,12 +31,7 @@
                         <h1>Người dùng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users">Quản trị</a> / Người dùng</span>
                         <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            </button>
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users?action=create">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                             Thêm người dùng
                         </a>
                     </div>
@@ -58,13 +53,11 @@
                     </div>
 
                     <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
+                        <div class="alert"><c:out value="${sessionScope.message}"/></div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
 
-                    <form method="get" action="${pageContext.request.contextPath}/admin/users" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                    <form method="get" action="${pageContext.request.contextPath}/admin/users" class="filter-bar">
                         <input type="hidden" name="action" value="list" />
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
@@ -79,6 +72,7 @@
                                 <option value="warehouse_staff" <c:if test="${roleFilter == 'warehouse_staff'}">selected</c:if>>Thủ kho</option>
                                 <option value="sales_staff" <c:if test="${roleFilter == 'sales_staff'}">selected</c:if>>Nhân viên bán hàng</option>
                                 <option value="sale_manager" <c:if test="${roleFilter == 'sale_manager'}">selected</c:if>>Quản lý bán hàng</option>
+                                <option value="ceo" <c:if test="${roleFilter == 'ceo'}">selected</c:if>>CEO</option>
                             </select>
                                 <select class="filter-select" name="status" onchange="this.form.submit()">
                                     <option value="">Trạng thái: Tất cả</option>
@@ -87,7 +81,6 @@
                             </select>
                             <div class="spacer"></div>
                             <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=list'">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Xoá lọc
                         </button>
                     </form>
@@ -96,7 +89,7 @@
                         <table class="users" id="usersTable">
                             <thead>
                                 <tr>
-                                    <th class="sortable" data-sort="name">Người dùng <span class="sort-ind"></span></th>
+                                    <th>Người dùng</th>
                                     <th>Vai trò</th>
                                     <th>Trạng thái</th>
                                     <th class="col-actions">Hành động</th>
@@ -107,15 +100,10 @@
                                     <c:when test="${empty users}">
                                     </c:when>
                                     <c:otherwise>
-                                        <c:forEach var="user" items="${users}" varStatus="loop">
-                                            <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a'))
-                                                        location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'"
-                                                style="cursor:pointer;">
+                                        <c:forEach var="user" items="${users}">
+                                            <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a')) location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'">
                                                 <td>
                                                     <div class="user-cell">
-                                                        <div class="user-avatar <c:out value="${userAvatarClass[loop.index]}"/>">
-                                                            <c:out value="${userInitials[loop.index]}"/>
-                                                        </div>
                                                         <div class="user-name-block">
                                                             <div class="user-name"><c:out value="${user.name}"/></div>
                                                             <div class="user-email"><c:out value="${user.email}"/></div>
@@ -127,9 +115,10 @@
                                                         <c:choose>
                                                             <c:when test="${role.roleName == 'admin'}"><span class="pill role-admin"><span class="pdot"></span>Quản trị viên</span></c:when>
                                                             <c:when test="${role.roleName == 'warehouse_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kho</span></c:when>
-                                                            <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Thủ kho</span></c:when>
-                                                            <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý bán hàng</span></c:when>
-                                                            <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên</span></c:when>
+                                                            <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Nhân viên kho</span></c:when>
+                                                            <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý kinh doanh</span></c:when>
+                                                            <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên kinh doanh</span></c:when>
+                                                            <c:when test="${role.roleName == 'ceo'}"><span class="pill role-ceo"><span class="pdot"></span>CEO</span></c:when>
                                                             <c:otherwise><span class="pill role-staff"><span class="pdot"></span><c:out value="${role.roleName}"/></span></c:otherwise>
                                                             </c:choose>
                                                         </c:forEach>

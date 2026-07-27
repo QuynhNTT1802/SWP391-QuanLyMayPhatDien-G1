@@ -114,7 +114,7 @@ public class GeneratorManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                page = 1;
+                e.printStackTrace();
             }
         }
 
@@ -506,9 +506,5 @@ public class GeneratorManagementController extends HttpServlet {
         new ActivityLogDAO().insertLog(log);
     }
 
-    /**
-     * Tính lại số PO APPROVED có máy chưa có trong kho và lưu vào session.
-     * Gọi sau khi sale staff tạo/cập nhật generator để badge trên sidebar
-     * được cập nhật ngay.
-     */
+   
 }

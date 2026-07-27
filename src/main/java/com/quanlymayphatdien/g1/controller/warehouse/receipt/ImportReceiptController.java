@@ -1,8 +1,4 @@
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Servlet.java to edit this template
- */
 package com.quanlymayphatdien.g1.controller.warehouse.receipt;
 
 import com.quanlymayphatdien.g1.dal.CategoryDAO;
@@ -28,7 +24,6 @@ import com.quanlymayphatdien.g1.entity.TransferDetail;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import com.quanlymayphatdien.g1.utils.ReceiptExcelSupport;
-
 import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.dal.TransferDAO;
@@ -45,17 +40,20 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-/**
- *
- * @author FPTShop
- */
 @WebServlet(name = "ImportReceiptController", urlPatterns = {"/import-receipt"})
 @MultipartConfig(maxFileSize = 10 * 1024 * 1024)
 public class ImportReceiptController extends HttpServlet {
@@ -193,7 +191,7 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("receiptList", receiptList);
         if (scopedWarehouseId > 0) {
             Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            request.setAttribute("warehouses", scoped != null ? Collections.singletonList(scoped) : Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
                 request.setAttribute("scopedWarehouseName", scoped.getName());
@@ -220,8 +218,8 @@ public class ImportReceiptController extends HttpServlet {
         int scopedWarehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
 
         if (scopedWarehouseId > 0) {
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
-            request.setAttribute("warehouses", scoped != null ? java.util.Collections.singletonList(scoped) : java.util.Collections.emptyList());
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            request.setAttribute("warehouses", scoped != null ? Collections.singletonList(scoped) : Collections.emptyList());
             request.setAttribute("scopedWarehouseId", scopedWarehouseId);
             if (scoped != null) {
                 request.setAttribute("scopedWarehouseName", scoped.getName());
@@ -254,10 +252,10 @@ public class ImportReceiptController extends HttpServlet {
         String exportReceiptIdStr = request.getParameter("exportReceiptId");
         if (exportReceiptIdStr != null && !exportReceiptIdStr.isEmpty()) {
             int exportReceiptId = parseId(exportReceiptIdStr);
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
-            com.quanlymayphatdien.g1.entity.Transfer transfer = tDAO.findByExportReceiptId(exportReceiptId);
+            TransferDAO tDAO = new TransferDAO();
+            Transfer transfer = tDAO.findByExportReceiptId(exportReceiptId);
             if (transfer != null
-                    && com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transfer.getStatus())
+                    && GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transfer.getStatus())
                     && transfer.getImportReceiptId() == null) {
                 if (scopedWarehouseId > 0 && scopedWarehouseId != transfer.getDestWarehouseId()) {
                     response.sendError(HttpServletResponse.SC_FORBIDDEN);
@@ -272,7 +270,7 @@ public class ImportReceiptController extends HttpServlet {
     }
 
     private void applyExportReceiptPrefillToRequest(HttpServletRequest request,
-                                                    com.quanlymayphatdien.g1.entity.Transfer transfer,
+Transfer transfer,
                                                     Receipt exportReceipt) {
         if (transfer == null || exportReceipt == null) return;
         request.setAttribute("transfer", transfer);
@@ -319,9 +317,9 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("prefillDetailsJson", gson.toJson(prefillDetails));
         request.setAttribute("transferRowListJson", gson.toJson(transferRowList));
 
-        com.quanlymayphatdien.g1.entity.Warehouse dest = warehouseDAO.findById(transfer.getDestWarehouseId());
+        Warehouse dest = warehouseDAO.findById(transfer.getDestWarehouseId());
         if (dest != null) {
-            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
+            List<Warehouse> whList = new ArrayList<>();
             whList.add(dest);
             request.setAttribute("warehouses", whList);
         }
@@ -350,8 +348,8 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("fromDate", fromDate);
         request.setAttribute("toDate", toDate);
         if (scopedWarehouseId > 0) {
-            java.util.List<com.quanlymayphatdien.g1.entity.Warehouse> whList = new java.util.ArrayList<>();
-            com.quanlymayphatdien.g1.entity.Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
+            List<Warehouse> whList = new ArrayList<>();
+            Warehouse scoped = warehouseDAO.findById(scopedWarehouseId);
             if (scoped != null) {
                 whList.add(scoped);
             }
@@ -379,7 +377,7 @@ public class ImportReceiptController extends HttpServlet {
         if (scopedWarehouseId == null) scopedWarehouseId = 0;
 
         TransferDAO tDAO = new TransferDAO();
-        java.util.List<Transfer> transfers
+        List<Transfer> transfers
                 = tDAO.findReadyForImport(scopedWarehouseId, loggedUser.getId());
 
         request.setAttribute("transfers", transfers);
@@ -450,8 +448,8 @@ public class ImportReceiptController extends HttpServlet {
         List<ReceiptDetail> ds = new ArrayList<>();
         List<Map<String, Object>> poRowList = new ArrayList<>();
         int expectedRows = 0;
-        java.util.Set<Integer> poGenIds = new java.util.HashSet<>();
-        java.util.Map<Integer, Integer> poQtyMap = new java.util.LinkedHashMap<>();
+        Set<Integer> poGenIds = new HashSet<>();
+        Map<Integer, Integer> poQtyMap = new LinkedHashMap<>();
         if (pods != null) {
             for (PurchaseOrderDetail pod : pods) {
                 int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
@@ -481,8 +479,8 @@ public class ImportReceiptController extends HttpServlet {
         request.setAttribute("expectedRows", expectedRows);
         request.setAttribute("poRowList", poRowList);
         if (request.getAttribute("availableGenerators") == null) {
-            java.util.List<Generator> poGenerators = new java.util.ArrayList<>();
-            java.util.Map<Integer, Generator> allGenMap = new java.util.HashMap<>();
+            List<Generator> poGenerators = new ArrayList<>();
+            Map<Integer, Generator> allGenMap = new HashMap<>();
             for (Generator g : genDAO.findAllActive()) allGenMap.put(g.getId(), g);
             for (Integer gid : poGenIds) {
                 Generator g = allGenMap.get(gid);
@@ -527,16 +525,6 @@ public class ImportReceiptController extends HttpServlet {
         }
     }
 
-    /**
-     * Xu ly Excel upload trong PO mode:
-     *   - Moi dong Excel la 1 serial
-     *   - Serial gan theo thu tu PO (khong can cot "Ma may")
-     *   - Validate so luong serial khop voi PO
-     *   - Validate khong trung serial
-     *
-     *   Neu la AJAX (X-Requested-With): tra JSON de JS apply thang vao form rows
-     *   Neu khong: forward ve create page voi serial attribute
-     */
     private void handleImportPreviewForPo(HttpServletRequest request, HttpServletResponse response,
             PurchaseOrder po, List<Map<String, String>> rawRows,
             int warehouseId, Integer reasonId, String note)
@@ -556,7 +544,7 @@ public class ImportReceiptController extends HttpServlet {
         }
 
         List<String> serialList = new ArrayList<>();
-        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
+        Map<String, Integer> firstSeenRow = new LinkedHashMap<>();
         List<String> duplicateSerials = new ArrayList<>();
         List<String> blockedSerials = new ArrayList<>();
         List<Integer> emptyRows = new ArrayList<>();
@@ -677,12 +665,6 @@ public class ImportReceiptController extends HttpServlet {
         return "1".equals(ajax) || "true".equalsIgnoreCase(ajax);
     }
 
-    /**
-     * Validate danh sach details voi purchase order:
-     *  - Moi generator_id trong details phai ton tai trong PO
-     *  - So luong moi generator_id phai khop voi finalQuantity trong PO
-     *  - Khong duoc them generator_id khong co trong PO
-     */
     private void validateAgainstPurchaseOrder(Integer poId, List<ReceiptDetail> details, List<String> errors) {
         if (poId == null || details == null || details.isEmpty()) {
             return;
@@ -692,18 +674,18 @@ public class ImportReceiptController extends HttpServlet {
             errors.add("Không tìm thấy phiếu purchase " + poId);
             return;
         }
-        java.util.Map<Integer, Integer> expectedQty = new java.util.LinkedHashMap<>();
+        Map<Integer, Integer> expectedQty = new LinkedHashMap<>();
         for (PurchaseOrderDetail pod : po.getDetails()) {
             int qty = pod.getFinalQuantity() > 0 ? pod.getFinalQuantity()
                      : (pod.getProposedQuantity() > 0 ? pod.getProposedQuantity() : 1);
             expectedQty.put(pod.getGeneratorId(), qty);
         }
-        java.util.Map<Integer, Integer> actualQty = new java.util.LinkedHashMap<>();
+        Map<Integer, Integer> actualQty = new LinkedHashMap<>();
         for (ReceiptDetail d : details) {
             if (d.getGeneratorId() <= 0) continue;
             actualQty.merge(d.getGeneratorId(), 1, Integer::sum);
         }
-        for (java.util.Map.Entry<Integer, Integer> e : expectedQty.entrySet()) {
+        for (Map.Entry<Integer, Integer> e : expectedQty.entrySet()) {
             int expected = e.getValue();
             int actual = actualQty.getOrDefault(e.getKey(), 0);
             if (actual != expected) {
@@ -717,11 +699,63 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
         }
-        for (java.util.Map.Entry<Integer, Integer> a : actualQty.entrySet()) {
+        for (Map.Entry<Integer, Integer> a : actualQty.entrySet()) {
             if (!expectedQty.containsKey(a.getKey())) {
                 String label = lookupGeneratorLabel(a.getKey());
                 errors.add("Máy " + label + " không có trong PO (không được thêm)");
             }
+        }
+    }
+
+    private void validateTransferImportCompleteness(HttpServletRequest request,
+            int exportReceiptId, List<ReceiptDetail> details, List<String> errors) {
+        if (details == null || details.isEmpty()) {
+            errors.add("Phiếu nhập theo luân chuyển phải chứa đủ serial từ phiếu xuất");
+            return;
+        }
+        for (ReceiptDetail d : details) {
+            if (d.getInventoryId() <= 0 && d.getSerialNumber() != null
+                    && !d.getSerialNumber().trim().isEmpty()) {
+                Inventory inv = inventoryDAO.findBySerialNumber(d.getSerialNumber().trim());
+                if (inv != null) {
+                    d.setInventoryId(inv.getInventoryId());
+                }
+            }
+        }
+        Receipt exportReceipt = new ReceiptDAO().findById(exportReceiptId);
+        if (exportReceipt == null || exportReceipt.getDetails() == null
+                || exportReceipt.getDetails().isEmpty()) {
+            return;
+        }
+        Set<Integer> expectedInvIds = new HashSet<>();
+        for (ReceiptDetail ed : exportReceipt.getDetails()) {
+            if (ed.getInventoryId() > 0) {
+                expectedInvIds.add(ed.getInventoryId());
+            }
+        }
+        if (expectedInvIds.isEmpty()) {
+            return;
+        }
+        Set<Integer> actualInvIds = new HashSet<>();
+        for (ReceiptDetail d : details) {
+            if (d.getInventoryId() > 0) {
+                actualInvIds.add(d.getInventoryId());
+            }
+        }
+        Set<Integer> missing = new HashSet<>(expectedInvIds);
+        missing.removeAll(actualInvIds);
+        if (!missing.isEmpty()) {
+            List<String> missingSns = new ArrayList<>();
+            for (ReceiptDetail ed : exportReceipt.getDetails()) {
+                if (missing.contains(ed.getInventoryId())) {
+                    missingSns.add(ed.getSerialNumber() != null
+                            ? ed.getSerialNumber() : "(trống)");
+                }
+            }
+            errors.add("Phiếu nhập phải chứa đủ " + expectedInvIds.size()
+                    + " serial từ phiếu xuất. Còn thiếu " + missing.size()
+                    + " serial: " + String.join(", ", missingSns));
+            request.setAttribute("transferImportMissingSns", missingSns);
         }
     }
 
@@ -960,12 +994,16 @@ public class ImportReceiptController extends HttpServlet {
         String[] serials = request.getParameterValues("manualSerialNumber");
         String[] detailNotes = request.getParameterValues("manualDetailNote");
         int selectedGeneratorId = parseId(request.getParameter("selectedGeneratorId"));
+        int exportReceiptId = parseId(request.getParameter("exportReceiptId"));
 
-        if (!fromPo && parseId(request.getParameter("exportReceiptId")) <= 0 && selectedGeneratorId <= 0) {
+        boolean hasAnyManualGenId = genIds != null && java.util.Arrays.stream(genIds)
+                .anyMatch(id -> id != null && !id.trim().isEmpty() && !"0".equals(id.trim()));
+
+        if (!fromPo && exportReceiptId <= 0 && !hasAnyManualGenId && selectedGeneratorId <= 0) {
             errors.add("Vui lòng chọn mẫu máy phát điện ở mục 02 trước khi gửi phiếu");
         }
 
-        if (!fromPo && parseId(request.getParameter("exportReceiptId")) <= 0 && selectedGeneratorId > 0 && genIds != null) {
+        if (!fromPo && exportReceiptId <= 0 && !hasAnyManualGenId && selectedGeneratorId > 0 && genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
                 if (genIds[i] == null || genIds[i].trim().isEmpty()
                         || "0".equals(genIds[i].trim())) {
@@ -986,6 +1024,10 @@ public class ImportReceiptController extends HttpServlet {
             if (details.isEmpty() && errors.stream().noneMatch(s -> s.startsWith("Dòng "))) {
                 errors.add("Phải có ít nhất 1 dòng chi tiết hợp lệ");
             }
+        }
+
+        if (exportReceiptId > 0) {
+            validateTransferImportCompleteness(request, exportReceiptId, details, errors);
         }
 
         if (!errors.isEmpty()) {
@@ -1032,6 +1074,15 @@ public class ImportReceiptController extends HttpServlet {
                 }
             }
 
+            if (exportReceiptId > 0) {
+                TransferDAO tDAO = new TransferDAO();
+                Transfer transferErr = tDAO.findByExportReceiptId(exportReceiptId);
+                Receipt exportReceiptErr = new ReceiptDAO().findById(exportReceiptId);
+                if (transferErr != null && exportReceiptErr != null) {
+                    applyExportReceiptPrefillToRequest(request, transferErr, exportReceiptErr);
+                }
+            }
+
             request.setAttribute("warehouses", warehouseDAO.findAll());
             setGeneratorsAttributes(request, genDAO.findAllActive());
             request.setAttribute("receiptReasons", new CategoryDAO().findByType("receipt_reason"));
@@ -1041,7 +1092,6 @@ public class ImportReceiptController extends HttpServlet {
             return;
         }
 
-        int exportReceiptId = parseId(request.getParameter("exportReceiptId"));
         boolean isTransferImport = exportReceiptId > 0;
         if (!isTransferImport) {
             for (ReceiptDetail d : details) {
@@ -1063,13 +1113,13 @@ public class ImportReceiptController extends HttpServlet {
             return;
         }
 
-        com.quanlymayphatdien.g1.entity.Transfer transferForImport = null;
+        Transfer transferForImport = null;
         Receipt exportReceipt = null;
         if (exportReceiptId > 0) {
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            TransferDAO tDAO = new TransferDAO();
             transferForImport = tDAO.findByExportReceiptId(exportReceiptId);
             if (transferForImport == null
-                    || !com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transferForImport.getStatus())
+                    || !GlobalUtils.TRANSFER_STATUS_EXPORTED.equals(transferForImport.getStatus())
                     || transferForImport.getImportReceiptId() != null) {
                 HttpSession s = request.getSession();
                 s.setAttribute("toastMessage", "Phiếu đề xuất không hợp lệ hoặc đã có phiếu nhập");
@@ -1116,7 +1166,7 @@ public class ImportReceiptController extends HttpServlet {
         }
         r.setStatus(GlobalUtils.RECEIPT_STATUS_COMPLETED);
         r.setApprovedBy(loggedUser.getId());
-        r.setApprovedAt(java.time.LocalDateTime.now());
+        r.setApprovedAt(LocalDateTime.now());
 
         List<ReceiptDetail> detailsToSave;
         if (isTransferImport && exportReceipt != null && exportReceipt.getDetails() != null) {
@@ -1150,7 +1200,7 @@ public class ImportReceiptController extends HttpServlet {
         activityLogDAO.insert(log);
 
         if (isTransferImport && transferForImport != null) {
-            com.quanlymayphatdien.g1.dal.TransferDAO tDAO = new com.quanlymayphatdien.g1.dal.TransferDAO();
+            TransferDAO tDAO = new TransferDAO();
             if (tDAO.markImportReceiptCreated(transferForImport.getTransferId(), receiptId, loggedUser.getId())) {
                 ActivityLog transferLog = new ActivityLog();
                 transferLog.setUserId(loggedUser.getId());
@@ -1222,7 +1272,7 @@ public class ImportReceiptController extends HttpServlet {
                         && !exportReceipt.getDetails().isEmpty()) {
                     XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(
                             exportReceipt.getDetails(), allGens);
-                    String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date()) + ".xlsx";
+                    String fileName = "mau-phieu-nhap-" + new SimpleDateFormat("dd/MM/yyyy").format(new Date()) + ".xlsx";
                     response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
                     response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
                     workbook.write(response.getOutputStream());
@@ -1233,7 +1283,7 @@ public class ImportReceiptController extends HttpServlet {
         }
 
         XSSFWorkbook workbook = ReceiptExcelSupport.createTemplateWorkbook(poDetails);
-        String fileName = "mau-phieu-nhap-" + new java.text.SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date()) + ".xlsx";
+        String fileName = "mau-phieu-nhap-" + new SimpleDateFormat("dd/MM/yyyy").format(new Date()) + ".xlsx";
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
         workbook.write(response.getOutputStream());
@@ -1335,7 +1385,7 @@ public class ImportReceiptController extends HttpServlet {
         }
 
         List<Generator> allGenerators = genDAO.findAllActive();
-        java.util.Map<String, Generator> modelIndex = new java.util.HashMap<>();
+        Map<String, Generator> modelIndex = new HashMap<>();
         for (Generator g : allGenerators) {
             if (g.getModel() != null) {
                 modelIndex.put(g.getModel().trim().toLowerCase(), g);
@@ -1347,7 +1397,7 @@ public class ImportReceiptController extends HttpServlet {
 
         List<Map<String, Object>> validRows = new ArrayList<>();
         List<Map<String, Object>> invalidRows = new ArrayList<>();
-        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
+        Map<String, Integer> firstSeenRow = new LinkedHashMap<>();
 
         for (int i = 0; i < rawRows.size(); i++) {
             Map<String, String> raw = rawRows.get(i);
@@ -1497,10 +1547,6 @@ public class ImportReceiptController extends HttpServlet {
         new Gson().toJson(body, response.getWriter());
     }
 
-    /**
-     * Forward lai trang import-create.jsp voi toast message, dong thoi bao toan
-     * form data (warehouseId, reasonId, note, manual rows) de user khong bi mat du lieu.
-     */
     private void forwardBackToCreate(HttpServletRequest request, HttpServletResponse response,
             String toastMessage, String toastType,
             int warehouseId, Integer reasonId, String note)
@@ -1519,10 +1565,6 @@ public class ImportReceiptController extends HttpServlet {
         request.getRequestDispatcher("/view/receipt/import/import-create.jsp").forward(request, response);
     }
 
-    /**
-     * Luu form state (warehouse, reason, note, manual rows) vao request attribute
-     * de JSP co the re-populate form khi forward ve.
-     */
     private void preserveFormStateForInlinePreview(HttpServletRequest request,
             int warehouseId, Integer reasonId, String note) {
         request.setAttribute("warehouses", warehouseDAO.findAll());
@@ -1624,7 +1666,7 @@ public class ImportReceiptController extends HttpServlet {
         if (!emptyRows.isEmpty()) {
             msg.append(" Có ").append(emptyRows.size())
                .append(" dòng trống serial: dòng ")
-               .append(emptyRows.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(", ")))
+               .append(emptyRows.stream().map(String::valueOf).collect(Collectors.joining(", ")))
                .append(".");
         }
         if (!blockedSerials.isEmpty()) {
@@ -1640,7 +1682,7 @@ public class ImportReceiptController extends HttpServlet {
             String[] detailNotes, List<String> errors) {
         List<ReceiptDetail> details = new ArrayList<>();
         if (genIds == null) return details;
-        java.util.Map<String, Integer> firstSeenRow = new java.util.LinkedHashMap<>();
+        Map<String, Integer> firstSeenRow = new LinkedHashMap<>();
         for (int i = 0; i < genIds.length; i++) {
             String idStr = genIds[i];
             String serial = (serials != null && i < serials.length) ? serials[i] : null;
@@ -1681,15 +1723,15 @@ public class ImportReceiptController extends HttpServlet {
         return details;
     }
 
-    private void notifySourceWarehouseStaff(com.quanlymayphatdien.g1.entity.Transfer transfer,
+    private void notifySourceWarehouseStaff(Transfer transfer,
                                             Receipt receipt, User sender, String contextPath) {
-        java.util.List<User> staff = userDAO.findUsersByPermission("receipts", "view");
+        List<User> staff = userDAO.findUsersByPermission("receipts", "view");
         if (staff == null) return;
         for (User u : staff) {
             if (u.getId() == sender.getId()) continue;
             Integer scopedWh = null;
             try {
-                scopedWh = new com.quanlymayphatdien.g1.dal.UserDAO().getScopedWarehouseId(u.getId());
+                scopedWh = new UserDAO().getScopedWarehouseId(u.getId());
             } catch (Exception ex) {
                 continue;
             }

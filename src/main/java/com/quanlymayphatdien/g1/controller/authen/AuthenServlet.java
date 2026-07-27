@@ -172,7 +172,6 @@ public class AuthenServlet extends HttpServlet {
             return true;
         } catch (Exception e) {
             e.printStackTrace();
-            e.printStackTrace();
             return false;
         }
     }
@@ -227,7 +226,6 @@ public class AuthenServlet extends HttpServlet {
             return "redirect:/admin/dashboard";
 
         } catch (Exception e) {
-            e.printStackTrace();
             e.printStackTrace();
             request.setAttribute("error", "Lỗi hệ thống: " + e.getMessage());
             return "view/authen/login.jsp";

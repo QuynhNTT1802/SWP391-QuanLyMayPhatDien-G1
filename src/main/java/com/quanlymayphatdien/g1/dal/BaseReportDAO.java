@@ -1,7 +1,5 @@
 package com.quanlymayphatdien.g1.dal;
 
-import com.quanlymayphatdien.g1.entity.Receipt;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -69,32 +67,5 @@ public class BaseReportDAO extends DBContext {
         p.add(lastDay(month, year));
         if (warehouseId != null) p.add(warehouseId);
         return p;
-    }
-
-    protected Receipt mapReceipt(ResultSet rs) throws SQLException {
-        Receipt r = new Receipt();
-        r.setReceiptId(rs.getInt("receipt_id"));
-        r.setReceiptCode(rs.getString("receipt_code"));
-        r.setReceiptType(rs.getString("receipt_type"));
-        r.setWarehouseId(rs.getInt("warehouse_id"));
-        r.setWarehouseName(rs.getString("warehouse_name"));
-        r.setCreatedBy(rs.getInt("created_by"));
-        r.setCreatedByName(rs.getString("created_by_name"));
-        r.setStatus(rs.getString("status"));
-        r.setNote(rs.getString("note"));
-        r.setOrderId((Integer) rs.getObject("order_id"));
-        r.setPurchaseOrderId((Integer) rs.getObject("purchase_order_id"));
-        if (rs.getTimestamp("created_at") != null) {
-            r.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
-        }
-        return r;
-    }
-
-    protected String detailInfoSubquery() {
-        return " (SELECT GROUP_CONCAT(CONCAT(g.model, '|', i2.serial_number) SEPARATOR '; ')"
-                + "  FROM receipt_detail rd"
-                + "  JOIN inventory i2 ON rd.inventory_id = i2.inventory_id"
-                + "  JOIN generator g ON i2.generator_id = g.id"
-                + "  WHERE rd.receipt_id = r.receipt_id) AS detail_info";
     }
 }

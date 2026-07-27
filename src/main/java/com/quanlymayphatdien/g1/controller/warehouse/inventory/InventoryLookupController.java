@@ -2,7 +2,6 @@ package com.quanlymayphatdien.g1.controller.warehouse.inventory;
 
 import com.quanlymayphatdien.g1.dal.InventoryDAO;
 import com.quanlymayphatdien.g1.entity.Inventory;
-
 import com.google.gson.Gson;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;

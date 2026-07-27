@@ -3,7 +3,11 @@ package com.quanlymayphatdien.g1.dal;
 import com.quanlymayphatdien.g1.entity.GeneratorSummary;
 import com.quanlymayphatdien.g1.entity.Inventory;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import com.quanlymayphatdien.g1.utils.GlobalUtils;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -13,12 +17,6 @@ import java.util.Map;
  * Moi serial = 1 dong trong bang inventory. Quan ly ton kho = quan ly serial.
  */
 public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
-
-    public static final String STATUS_IN_STOCK = "IN_STOCK";
-    public static final String STATUS_SOLD = "SOLD";
-    public static final String STATUS_PENDING_LIQUIDATION = "PENDING_LIQUIDATION";
-    public static final String STATUS_IN_TRANSIT = "IN_TRANSIT";
-    public static final String STATUS_LIQUIDATED = "LIQUIDATED";
 
     public List<GeneratorSummary> findGeneratorSummary(Integer warehouseId,
             String search, String brand, int page, int pageSize) {
@@ -273,19 +271,23 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
 
 
     public List<Inventory> findInStockByWarehouseAndGenerator(int warehouseId, int generatorId) {
+        return findAvailableForExportByWarehouseAndGenerator(warehouseId, generatorId, false);
+    }
+
+    public List<Inventory> findAvailableForExportByWarehouseAndGenerator(int warehouseId, int generatorId, boolean isLiquidation) {
         List<Inventory> list = new ArrayList<>();
         String sql = "SELECT i.*, g.model AS generator_model, w.name AS warehouse_name "
                 + "FROM inventory i "
                 + "JOIN generator g ON i.generator_id = g.id "
                 + "JOIN warehouse w ON i.warehouse_id = w.warehouse_id "
-                + "WHERE i.warehouse_id = ? AND i.generator_id = ? AND i.status = ? "
+                + "WHERE i.warehouse_id = ? AND i.generator_id = ? "
+                + (isLiquidation ? "AND i.status IN ('IN_STOCK', 'PENDING_LIQUIDATION') " : "AND i.status = 'IN_STOCK' ")
                 + "ORDER BY i.created_at, i.inventory_id";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
             statement.setInt(2, generatorId);
-            statement.setString(3, STATUS_IN_STOCK);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);
@@ -313,7 +315,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, generatorId);
-            statement.setString(2, STATUS_IN_STOCK);
+            statement.setString(2, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getInt(1);
@@ -344,7 +346,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
-            statement.setString(2, STATUS_IN_STOCK);
+            statement.setString(2, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);
@@ -381,7 +383,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
-            statement.setString(2, STATUS_IN_STOCK);
+            statement.setString(2, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             statement.setInt(3, minMonthsInStock);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -419,7 +421,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             statement = connection.prepareStatement(sql.toString());
             int idx = 1;
             statement.setInt(idx++, warehouseId);
-            statement.setString(idx++, STATUS_IN_STOCK);
+            statement.setString(idx++, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             statement.setInt(idx++, minMonthsInStock);
             if (condition != null && !condition.isEmpty() && !"all".equals(condition)) {
                 statement.setString(idx++, condition);
@@ -448,7 +450,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
-            statement.setString(2, STATUS_IN_STOCK);
+            statement.setString(2, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             statement.setInt(3, minMonthsInStock);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -485,7 +487,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             statement = connection.prepareStatement(sql.toString());
             int idx = 1;
             statement.setInt(idx++, warehouseId);
-            statement.setString(idx++, STATUS_IN_STOCK);
+            statement.setString(idx++, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             statement.setInt(idx++, minMonthsInStock);
             if (condition != null && !condition.isEmpty() && !"all".equals(condition)) {
                 statement.setString(idx++, condition);
@@ -523,12 +525,12 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 + "JOIN liquidation l ON l.liquidation_id = ld.liquidation_id "
                 + "WHERE i.warehouse_id = ? "
                 + "  AND i.status = ? "
-                + "  AND l.status IN ('PENDING_CEO','CEO_REQUEST_EDIT')";
+                + "  AND l.status IN ('" + GlobalUtils.LIQUIDATION_STATUS_PENDING_CEO + "','" + GlobalUtils.LIQUIDATION_STATUS_CEO_REQUEST_EDIT + "')";
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setInt(1, warehouseId);
-            statement.setString(2, STATUS_PENDING_LIQUIDATION);
+            statement.setString(2, GlobalUtils.INVENTORY_STATUS_PENDING_LIQUIDATION);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Map<String, Object> m = new HashMap<>();
@@ -626,7 +628,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             ps.setInt(1, generatorId);
             ps.setString(2, serialNumber);
             ps.setInt(3, warehouseId);
-            ps.setString(4, status == null ? STATUS_IN_STOCK : status);
+            ps.setString(4, status == null ? GlobalUtils.INVENTORY_STATUS_IN_STOCK : status);
             return ps.executeUpdate() > 0;
         }
     }
@@ -645,7 +647,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             ps.setInt(1, generatorId);
             ps.setString(2, serialNumber);
             ps.setInt(3, warehouseId);
-            ps.setString(4, STATUS_IN_STOCK);
+            ps.setString(4, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             ps.executeUpdate();
             try (ResultSet rs = ps.getGeneratedKeys()) {
                 if (rs.next()) {
@@ -684,7 +686,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, targetStatus);
             ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_IN_STOCK);
+            ps.setString(3, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             return ps.executeUpdate() > 0;
         }
     }
@@ -698,9 +700,9 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     public boolean markAsInTransit(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_IN_TRANSIT);
+            ps.setString(1, GlobalUtils.INVENTORY_STATUS_IN_TRANSIT);
             ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_IN_STOCK);
+            ps.setString(3, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             return ps.executeUpdate() > 0;
         }
     }
@@ -714,10 +716,10 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         String sql = "UPDATE inventory SET status = ?, warehouse_id = ? "
                 + "WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_IN_STOCK);
+            ps.setString(1, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             ps.setInt(2, destWarehouseId);
             ps.setInt(3, inventoryId);
-            ps.setString(4, STATUS_IN_TRANSIT);
+            ps.setString(4, GlobalUtils.INVENTORY_STATUS_IN_TRANSIT);
             return ps.executeUpdate() > 0;
         }
     }
@@ -732,7 +734,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         String sql = "SELECT inventory_id FROM inventory WHERE warehouse_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, sourceWarehouseId);
-            ps.setString(2, STATUS_IN_TRANSIT);
+            ps.setString(2, GlobalUtils.INVENTORY_STATUS_IN_TRANSIT);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ids.add(rs.getInt(1));
@@ -778,11 +780,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         String sql = "UPDATE inventory SET status = ?, generator_id = ?, warehouse_id = ? "
                    + "WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_IN_STOCK);
+            ps.setString(1, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             ps.setInt(2, newGeneratorId);
             ps.setInt(3, newWarehouseId);
             ps.setInt(4, inventoryId);
-            ps.setString(5, STATUS_SOLD);
+            ps.setString(5, GlobalUtils.INVENTORY_STATUS_SOLD);
             return ps.executeUpdate();
         }
     }
@@ -854,7 +856,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 ps.setString(1, newStatus);
                 ps.setString(2, sn);
                 ps.setInt(3, warehouseId);
-                ps.setString(4, STATUS_IN_STOCK);
+                ps.setString(4, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
                 ps.addBatch();
             }
             int[] rs = ps.executeBatch();
@@ -893,7 +895,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 ps.setString(idx++, sn);
             }
             ps.setInt(idx++, warehouseId);
-            ps.setString(idx, STATUS_IN_STOCK);
+            ps.setString(idx, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     available.add(rs.getString("serial_number"));
@@ -908,17 +910,12 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return result;
     }
 
-    /**
-     * Kiem tra serial co dang IN_STOCK o dung kho khong (dung cho xuat kho).
-     * Tra ve true neu OK, false neu khong ton tai hoac khong o trang thai
-     * IN_STOCK.
-     */
     public boolean isInStockAtWarehouse(Connection conn, String serialNumber, int warehouseId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ? AND warehouse_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, serialNumber);
             ps.setInt(2, warehouseId);
-            ps.setString(3, STATUS_IN_STOCK);
+            ps.setString(3, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -945,7 +942,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, serialNumber);
             ps.setInt(2, warehouseId);
-            ps.setString(3, STATUS_PENDING_LIQUIDATION);
+            ps.setString(3, GlobalUtils.INVENTORY_STATUS_PENDING_LIQUIDATION);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -958,9 +955,9 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
     public int markAsExportedFromPendingLiquidation(Connection conn, int inventoryId) throws SQLException {
         String sql = "UPDATE inventory SET status = ? WHERE inventory_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, STATUS_SOLD);
+            ps.setString(1, GlobalUtils.INVENTORY_STATUS_SOLD);
             ps.setInt(2, inventoryId);
-            ps.setString(3, STATUS_PENDING_LIQUIDATION);
+            ps.setString(3, GlobalUtils.INVENTORY_STATUS_PENDING_LIQUIDATION);
             return ps.executeUpdate();
         }
     }
@@ -1017,7 +1014,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, warehouseId);
             ps.setInt(2, generatorId);
-            ps.setString(3, STATUS_IN_STOCK);
+            ps.setString(3, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             ps.setInt(4, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -1035,7 +1032,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         String sql = "UPDATE inventory SET warehouse_id = ?, status = ? WHERE serial_number = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, newWarehouseId);
-            ps.setString(2, STATUS_IN_STOCK);
+            ps.setString(2, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             ps.setString(3, serialNumber);
             return ps.executeUpdate();
         }
@@ -1143,10 +1140,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return 0;
     }
 
-    /**
-     * Returns a map of generator_id -> in-stock count at the given warehouse.
-     * Used by proposal screens to show tồn kho next to each generator row.
-     */
     public Map<Integer, Integer> countInStockMapByWarehouse(int warehouseId) {
         Map<Integer, Integer> map = new LinkedHashMap<>();
         if (warehouseId <= 0) {
@@ -1167,6 +1160,33 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             System.out.println(e.getMessage());
         }
         return map;
+    }
+
+    public Map<Integer, Map<Integer, Integer>> getStockDistributionByGeneratorIds(List<Integer> generatorIds) {
+        Map<Integer, Map<Integer, Integer>> result = new LinkedHashMap<>();
+        if (generatorIds == null || generatorIds.isEmpty()) {
+            return result;
+        }
+        String placeholders = String.join(",", Collections.nCopies(generatorIds.size(), "?"));
+        String sql = "SELECT generator_id, warehouse_id, COUNT(*) AS cnt FROM inventory "
+                + "WHERE generator_id IN (" + placeholders + ") AND status = 'IN_STOCK' "
+                + "GROUP BY generator_id, warehouse_id ORDER BY generator_id, warehouse_id";
+        try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
+            for (int i = 0; i < generatorIds.size(); i++) {
+                ps.setInt(i + 1, generatorIds.get(i));
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int genId = rs.getInt("generator_id");
+                    int whId = rs.getInt("warehouse_id");
+                    int cnt = rs.getInt("cnt");
+                    result.computeIfAbsent(genId, k -> new LinkedHashMap<>()).put(whId, cnt);
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return result;
     }
 
     public int countActiveWarehouses() {
@@ -1287,7 +1307,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, STATUS_IN_STOCK);
+            statement.setString(1, GlobalUtils.INVENTORY_STATUS_IN_STOCK);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Inventory inv = getFromResultSet(resultSet);
@@ -1322,7 +1342,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             statement.setString(1, t.getSerialNumber());
             statement.setInt(2, t.getGeneratorId());
             statement.setInt(3, t.getWarehouseId());
-            statement.setString(4, t.getStatus() == null ? STATUS_IN_STOCK : t.getStatus());
+            statement.setString(4, t.getStatus() == null ? GlobalUtils.INVENTORY_STATUS_IN_STOCK : t.getStatus());
             int affected = statement.executeUpdate();
             if (affected > 0) {
                 resultSet = statement.getGeneratedKeys();
@@ -1418,11 +1438,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
         if (from != null) {
             w.append(" AND DATE(i.created_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(i.created_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND i.warehouse_id = ?");
@@ -1548,11 +1568,11 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         StringBuilder w = new StringBuilder(" WHERE w.status <> 'locked'");
         if (from != null) {
             w.append(" AND DATE(sc.created_at) >= ?");
-            params.add(java.sql.Date.valueOf(from));
+            params.add(Date.valueOf(from));
         }
         if (to != null) {
             w.append(" AND DATE(sc.created_at) <= ?");
-            params.add(java.sql.Date.valueOf(to));
+            params.add(Date.valueOf(to));
         }
         if (warehouseId != null) {
             w.append(" AND sc.warehouse_id = ?");
@@ -1620,7 +1640,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
             statement = connection.prepareStatement(sql);
             bindParams(statement, params);
             resultSet = statement.executeQuery();
-            java.time.format.DateTimeFormatter df = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             while (resultSet.next()) {
                 Map<String, Object> r = new java.util.HashMap<>();
                 r.put("inventoryId", resultSet.getInt("inventory_id"));
@@ -1631,7 +1651,7 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
                 r.put("warehouseName", resultSet.getString("warehouse_name"));
                 r.put("importReceiptCode", resultSet.getString("import_receipt_code"));
                 r.put("condition", resultSet.getString("condition"));
-                java.time.LocalDateTime createdAt = resultSet.getObject("created_at", java.time.LocalDateTime.class);
+                LocalDateTime createdAt = resultSet.getObject("created_at", LocalDateTime.class);
                 r.put("createdAtStr", createdAt != null ? createdAt.toLocalDate().format(df) : "");
                 list.add(r);
             }

@@ -13,6 +13,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -78,9 +80,8 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         );
         List<Object> param = new ArrayList<>();
 
-        // Soft-delete: only creator sees their own DELETED orders
         sql.append(" AND (so.status != ? OR so.created_by = ?)");
-        param.add(GlobalUtils.STATUS_DELETED);
+        param.add(GlobalUtils.SALE_ORDER_STATUS_DELETED);
         param.add(loggedUserId);
 
         if (status != null && !status.trim().isEmpty()) {
@@ -280,7 +281,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 if (s.getCustomerId() > 0) {
                     ps.setInt(2, s.getCustomerId());
                 } else {
-                    ps.setNull(2, java.sql.Types.INTEGER);
+                    ps.setNull(2, Types.INTEGER);
                 }
                 ps.setInt(3, s.getCreatedBy());
                 ps.setInt(4, s.getApprovedBy());
@@ -297,7 +298,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 ps.setTimestamp(15, s.getCancelledAt() != null ? new java.sql.Timestamp(s.getCancelledAt().getTime()) : null);
                 ps.setTimestamp(16, s.getUpdatedAt() != null ? new java.sql.Timestamp(s.getUpdatedAt().getTime()) : null);
                 ps.setInt(17, s.getOrderId());
-                ps.setString(18, GlobalUtils.STATUS_PENDING);
+                ps.setString(18, GlobalUtils.SALE_ORDER_STATUS_PENDING);
                 ps.executeUpdate();
                 conn.commit();
                 return true;
@@ -314,45 +315,39 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         }
     }
 
-    public int cancelOrder(int orderId, int cancelledBy) {
-        String checkSql = "SELECT COUNT(*) FROM receipt "
-                + "WHERE order_id = ? AND receipt_type = 'EXPORT' AND status = 'COMPLETED'";
-
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(checkSql);
-            statement.setInt(1, orderId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next() && resultSet.getInt(1) > 0) {
-                return -1;
+    public boolean updateForRevision(SaleOrder s) {
+        String sql = "UPDATE sale_order SET customer_id = ?, note = ?, "
+                + "customer_note = ?, total_amount = ?, status = ?, "
+                + "updated_by = ?, updated_at = NOW() "
+                + "WHERE order_id = ? AND status = ?";
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                if (s.getCustomerId() > 0) {
+                    ps.setInt(1, s.getCustomerId());
+                } else {
+                    ps.setNull(1, java.sql.Types.INTEGER);
+                }
+                ps.setString(2, s.getNote());
+                ps.setString(3, s.getCustomerNote());
+                ps.setDouble(4, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
+                ps.setString(5, GlobalUtils.SALE_ORDER_STATUS_PENDING);
+                ps.setInt(6, s.getUpdatedBy());
+                ps.setInt(7, s.getOrderId());
+                ps.setString(8, GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION);
+                int rows = ps.executeUpdate();
+                conn.commit();
+                return rows > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                e.printStackTrace();
+                return false;
+            } finally {
+                conn.setAutoCommit(true);
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            return 0;
-        } finally {
-            closeResources();
-        }
-
-        String updateSql = "UPDATE sale_order SET status = ?, cancelled_by = ?, cancelled_at = NOW() "
-                + "WHERE order_id = ? AND (status = ? OR status = ?)";
-
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(updateSql);
-            statement.setString(1, GlobalUtils.STATUS_CANCELLED);
-            statement.setInt(2, cancelledBy);
-            statement.setInt(3, orderId);
-            statement.setString(4, GlobalUtils.STATUS_PENDING);
-            statement.setString(5, GlobalUtils.STATUS_APPROVED);
-
-            int rowsAffected = statement.executeUpdate();
-            return rowsAffected > 0 ? 1 : 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return 0;
-        } finally {
-            closeResources();
+            return false;
         }
     }
 
@@ -362,10 +357,10 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_DELETED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_DELETED);
             statement.setInt(2, userId);
             statement.setInt(3, orderId);
-            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            statement.setString(4, GlobalUtils.SALE_ORDER_STATUS_PENDING);
             statement.setInt(5, userId);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -383,10 +378,10 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             statement.setInt(2, approvedBy);
             statement.setInt(3, orderId);
-            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            statement.setString(4, GlobalUtils.SALE_ORDER_STATUS_PENDING);
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -403,9 +398,9 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_COMPLETED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_COMPLETED);
             statement.setInt(2, orderId);
-            statement.setString(3, GlobalUtils.STATUS_APPROVED);
+            statement.setString(3, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             return statement.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -425,7 +420,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_APPROVED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_APPROVED);
             statement.setInt(2, excludeOrderId);
             resultSet = statement.executeQuery();
             while (resultSet.next()) {
@@ -445,11 +440,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_REJECTED);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_REJECTED);
             statement.setString(2, rejectReason);
             statement.setInt(3, rejectedBy);
             statement.setInt(4, orderId);
-            statement.setString(5, GlobalUtils.STATUS_PENDING);
+            statement.setString(5, GlobalUtils.SALE_ORDER_STATUS_PENDING);
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -468,11 +463,11 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         try {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
-            statement.setString(1, GlobalUtils.STATUS_NEEDS_REVISION);
+            statement.setString(1, GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION);
             statement.setString(2, reason);
             statement.setInt(3, userId);
             statement.setInt(4, orderId);
-            statement.setString(5, GlobalUtils.STATUS_PENDING);
+            statement.setString(5, GlobalUtils.SALE_ORDER_STATUS_PENDING);
             int rowsAffected = statement.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -528,15 +523,15 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             connection = getConnection();
-            statement = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS);
+            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, s.getOrderCode());
             if (s.getCustomerId() > 0) {
                 statement.setInt(2, s.getCustomerId());
             } else {
-                statement.setNull(2, java.sql.Types.INTEGER);
+                statement.setNull(2, Types.INTEGER);
             }
             statement.setInt(3, s.getCreatedBy());
-            statement.setString(4, GlobalUtils.STATUS_PENDING);
+            statement.setString(4, GlobalUtils.SALE_ORDER_STATUS_PENDING);
             statement.setDouble(5, s.getTotalAmount() != null ? s.getTotalAmount() : 0);
             statement.setString(6, s.getNote());
             statement.setString(7, s.getCustomerNote());
@@ -679,15 +674,15 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
                     if (s.getCustomerId() > 0) {
                         ps.setInt(1, s.getCustomerId());
                     } else {
-                        ps.setNull(1, java.sql.Types.INTEGER);
+                        ps.setNull(1, Types.INTEGER);
                     }
                     ps.setString(2, s.getCustomerNote());
                     ps.setDouble(3, s.getTotalAmount());
                     ps.setString(4, s.getNote());
-                    ps.setString(5, GlobalUtils.STATUS_PENDING);
+                    ps.setString(5, GlobalUtils.SALE_ORDER_STATUS_PENDING);
                     ps.setInt(6, s.getOrderId());
-                    ps.setString(7, GlobalUtils.STATUS_PENDING);
-                    ps.setString(8, GlobalUtils.STATUS_NEEDS_REVISION);
+                    ps.setString(7, GlobalUtils.SALE_ORDER_STATUS_PENDING);
+                    ps.setString(8, GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION);
 
                     int rows = ps.executeUpdate();
                     if (rows == 0) {
@@ -733,7 +728,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
         String sql = "select count(*)\n"
                 + "from sale_order\n"
                 + "where status = ? ";
-        if (GlobalUtils.STATUS_DELETED.equals(status)) {
+        if (GlobalUtils.SALE_ORDER_STATUS_DELETED.equals(status)) {
             sql += " AND created_by = ?";
         } else if (userId > 0) {
             sql += " AND created_by = ?";
@@ -742,7 +737,7 @@ public class SaleOrderDAO extends DBContext implements I_DAO<SaleOrder> {
             connection = getConnection();
             statement = connection.prepareStatement(sql);
             statement.setString(1, status);
-            if (GlobalUtils.STATUS_DELETED.equals(status)) {
+            if (GlobalUtils.SALE_ORDER_STATUS_DELETED.equals(status)) {
                 statement.setInt(2, loggedUserId);
             } else if (userId > 0) {
                 statement.setInt(2, userId);

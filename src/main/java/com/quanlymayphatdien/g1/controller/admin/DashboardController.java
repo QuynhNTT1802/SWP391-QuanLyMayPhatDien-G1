@@ -275,11 +275,11 @@ public class DashboardController extends HttpServlet {
             int today = saleOrderDAO.countTodayOrders();
             request.setAttribute("todayOrders", today);
 
-            int pending = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_PENDING, 0, userId);
-            int approved = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_APPROVED, 0, userId);
-            int completed = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_COMPLETED, 0, userId);
-            int rejected = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_REJECTED, 0, userId);
-            int cancelled = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, 0, userId);
+            int pending = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING, 0, userId);
+            int approved = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_APPROVED, 0, userId);
+            int completed = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_COMPLETED, 0, userId);
+            int rejected = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_REJECTED, 0, userId);
+            int cancelled = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_CANCELLED, 0, userId);
 
             request.setAttribute("pendingOrders", pending);
             request.setAttribute("approvedOrders", approved);
@@ -320,10 +320,10 @@ public class DashboardController extends HttpServlet {
             request.setAttribute("donutSegments", donutSegments);
             request.setAttribute("donutTotal", total);
 
-            int myPending = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_PENDING, userId, userId);
-            int myApproved = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_APPROVED, userId, userId);
-            int myCompleted = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_COMPLETED, userId, userId);
-            int myCancelled = saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_CANCELLED, userId, userId);
+            int myPending = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING, userId, userId);
+            int myApproved = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_APPROVED, userId, userId);
+            int myCompleted = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_COMPLETED, userId, userId);
+            int myCancelled = saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_CANCELLED, userId, userId);
 
             request.setAttribute("myPendingOrders", myPending);
             request.setAttribute("myApprovedOrders", myApproved);
@@ -363,12 +363,12 @@ public class DashboardController extends HttpServlet {
                 request.setAttribute("poPendingCeoCount",
                         purchaseOrderDAO.countByFilters(null, null, 0, GlobalUtils.PO_STATUS_PENDING_CEO));
                 request.setAttribute("proposalsPendingApproval",
-                        importProposalDAO.countByStatus(GlobalUtils.STATUS_PENDING, null, null, null, userId));
+                        importProposalDAO.countByStatus(GlobalUtils.SALE_ORDER_STATUS_PENDING, null, null, null, userId));
                 request.setAttribute("recentProposalsForApproval",
                         importProposalDAO.searchByFilters(
-                                GlobalUtils.STATUS_PENDING, null, null, null, null, null, userId, null, 1, 5));
+                                GlobalUtils.SALE_ORDER_STATUS_PENDING, null, null, null, null, null, userId, null, 1, 5));
                 request.setAttribute("approvedOrdersThisMonth",
-                        saleOrderDAO.countOrderByStatus(GlobalUtils.STATUS_APPROVED, 0, userId));
+                        saleOrderDAO.countOrderByStatus(GlobalUtils.SALE_ORDER_STATUS_APPROVED, 0, userId));
             }
 
             if (isSalesStaffRole) {
@@ -383,7 +383,7 @@ public class DashboardController extends HttpServlet {
                 request.setAttribute("myRecentSaleOrders",
                         myRecentSaleOrders != null ? myRecentSaleOrders : new ArrayList<>());
                 request.setAttribute("myNeedsRevision",
-                        importProposalDAO.countByStatus(GlobalUtils.STATUS_NEEDS_REVISION, userId, null, null, userId));
+                        importProposalDAO.countByStatus(GlobalUtils.SALE_ORDER_STATUS_NEEDS_REVISION, userId, null, null, userId));
             }
         } catch (Exception e) {
             System.err.println("DashboardController loadSalesData error: " + e.getMessage());
@@ -439,7 +439,7 @@ public class DashboardController extends HttpServlet {
     private void loadCeoData(HttpServletRequest request, Set<String> roleNames, int userId) {
         try {
             Map<String, Integer> liquidationKpis = liquidationDAO.getKpiCounts(null);
-            request.setAttribute("pendingLiquidations", liquidationKpis != null ? liquidationKpis.getOrDefault("PENDING_CEO", 0) : 0);
+            request.setAttribute("pendingLiquidations", liquidationKpis != null ? liquidationKpis.getOrDefault(GlobalUtils.LIQUIDATION_STATUS_PENDING_CEO, 0) : 0);
 
             Map<String, Integer> transferKpis = transferDAO.getKpiCounts(null, null, userId);
             request.setAttribute("pendingTransfers", transferKpis != null ? transferKpis.getOrDefault("PENDING_CEO", 0) : 0);

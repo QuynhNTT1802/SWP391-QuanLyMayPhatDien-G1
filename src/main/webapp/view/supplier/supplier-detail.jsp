@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/supplier.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory-check.css">
 </head>
@@ -51,31 +53,15 @@
                 <div class="hero-body">
                     <h2 class="hero-name">
                         <c:out value="${supplier.name}"/>
-                        <c:if test="${not empty supplierTypeName}">
-                            <span class="verified"><c:out value="${supplierTypeName}"/></span>
-                        </c:if>
                     </h2>
-                    <div class="hero-meta">
-                        <span class="mono"><c:out value="${supplier.phone}"/></span>
-                        <span class="sep">·</span>
-                        <span class="id">#<c:out value="${supplier.id}"/></span>
-                        <span class="sep">·</span>
-                        <span>Tạo ngày <c:out value="${createdDate}"/></span>
-                    </div>
-                    <div class="hero-pills">
-                        <c:choose>
-                            <c:when test="${supplier.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${supplier.status == 'locked'}"><span class="pill status-active" style="color:var(--danger)"><span class="pdot"></span>Bị khóa</span></c:when>
-                        </c:choose>
-                    </div>
                 </div>
             </div>
 
-            <div class="section" style="padding: 18px 22px;">
+            <div class="section section-padded">
                 <div class="tabs">
                     <button type="button" class="tab active" data-tab="info">Thông tin cơ bản</button>
                     <button type="button" class="tab" data-tab="orders">Đơn hàng</button>
-                    <button type="button" class="tab" data-tab="history">Nhật ký hoạt động</button>
+                    <button type="button" class="tab" data-tab="history">Nhật ký chỉnh sửa</button>
                 </div>
 
                 <div class="tab-panel active" id="tab-info">
@@ -103,7 +89,7 @@
                                     <input class="info-input" type="text" disabled value="${supplier.status == 'active' ? 'Đang hoạt động' : (supplier.status == 'locked' ? 'Bị khóa' : '')}">
                                 </div>
                             </div>
-                            <div class="form-grid cols-5" style="margin-top:14px;">
+                            <div class="form-grid cols-5 grid-mt-14">
                                 <div class="info-field">
                                     <label>Tên công ty</label>
                                     <input class="info-input" type="text" disabled value="<c:out value='${not empty supplier.companyName ? supplier.companyName : "—"}'/>">
@@ -126,18 +112,18 @@
                 </div>
 
                 <div class="tab-panel" id="tab-orders">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                        <h3 style="font-size:15px;font-weight:700;margin:0;">Đơn mua</h3>
-                        <a href="${pageContext.request.contextPath}/purchase-order" class="btn" style="font-size:12px;">Xem tất cả →</a>
+                    <div class="section-header-row">
+                        <h3 class="section-title-sm">Đơn mua</h3>
+                        <a href="${pageContext.request.contextPath}/purchase-order" class="btn btn-sm">Xem tất cả →</a>
                     </div>
                     <c:if test="${empty purchaseOrders}">
-                        <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Nhà cung cấp chưa có đơn mua nào.</div>
+                        <div class="activity-empty">Nhà cung cấp chưa có đơn mua nào.</div>
                     </c:if>
                     <c:if test="${not empty purchaseOrders}">
                         <table class="detail-table">
                             <thead>
                                 <tr>
-                                    <th style="width:40px;">#</th>
+                                    <th class="col-w-40">#</th>
                                     <th>Mã đơn</th>
                                     <th>Kỳ</th>
                                     <th>Trạng thái</th>
@@ -150,7 +136,7 @@
                                 <c:forEach var="po" items="${purchaseOrders}" varStatus="st">
                                     <tr>
                                         <td>${st.index + 1}</td>
-                                        <td><strong><a href="${pageContext.request.contextPath}/purchase-order?action=view&poId=${po.poId}" style="color:var(--accent);text-decoration:none;">${po.poCode}</a></strong></td>
+                                        <td><strong><a href="${pageContext.request.contextPath}/purchase-order?action=view&poId=${po.poId}" class="po-table-link">${po.poCode}</a></strong></td>
                                         <td>${po.period}</td>
                                         <td>${po.status}</td>
                                         <td>${po.warehouseName}</td>
@@ -166,7 +152,7 @@
                 <div class="tab-panel" id="tab-history">
                     <c:choose>
                         <c:when test="${empty activityLogs}">
-                            <div style="padding:24px;text-align:center;color:var(--muted);font-size:14px;">Chưa có hoạt động nào.</div>
+                            <div class="activity-empty">Chưa có hoạt động nào.</div>
                         </c:when>
                         <c:otherwise>
                             <table class="actlog-table">

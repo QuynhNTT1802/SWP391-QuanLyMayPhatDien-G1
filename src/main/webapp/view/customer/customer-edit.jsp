@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
 </head>
 <body>
@@ -24,14 +26,13 @@
             <h1>Chỉnh sửa khách hàng</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/customers?action=list">Khách hàng</a> / <span><c:out value="${customer.name}"/></span></span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-            </div>
+                </div>
         </header>
 
         <main>
             <c:if test="${not empty sessionScope.errors}">
                 <c:forEach var="err" items="${sessionScope.errors}">
-                    <div style="background:#ffeaea;color:#e74c3c;border:1px solid #e7b4b4;border-radius:6px;padding:10px 16px;margin-bottom:8px;font-size:13px;font-weight:600;">
+                    <div class="alert-danger">
                         <c:out value="${err.value}"/>
                     </div>
                 </c:forEach>
@@ -111,7 +112,7 @@
                         </div>
                     </div>
 
-                    <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                    <div class="form-section form-actions-end">
                         <a class="btn" href="${pageContext.request.contextPath}/warehouse/customers?action=view&id=${customer.id}">Hủy</a>
                         <button type="submit" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>

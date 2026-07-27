@@ -11,7 +11,7 @@ import java.util.List;
 public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck> {
 
     public List<InventoryCheck> findWithFilters(String search, Integer warehouseId,
-            String status, int page, int pageSize) {
+            String status, int month, int year, int page, int pageSize) {
         List<InventoryCheck> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT ic.*, w.name AS warehouse_name, u.name AS created_by_name "
@@ -33,6 +33,9 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             sql.append("AND ic.status = ? ");
             params.add(status);
         }
+        sql.append("AND MONTH(ic.created_at) = ? AND YEAR(ic.created_at) = ? ");
+        params.add(month);
+        params.add(year);
         sql.append("ORDER BY ic.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -55,7 +58,7 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         return list;
     }
 
-    public int countWithFilters(String search, Integer warehouseId, String status) {
+    public int countWithFilters(String search, Integer warehouseId, String status, int month, int year) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM inventory_check ic WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
 
@@ -71,6 +74,9 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             sql.append("AND ic.status = ? ");
             params.add(status);
         }
+        sql.append("AND MONTH(ic.created_at) = ? AND YEAR(ic.created_at) = ? ");
+        params.add(month);
+        params.add(year);
 
         try {
             connection = getConnection();
@@ -218,35 +224,6 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         return list;
     }
 
-    public int insertDetail(InventoryCheckDetail detail) {
-        String sql = "INSERT INTO inventory_check_detail "
-                + "(check_id, generator_id, system_quantity, actual_quantity, notes) "
-                + "VALUES (?, ?, ?, ?, ?)";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            statement.setInt(1, detail.getCheckId());
-            statement.setInt(2, detail.getGeneratorId());
-            statement.setInt(3, detail.getSystemQuantity());
-            if (detail.getActualQuantity() != null) {
-                statement.setInt(4, detail.getActualQuantity());
-            } else {
-                statement.setNull(4, Types.INTEGER);
-            }
-            statement.setString(5, detail.getNotes());
-            statement.executeUpdate();
-            resultSet = statement.getGeneratedKeys();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return -1;
-    }
-
     public boolean insertDetailsBatch(int checkId, List<InventoryCheckDetail> details) {
         String sql = "INSERT INTO inventory_check_detail "
                 + "(check_id, generator_id, system_quantity, notes) "
@@ -263,27 +240,6 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             return results.length > 0;
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-        return false;
-    }
-
-    public boolean updateDetail(InventoryCheckDetail detail) {
-        String sql = "UPDATE inventory_check_detail SET actual_quantity = ?, notes = ? WHERE id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            if (detail.getActualQuantity() != null) {
-                statement.setInt(1, detail.getActualQuantity());
-            } else {
-                statement.setNull(1, Types.INTEGER);
-            }
-            statement.setString(2, detail.getNotes());
-            statement.setInt(3, detail.getId());
-            return statement.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
         }
         return false;
     }
@@ -309,40 +265,6 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             e.printStackTrace();
         }
         return false;
-    }
-
-    public boolean deleteDetailsByCheckId(int checkId) {
-        String sql = "DELETE FROM inventory_check_detail WHERE check_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, checkId);
-            statement.executeUpdate();
-            return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return false;
-    }
-
-    public int countDetailsByCheckId(int checkId) {
-        String sql = "SELECT COUNT(*) FROM inventory_check_detail WHERE check_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, checkId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return 0;
     }
 
     public int countTotal() {
@@ -443,25 +365,6 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         return list;
     }
 
-    public List<InventoryCheckSerial> findSerialsByDetailId(int detailId) {
-        List<InventoryCheckSerial> list = new ArrayList<>();
-        String sql = "SELECT * FROM inventory_check_serial WHERE check_detail_id = ? ORDER BY id";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, detailId);
-            resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                list.add(getSerialFromResultSet(resultSet));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return list;
-    }
-
     public boolean insertSerialsBatch(int checkDetailId, List<InventoryCheckSerial> serials) {
         String sql = "INSERT INTO inventory_check_serial (check_detail_id, serial_number) VALUES (?, ?)";
         try (Connection c = getConnection(); PreparedStatement ps = c.prepareStatement(sql)) {
@@ -499,67 +402,6 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             System.out.println("Lỗi updateSerialsBatch: " + e.getMessage());
         }
         return false;
-    }
-
-    public int countSerialsByCheckId(int checkId) {
-        String sql = "SELECT COUNT(*) FROM inventory_check_serial ics "
-                + "JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
-                + "WHERE icd.check_id = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, checkId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return 0;
-    }
-
-    public int countSerialsByStatus(int checkId, String status) {
-        String sql = "SELECT COUNT(*) FROM inventory_check_serial ics "
-                + "JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
-                + "WHERE icd.check_id = ? AND ics.status = ?";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, checkId);
-            statement.setString(2, status);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return 0;
-    }
-
-    public int countNullStatusByCheckId(int checkId) {
-        String sql = "SELECT COUNT(*) FROM inventory_check_serial ics "
-                + "JOIN inventory_check_detail icd ON ics.check_detail_id = icd.id "
-                + "WHERE icd.check_id = ? AND ics.status IS NULL";
-        try {
-            connection = getConnection();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, checkId);
-            resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeResources();
-        }
-        return -1;
     }
 
     private InventoryCheckSerial getSerialFromResultSet(ResultSet rs) throws SQLException {

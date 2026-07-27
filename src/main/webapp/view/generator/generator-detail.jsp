@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : generator-detail
     Created on : May 23, 2026
     Author     : Admin
@@ -19,6 +19,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/generator.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory-check.css">
@@ -79,21 +80,7 @@
                         <div class="hero-body">
                             <h2 class="hero-name">
                                 <c:out value="${generator.model}"/>
-                                <c:if test="${not empty catType}">
-                                    <span class="verified"><c:out value="${catType}"/></span>
-                                </c:if>
                             </h2>
-                            <div class="hero-meta">
-                                <span><c:out value="${catBrand}"/></span>
-                                <span class="sep">·</span>
-                                <span class="id">#<c:out value="${generator.id}"/></span>
-                                <span class="sep">·</span>
-                                <span>Tạo ngày <c:out value="${createdDate}"/></span>
-                            </div>
-                            <div class="hero-pills">
-                                <span class="power-rating"><span class="pdot"></span><c:out value="${generator.powerRating}"/> kVA</span>
-                                <c:if test="${not empty catFuel}"><span class="fuel-type"><span class="pdot"></span><c:out value="${catFuel}"/></span></c:if>                              
-                            </div>
                         </div>
                     </div>
 
@@ -124,7 +111,7 @@
                                             <input class="info-input" type="text" disabled value="${generator.status == 'active' ? 'Đang hoạt động' : (generator.status == 'locked' ? 'Bị khóa' : '')}">
                                         </div>
                                     </div>
-                                    <div class="form-grid cols-5" style="margin-top:14px;">
+                                    <div class="form-grid cols-5 grid-mt-14">
                                         <div class="info-field">
                                             <label>Ngày tạo</label>
                                             <input class="info-input mono" type="text" disabled value="<c:out value='${createdDate}'/>">
@@ -175,7 +162,7 @@
                     
                     <div class="section" id="logs">
                         <div class="section-head">
-                            <h3>Nhật ký hoạt động</h3>
+                            <h3>Nhật ký chỉnh sửa</h3>
                         </div>
                         <c:choose>
                             <c:when test="${empty activityLogs}">

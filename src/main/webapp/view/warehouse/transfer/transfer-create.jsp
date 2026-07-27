@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -144,10 +144,6 @@
             <h1>Tạo phiếu luân chuyển</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/transfers">Luân chuyển</a> / Thêm mới</span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle">
-                    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                </button>
                 <jsp:include page="../../common/admin/bell.jsp"/>
             </div>
         </header>
@@ -620,9 +616,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
     function confirmCancelCreate() {
-        if (confirm('Bạn có chắc muốn huỷ tạo phiếu luân chuyển?')) {
-            location.href = window.APP_CTX + '/transfers';
-        }
+        location.href = window.APP_CTX + '/transfers';
     }
 
     // ========== Confirm Save Modal ==========

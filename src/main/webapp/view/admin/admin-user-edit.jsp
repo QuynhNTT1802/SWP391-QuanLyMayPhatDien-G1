@@ -30,8 +30,7 @@
                     <h1>Chỉnh sửa người dùng</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users?action=list">Người dùng</a> / ${user.name}</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
-                    </div>
+                        </div>
                 </header>
 
                 <main>
@@ -43,7 +42,6 @@
                     <div class="edit-hero">
                         <div class="edit-avatar">
                             ${user.name.substring(0, 1)}
-                            <button class="avatar-edit-btn" title="Đổi ảnh"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
                         </div>
                         <div class="edit-hero-body">
                             <h2 class="edit-hero-title">${user.name}</h2>
@@ -260,7 +258,8 @@
                 name: '<c:out value="${user.name}"/>',
                 phone: '<c:out value="${user.phone}"/>',
                 address: '<c:out value="${user.address}"/>',
-                status: '<c:out value="${user.status}"/>'
+                status: '<c:out value="${user.status}"/>',
+                warehouseId: '<c:out value="${user.warehouseId}"/>'
             };
             window.SESSION_DATA = {};
             <c:if test="${not empty sessionScope.message}">
