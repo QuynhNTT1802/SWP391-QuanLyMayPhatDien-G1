@@ -134,7 +134,6 @@ public class InventoryController extends HttpServlet {
         String genParam = request.getParameter("generator");
         request.setAttribute("selectedWarehouse", selectedWarehouse);
 
-        // Neu co generator param => che do serial detail
         if (genParam != null && !genParam.isEmpty()) {
             handleSerialDetail(request, response, selectedWarehouse, genParam);
         } else {
