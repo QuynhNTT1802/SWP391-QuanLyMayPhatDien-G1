@@ -31,7 +31,7 @@
                     <header class="topbar">
                         <h1>Đơn hàng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/order">Kinh doanh</a> / Đơn hàng</span>
-<div class="top-actions">
+                    <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -93,7 +93,7 @@
 
                             <div class="spacer"></div>
                             <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/order?action=list'">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            
                             Xóa lọc
                         </button>
                     </form>
@@ -203,7 +203,8 @@
             </c:if>
         </script>
 
-        <div class="customer-modal-backdrop" id="customerModal" onclick="if (event.target === this) closeCustomerModal();">
+        <div class="customer-modal-backdrop" id="customerModal" onclick="if (event.target === this)
+                    closeCustomerModal();">
             <div class="customer-modal" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
                 <div class="customer-modal-header">
                     <h3 id="customerModalTitle">Thông tin khách hàng</h3>
@@ -245,10 +246,10 @@
             </div>
         </div>
 
-    <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
-    <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
-    <script src="${pageContext.request.contextPath}/assets/js/order-list.js"></script>
-</body>
+        <script>window.APP_CTX = '${pageContext.request.contextPath}';</script>
+        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
+        <script src="${pageContext.request.contextPath}/assets/js/order-list.js"></script>
+    </body>
 </html>

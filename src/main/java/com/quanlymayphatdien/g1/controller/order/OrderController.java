@@ -75,9 +75,7 @@ public class OrderController extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "OrderController.doGet", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
-            setMsg(request.getSession(), "Lỗi hệ thống: " + e.getMessage(), "danger");
+               setMsg(request.getSession(), "Lỗi hệ thống: " + e.getMessage(), "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }
     }
@@ -123,9 +121,7 @@ public class OrderController extends HttpServlet {
                     doGet(request, response);
                     break;
             }
-        } catch (Exception e) {
-            SystemLogger.error(LogModule.ORDER, "OrderController.doPost", e.getMessage(), e);
-            com.quanlymayphatdien.g1.utils.SystemLogger.error(LogModule.SYSTEM, "Loi Ngoai Le", e.getMessage() != null ? e.getMessage() : e.getClass().getName(), e);
+        } catch (Exception e) {         
             setMsg(request.getSession(), "Lỗi xử lý dữ liệu: " + e.getMessage(), "danger");
             response.sendRedirect(request.getContextPath() + "/order?action=list");
         }

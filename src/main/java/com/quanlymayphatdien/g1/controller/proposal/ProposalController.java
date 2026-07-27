@@ -179,7 +179,7 @@ public class ProposalController extends HttpServlet {
         User loggedUser = (User) session.getAttribute("loggedUser");
         Set<String> perms = (Set<String>) session.getAttribute("userPermissions");
         boolean canApprove = perms != null && perms.contains("proposals.approve");
-     
+
         Integer createdByFilter = canApprove ? null : loggedUser.getId();
 
         String statusFilter = request.getParameter("status");
@@ -204,7 +204,10 @@ public class ProposalController extends HttpServlet {
         Integer poFilter = null;
         String poFilterStr = request.getParameter("poFilter");
         if (poFilterStr != null && !poFilterStr.isEmpty()) {
-            try { poFilter = Integer.parseInt(poFilterStr); } catch (NumberFormatException e) {}
+            try {
+                poFilter = Integer.parseInt(poFilterStr);
+            } catch (NumberFormatException e) {
+            }
         }
 
         String dbStatus = statusFilter;
@@ -259,12 +262,11 @@ public class ProposalController extends HttpServlet {
         request.setAttribute("canCreateProposal", perms != null && perms.contains("proposals.create"));
         request.setAttribute("canCreatePo", perms != null && perms.contains("purchase_orders.create"));
 
-        request.setAttribute("pendingCount",   dao.countByStatus(GlobalUtils.STATUS_PENDING,   createdByFilter, dateFrom, dateTo, loggedUser.getId()));
-        request.setAttribute("approvedCount",  dao.countByStatus(GlobalUtils.STATUS_APPROVED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
-        request.setAttribute("rejectedCount",  dao.countByStatus(GlobalUtils.STATUS_REJECTED,  createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("pendingCount", dao.countByStatus(GlobalUtils.STATUS_PENDING, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("approvedCount", dao.countByStatus(GlobalUtils.STATUS_APPROVED, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
+        request.setAttribute("rejectedCount", dao.countByStatus(GlobalUtils.STATUS_REJECTED, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
         request.setAttribute("cancelledCount", dao.countByStatus(GlobalUtils.STATUS_CANCELLED, createdByFilter, dateFrom, dateTo, loggedUser.getId()));
 
- 
         request.getRequestDispatcher("/view/proposal/proposal-list.jsp").forward(request, response);
     }
 
@@ -279,7 +281,7 @@ public class ProposalController extends HttpServlet {
             return;
         }
         int warehouseId = parseInt(request.getParameter("warehouseId"));
-request.setAttribute("selectedWarehouseId", warehouseId);
+        request.setAttribute("selectedWarehouseId", warehouseId);
         loadProposalFormAttributes(request, warehouseId);
         request.getRequestDispatcher("/view/proposal/proposal-create.jsp").forward(request, response);
     }
@@ -305,13 +307,16 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("canCreateSupplier", canCreateSupplier);
     }
 
-    
     private boolean canEditProposal(ImportProposal p, int currentUserId, boolean canApprove) {
-        if (p == null) return false;
+        if (p == null) {
+            return false;
+        }
         if (!GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())) {
             return false;
         }
-        if (p.getCreatedBy() == currentUserId) return true;
+        if (p.getCreatedBy() == currentUserId) {
+            return true;
+        }
         boolean isCeoRequestedRevision = GlobalUtils.STATUS_NEEDS_REVISION.equals(p.getStatus())
                 && GlobalUtils.REVISION_REQUESTER_CEO.equals(p.getRevisionRequestedByRole());
         return isCeoRequestedRevision && canApprove;
@@ -397,13 +402,18 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             int logPage = 1;
             String pageStr = request.getParameter("page");
             if (pageStr != null && !pageStr.isEmpty()) {
-                try { logPage = Math.max(1, Integer.parseInt(pageStr)); }
-                catch (NumberFormatException ignored) { logPage = 1; }
+                try {
+                    logPage = Math.max(1, Integer.parseInt(pageStr));
+                } catch (NumberFormatException ignored) {
+                    logPage = 1;
+                }
             }
 
             int totalLogs = logDAO.countByEntityTypeAndId2("import_proposal", id, logSearch, logAction, dateFrom, dateTo);
             int logTotalPages = Math.max(1, (int) Math.ceil((double) totalLogs / pageSize));
-            if (logPage > logTotalPages) logPage = logTotalPages;
+            if (logPage > logTotalPages) {
+                logPage = logTotalPages;
+            }
             List<ActivityLog> logList = logDAO.findByEntityTypeAndId2("import_proposal", id, logSearch, logAction, dateFrom, dateTo, logPage, pageSize);
 
             request.setAttribute("logList", logList);
@@ -430,7 +440,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 totalQty += d.getQuantity();
                 if (d.getUnitPrice() != null) {
                     grandTotal = grandTotal.add(
-                        d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
+                            d.getUnitPrice().multiply(java.math.BigDecimal.valueOf(d.getQuantity())));
                 }
             }
         }
@@ -449,8 +459,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         request.setAttribute("canViewPo", perms != null && perms.contains("purchase_orders.view"));
         request.setAttribute("isWithinDeadline",
                 p.getPeriod() == null
-                        || PeriodUtils.isCurrentPeriod(p.getPeriod())
-                        || PeriodUtils.isWithinDeadline(p.getPeriod()));
+                || PeriodUtils.isCurrentPeriod(p.getPeriod())
+                || PeriodUtils.isWithinDeadline(p.getPeriod()));
         request.setAttribute("deadlineDate",
                 p.getPeriod() == null ? null : PeriodUtils.deadlineOf(p.getPeriod()));
         request.setAttribute("perms", perms);
@@ -548,14 +558,16 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         for (User u : approvers) {
             try {
                 boolean ok = NotificationService.send(
-                    u.getId(),
-                    "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
-                    "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
-                    request.getContextPath() + "/proposal?action=detail&id=" + newId,
-                    "proposal",
-                    newId
+                        u.getId(),
+                        "Phiếu đề xuất " + p.getProposalCode() + " chờ duyệt",
+                        "Nhân viên " + user.getName() + " vừa tạo phiếu đề xuất cần duyệt.",
+                        request.getContextPath() + "/proposal?action=detail&id=" + newId,
+                        "proposal",
+                        newId
                 );
-                if (!ok) anyNotifFailed = true;
+                if (!ok) {
+                    anyNotifFailed = true;
+                }
             } catch (Exception e) {
                 SystemLogger.error(LogModule.PROPOSAL, "ProposalController.saveProposal.sendNotification", e.getMessage(), e);
                 anyNotifFailed = true;
@@ -571,7 +583,9 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
     private Integer parseHeaderSupplierId(HttpServletRequest request) {
         String raw = request.getParameter("supplierId");
-        if (raw == null || raw.trim().isEmpty()) return null;
+        if (raw == null || raw.trim().isEmpty()) {
+            return null;
+        }
         int id = parseInt(raw);
         return id > 0 ? id : null;
     }
@@ -601,8 +615,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 && !PeriodUtils.isWithinDeadline(existing.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
-                            + " tháng sau) cho period " + existing.getPeriod()
-                            + ". Không thể gửi duyệt lại phiếu này.");
+                    + " tháng sau) cho period " + existing.getPeriod()
+                    + ". Không thể gửi duyệt lại phiếu này.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
@@ -667,7 +681,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         Part filePart = null;
         try {
             filePart = request.getPart("excelFile");
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         if (filePart == null || filePart.getSize() == 0) {
             session.setAttribute("toastMessage", "Vui lòng chọn file Excel.");
             session.setAttribute("toastType", "danger");
@@ -691,11 +706,25 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         for (Map<String, String> row : rows) {
             String model = row.get(ProposalExcelSupport.HEADER_MODEL);
             String qtyStr = row.get(ProposalExcelSupport.HEADER_QUANTITY);
-            if (model == null || model.trim().isEmpty()) continue;
+            if (model == null || model.trim().isEmpty()) {
+                continue;
+            }
             Generator g = genDAO.findByModel(model.trim());
-            if (g == null) { errors++; continue; }
+            if (g == null) {
+                errors++;
+                continue;
+            }
             int qty = 1;
-            try { qty = Integer.parseInt(qtyStr); if (qty < 1) qty = 1; if (qty > 9999) qty = 9999; } catch (Exception ignored) {}
+            try {
+                qty = Integer.parseInt(qtyStr);
+                if (qty < 1) {
+                    qty = 1;
+                }
+                if (qty > 9999) {
+                    qty = 9999;
+                }
+            } catch (Exception ignored) {
+            }
             ImportProposalDetail d = new ImportProposalDetail();
             d.setProposalId(id);
             d.setGeneratorId(g.getId());
@@ -706,7 +735,10 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             if (priceStr != null && !priceStr.trim().isEmpty()) {
                 String cleaned = priceStr.trim().replaceAll("[^0-9.]", "");
                 if (!cleaned.isEmpty()) {
-                    try { d.setUnitPrice(new BigDecimal(cleaned)); } catch (Exception ignored) {}
+                    try {
+                        d.setUnitPrice(new BigDecimal(cleaned));
+                    } catch (Exception ignored) {
+                    }
                 }
             }
             details.add(d);
@@ -728,7 +760,9 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         }
 
         String msg = "Thay thế dữ liệu từ Excel (" + details.size() + " dòng)";
-        if (errors > 0) msg += ". Bỏ qua " + errors + " dòng không tìm thấy máy.";
+        if (errors > 0) {
+            msg += ". Bỏ qua " + errors + " dòng không tìm thấy máy.";
+        }
         logActivity(user.getId(), "import_proposal", "UPDATE", id, existing.getProposalCode(), msg);
 
         session.setAttribute("toastMessage", "Đã thay thế dữ liệu từ Excel" + (errors > 0 ? " (" + errors + " dòng bỏ qua)" : ""));
@@ -789,8 +823,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
-                            + " tháng sau) cho period " + pCheck.getPeriod()
-                            + ". Không thể duyệt phiếu.");
+                    + " tháng sau) cho period " + pCheck.getPeriod()
+                    + ". Không thể duyệt phiếu.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
@@ -808,12 +842,12 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 boolean notifOk = false;
                 try {
                     notifOk = NotificationService.send(
-                        p.getCreatedBy(),
-                        "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
-                        "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
-                        request.getContextPath() + "/proposal?action=detail&id=" + id,
-                        "proposal",
-                        id
+                            p.getCreatedBy(),
+                            "Phiếu đề xuất " + p.getProposalCode() + " đã được duyệt",
+                            "Phiếu " + p.getProposalCode() + " đã được " + (actor != null ? actor.getName() : "hệ thống") + " duyệt.",
+                            request.getContextPath() + "/proposal?action=detail&id=" + id,
+                            "proposal",
+                            id
                     );
                 } catch (Exception e) {
                     SystemLogger.error(LogModule.PROPOSAL, "ProposalController.approveProposal.sendNotification", e.getMessage(), e);
@@ -859,8 +893,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
-                            + " tháng sau) cho period " + pCheck.getPeriod()
-                            + ". Không thể từ chối phiếu.");
+                    + " tháng sau) cho period " + pCheck.getPeriod()
+                    + ". Không thể từ chối phiếu.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
@@ -878,12 +912,12 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 boolean notifOk = false;
                 try {
                     notifOk = NotificationService.send(
-                        p.getCreatedBy(),
-                        "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
-                        "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",
-                        request.getContextPath() + "/proposal?action=detail&id=" + id,
-                        "proposal",
-                        id
+                            p.getCreatedBy(),
+                            "Phiếu đề xuất " + p.getProposalCode() + " bị từ chối",
+                            "Phiếu " + p.getProposalCode() + " bị " + (actor != null ? actor.getName() : "hệ thống") + " từ chối (lý do: " + reason.trim() + ").",
+                            request.getContextPath() + "/proposal?action=detail&id=" + id,
+                            "proposal",
+                            id
                     );
                 } catch (Exception e) {
                     SystemLogger.error(LogModule.PROPOSAL, "ProposalController.rejectProposal.sendNotification", e.getMessage(), e);
@@ -929,8 +963,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
-                            + " tháng sau) cho period " + pCheck.getPeriod()
-                            + ". Không thể yêu cầu chỉnh sửa.");
+                    + " tháng sau) cho period " + pCheck.getPeriod()
+                    + ". Không thể yêu cầu chỉnh sửa.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
@@ -971,8 +1005,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 && !PeriodUtils.isWithinDeadline(pCheck.getPeriod())) {
             session.setAttribute("toastMessage",
                     "Đã quá deadline (ngày " + PeriodUtils.getDeadlineDay()
-                            + " tháng sau) cho period " + pCheck.getPeriod()
-                            + ". Không thể yêu cầu chỉnh sửa.");
+                    + " tháng sau) cho period " + pCheck.getPeriod()
+                    + ". Không thể yêu cầu chỉnh sửa.");
             session.setAttribute("toastType", "danger");
             response.sendRedirect(request.getContextPath() + "/proposal?action=detail&id=" + id);
             return;
@@ -1185,12 +1219,14 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 json.append("\"validCount\":").append(validCount).append(",");
                 json.append("\"invalidCount\":").append(invalidCount).append(",");
                 json.append("\"message\":\"Đã đọc ").append(allRows.size()).append(" dòng từ Excel")
-                    .append(invalidCount > 0 ? " (" + invalidCount + " dòng lỗi)" : "")
-                    .append("\",");
+                        .append(invalidCount > 0 ? " (" + invalidCount + " dòng lỗi)" : "")
+                        .append("\",");
                 json.append("\"rows\":[");
                 boolean first = true;
                 for (Map<String, String> row : allRows) {
-                    if (!first) json.append(",");
+                    if (!first) {
+                        json.append(",");
+                    }
                     first = false;
                     String errors = row.get("gerrors");
                     json.append("{");
@@ -1238,7 +1274,6 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         User u = (User) request.getSession().getAttribute("loggedUser");
         return u != null ? u.getId() : 0;
     }
-
 
     private int parseId(HttpServletRequest request) {
         try {
@@ -1310,7 +1345,7 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     }
 
     private void logActivity(int userId, String entityType, String action,
-                             int entityId, String entityName, String details) {
+            int entityId, String entityName, String details) {
         ActivityLog log = new ActivityLog();
         log.setUserId(userId);
         log.setEntityType(entityType);
@@ -1339,12 +1374,12 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             }
             first = false;
             sb.append("{")
-              .append("\"id\":").append(s.getId()).append(",")
-              .append("\"name\":\"").append(escapeJson(s.getName())).append("\",")
-              .append("\"phone\":\"").append(escapeJson(s.getPhone())).append("\",")
-              .append("\"email\":\"").append(escapeJson(s.getEmail())).append("\",")
-              .append("\"company\":\"").append(escapeJson(s.getCompanyName())).append("\"")
-              .append("}");
+                    .append("\"id\":").append(s.getId()).append(",")
+                    .append("\"name\":\"").append(escapeJson(s.getName())).append("\",")
+                    .append("\"phone\":\"").append(escapeJson(s.getPhone())).append("\",")
+                    .append("\"email\":\"").append(escapeJson(s.getEmail())).append("\",")
+                    .append("\"company\":\"").append(escapeJson(s.getCompanyName())).append("\"")
+                    .append("}");
         }
         sb.append("]");
         response.getWriter().write(sb.toString());
@@ -1372,17 +1407,16 @@ request.setAttribute("selectedWarehouseId", warehouseId);
                 }
             }
             sb.append("{")
-              .append("\"id\":").append(g.getId()).append(",")
-              .append("\"model\":\"").append(escapeJson(g.getModel())).append("\",")
-              .append("\"brand\":\"").append(escapeJson(brand)).append("\",")
-              .append("\"powerRating\":\"").append(g.getPowerRating() == null ? "" : g.getPowerRating().toString()).append("\",")
-              .append("\"status\":\"").append(escapeJson(g.getStatus())).append("\"")
-                            .append("}");
+                    .append("\"id\":").append(g.getId()).append(",")
+                    .append("\"model\":\"").append(escapeJson(g.getModel())).append("\",")
+                    .append("\"brand\":\"").append(escapeJson(brand)).append("\",")
+                    .append("\"powerRating\":\"").append(g.getPowerRating() == null ? "" : g.getPowerRating().toString()).append("\",")
+                    .append("\"status\":\"").append(escapeJson(g.getStatus())).append("\"")
+                    .append("}");
         }
         sb.append("]");
         response.getWriter().write(sb.toString());
     }
-
 
     private void quickCreateGenerator(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -1543,9 +1577,13 @@ request.setAttribute("selectedWarehouseId", warehouseId);
     }
 
     private void addCatIfPresent(CategoryDAO catDAO, String rawId, String type, List<Integer> acc) {
-        if (rawId == null || rawId.trim().isEmpty()) return;
+        if (rawId == null || rawId.trim().isEmpty()) {
+            return;
+        }
         int id = parseInt(rawId);
-        if (id <= 0) return;
+        if (id <= 0) {
+            return;
+        }
         Category c = catDAO.findById(id);
         if (c != null) {
             acc.add(id);
@@ -1612,7 +1650,8 @@ request.setAttribute("selectedWarehouseId", warehouseId);
         if (typeIdStr != null && !typeIdStr.trim().isEmpty()) {
             try {
                 s.setSupplierTypeId(Integer.parseInt(typeIdStr.trim()));
-            } catch (NumberFormatException ignore) {}
+            } catch (NumberFormatException ignore) {
+            }
         }
         s.setStatus("active");
         User u = (User) session.getAttribute("loggedUser");
@@ -1638,9 +1677,13 @@ request.setAttribute("selectedWarehouseId", warehouseId);
 
     private boolean isAjaxRequest(HttpServletRequest request) {
         String xrw = request.getHeader("X-Requested-With");
-        if ("XMLHttpRequest".equals(xrw)) return true;
+        if ("XMLHttpRequest".equals(xrw)) {
+            return true;
+        }
         String qs = request.getQueryString();
-        if (qs != null && (qs.contains("ajax=1") || qs.contains("ajax=true"))) return true;
+        if (qs != null && (qs.contains("ajax=1") || qs.contains("ajax=true"))) {
+            return true;
+        }
         String ajax = request.getParameter("ajax");
         return "1".equals(ajax) || "true".equalsIgnoreCase(ajax);
     }

@@ -29,11 +29,11 @@
         <div class="app">
             <jsp:include page="../common/admin/aside.jsp"></jsp:include>
 
-            <div>
-                <header class="topbar">
-                    <h1>Chi tiết đề xuất nhập kho</h1>
-                    <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal?action=list">Đề xuất nhập kho</a> / <span><c:out value="${proposal.proposalCode}"/></span></span>
-<div class="top-actions">
+                <div>
+                    <header class="topbar">
+                        <h1>Chi tiết đề xuất nhập kho</h1>
+                        <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal?action=list">Đề xuất nhập kho</a> / <span><c:out value="${proposal.proposalCode}"/></span></span>
+                    <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -43,8 +43,8 @@
                 </header>
 
                 <main>
-<c:choose>
-                    <c:when test="${proposal.status == 'PENDING'}">
+                    <c:choose>
+                        <c:when test="${proposal.status == 'PENDING'}">
                             <c:set var="statusLabel" value="Chờ duyệt"/>
                             <c:set var="statusPillClass" value="status-pending"/>
                         </c:when>
@@ -148,7 +148,7 @@
                                 </button>
                             </c:if>
 
-                         
+
                         </div>
                     </div>
 
@@ -259,7 +259,7 @@
                         </div>
                     </div>
 
-      
+
                     <div class="section">
                         <div class="section-head">
                             <h3>Danh sách máy phát đăng ký</h3>
@@ -292,7 +292,7 @@
                                     <thead>
                                         <tr>
                                             <th>Mã máy phát</th>
-                                            
+
                                             <th>Hãng</th>
                                             <th>Công suất</th>
                                             <th class="text-right">SL</th>
@@ -307,21 +307,21 @@
                                         <c:choose>
                                             <c:when test="${empty proposal.details}">
                                                 <tr><td colspan="10">
-                                                    <div class="empty-state">
-                                                        <div class="icon-wrap">
-                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                        <div class="empty-state">
+                                                            <div class="icon-wrap">
+                                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                            </div>
+                                                            <strong>Chưa có máy phát nào trong phiếu đề xuất</strong>
                                                         </div>
-                                                        <strong>Chưa có máy phát nào trong phiếu đề xuất</strong>
-                                                    </div>
-                                                </td></tr>
-                                            </c:when>
-                                            <c:otherwise>
-                                                <c:forEach var="d" items="${proposal.details}" varStatus="st">
+                                                    </td></tr>
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <c:forEach var="d" items="${proposal.details}" varStatus="st">
                                                     <tr data-row-id="${d.proposalDetailId}"
                                                         data-search="<c:out value='${d.generatorCode} ${d.generatorName} ${d.brandName} ${d.supplierName}'/>"
                                                         data-status="${proposal.status}">
                                                         <td class="mono"><c:out value="${d.generatorCode}"/></td>
-                                                        
+
                                                         <td><c:out value="${d.brandName}"/></td>
                                                         <td class="mono">
                                                             <c:choose>
@@ -407,7 +407,7 @@
                                     <option value="APPROVE"    ${logAction == 'APPROVE' ? 'selected' : ''}>Duyệt</option>
                                     <option value="REJECT"     ${logAction == 'REJECT' ? 'selected' : ''}>Từ chối</option>
                                     <option value="REVISION"   ${logAction == 'REVISION' ? 'selected' : ''}>Yêu cầu chỉnh sửa</option>
-                                    
+
                                 </select>
                                 <div class="date-range">
                                     <label class="date-label">Từ</label>
@@ -447,19 +447,19 @@
                                     <c:choose>
                                         <c:when test="${empty logList}">
                                             <tr><td colspan="4">
-                                                <div class="empty-state">
-                                                    <div class="icon-wrap">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                    <div class="empty-state">
+                                                        <div class="icon-wrap">
+                                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                        </div>
+                                                        <strong>Không có bản ghi nào</strong>
+                                                        <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
+                                                            <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}&amp;tab=history">xóa lọc</a></span>
+                                                        </c:if>
                                                     </div>
-                                                    <strong>Không có bản ghi nào</strong>
-                                                    <c:if test="${not empty logSearch or not empty logAction or not empty dateFrom or not empty dateTo}">
-                                                        <span style="color:var(--muted);font-size:0.88rem;">Thử điều chỉnh bộ lọc hoặc <a href="${pageContext.request.contextPath}/proposal?action=detail&id=${proposal.proposalId}&amp;tab=history">xóa lọc</a></span>
-                                                    </c:if>
-                                                </div>
-                                            </td></tr>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <c:forEach var="h" items="${logList}">
+                                                </td></tr>
+                                            </c:when>
+                                            <c:otherwise>
+                                                <c:forEach var="h" items="${logList}">
                                                 <tr>
                                                     <td class="mono">
                                                         <c:choose>
@@ -470,23 +470,23 @@
                                                     <td><strong><c:out value="${h.username}"/></strong></td>
                                                     <td>
                                                         <span class="action-badge action-<c:choose>
-                                                            <c:when test="${h.action == 'CREATE'}">create</c:when>
-                                                            <c:when test="${h.action == 'UPDATE'}">update</c:when>
-                                                            <c:when test="${h.action == 'APPROVE'}">approve</c:when>
-                                                            <c:when test="${h.action == 'REJECT'}">reject</c:when>
-                                                            <c:when test="${h.action == 'REVISION'}">revision</c:when>
-                                                            <c:when test="${h.action == 'CANCEL'}">cancel</c:when>
-                                                            <c:otherwise>cancel</c:otherwise>
-                                                        </c:choose>">
-                                                        <c:choose>
-                                                            <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
-                                                            <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
-                                                            <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
-                                                            <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
-                                                            <c:when test="${h.action == 'REVISION'}">Yêu cầu sửa</c:when>
-                                                            
-                                                            <c:otherwise>${h.action}</c:otherwise>
-                                                        </c:choose>
+                                                                  <c:when test="${h.action == 'CREATE'}">create</c:when>
+                                                                  <c:when test="${h.action == 'UPDATE'}">update</c:when>
+                                                                  <c:when test="${h.action == 'APPROVE'}">approve</c:when>
+                                                                  <c:when test="${h.action == 'REJECT'}">reject</c:when>
+                                                                  <c:when test="${h.action == 'REVISION'}">revision</c:when>
+                                                                  <c:when test="${h.action == 'CANCEL'}">cancel</c:when>
+                                                                  <c:otherwise>cancel</c:otherwise>
+                                                              </c:choose>">
+                                                            <c:choose>
+                                                                <c:when test="${h.action == 'CREATE'}">Tạo phiếu</c:when>
+                                                                <c:when test="${h.action == 'UPDATE'}">Cập nhật</c:when>
+                                                                <c:when test="${h.action == 'APPROVE'}">Duyệt</c:when>
+                                                                <c:when test="${h.action == 'REJECT'}">Từ chối</c:when>
+                                                                <c:when test="${h.action == 'REVISION'}">Yêu cầu sửa</c:when>
+
+                                                                <c:otherwise>${h.action}</c:otherwise>
+                                                            </c:choose>
                                                         </span>
                                                     </td>
                                                     <td style="max-width:480px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
@@ -500,23 +500,23 @@
                             </table>
 
                             <c:if test="${logTotalPages > 1}">
-                            <div class="pagination">
-                                <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
-                                <div class="controls">
-                                    <c:if test="${logPage > 1}">
-                                        <a href="${pageContext.request.contextPath}/proposal?action=detail&amp;id=${proposal.proposalId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
-                                    </c:if>
-                                    <c:forEach begin="1" end="${logTotalPages}" var="p">
-                                        <c:choose>
-                                            <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
-                                            <c:otherwise><a href="${pageContext.request.contextPath}/proposal?action=detail&amp;id=${proposal.proposalId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
-                                        </c:choose>
-                                    </c:forEach>
-                                    <c:if test="${logPage < logTotalPages}">
-                                        <a href="${pageContext.request.contextPath}/proposal?action=detail&amp;id=${proposal.proposalId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
-                                    </c:if>
+                                <div class="pagination">
+                                    <div class="info">Hiển thị <strong>${(logPage-1)*20 + 1}</strong>–<strong>${logPage*20 > totalLogs ? totalLogs : logPage*20}</strong> / <strong>${totalLogs}</strong> bản ghi</div>
+                                    <div class="controls">
+                                        <c:if test="${logPage > 1}">
+                                            <a href="${pageContext.request.contextPath}/proposal?action=detail&amp;id=${proposal.proposalId}&amp;tab=history&amp;page=${logPage - 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&lsaquo;</a>
+                                        </c:if>
+                                        <c:forEach begin="1" end="${logTotalPages}" var="p">
+                                            <c:choose>
+                                                <c:when test="${p == logPage}"><span class="page-btn active">${p}</span></c:when>
+                                                <c:otherwise><a href="${pageContext.request.contextPath}/proposal?action=detail&amp;id=${proposal.proposalId}&amp;tab=history&amp;page=${p}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">${p}</a></c:otherwise>
+                                            </c:choose>
+                                        </c:forEach>
+                                        <c:if test="${logPage < logTotalPages}">
+                                            <a href="${pageContext.request.contextPath}/proposal?action=detail&amp;id=${proposal.proposalId}&amp;tab=history&amp;page=${logPage + 1}<c:if test="${not empty logSearch}">&amp;logSearch=<c:out value="${logSearch}"/></c:if><c:if test="${not empty logAction}">&amp;logAction=${logAction}</c:if><c:if test="${not empty dateFrom}">&amp;dateFrom=${dateFrom}</c:if><c:if test="${not empty dateTo}">&amp;dateTo=${dateTo}</c:if>" class="page-btn">&rsaquo;</a>
+                                        </c:if>
+                                    </div>
                                 </div>
-                            </div>
                             </c:if>
                         </div>
                     </div>
@@ -524,7 +524,7 @@
             </div>
         </div>
 
- 
+
         <c:if test="${proposal.status == 'PENDING' && canApprove}">
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">

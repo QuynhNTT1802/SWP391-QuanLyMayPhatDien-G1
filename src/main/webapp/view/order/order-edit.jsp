@@ -21,216 +21,8 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/order-edit.css">
     </head>
-    <style>
-        .form-layout {
-            grid-template-columns: 1fr;
-            max-width: none;
-        }
-
-        
-        .customer-info-card { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface-2); margin-top: 10px; }
-        .cic-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .cic-name { font-size: 14px; font-weight: 700; color: var(--fg); line-height: 1.4; }
-        .cic-actions { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
-        .cic-btn-remove { padding: 4px; border: none; color: var(--muted); background: none; cursor: pointer; }
-        .cic-btn-remove:hover { color: var(--danger); }
-        .cic-btn-remove svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-        .cic-details { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; }
-        .cic-detail-item { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
-        .cic-detail-item svg { width: 14px; height: 14px; flex-shrink: 0; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-     
-        .modal-host {
-            position: fixed; inset: 0;
-            background: rgba(15, 23, 42, 0.45);
-            display: none; align-items: center; justify-content: center;
-            z-index: 1000; padding: 20px;
-        }
-        .modal-host.show { display: flex; }
-        .modal {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            width: 100%; max-width: 680px;
-            max-height: 90vh; overflow: auto;
-            padding: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.18);
-        }
-        .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .modal-head h3 { margin: 0; font-size: 18px; font-weight: 700; }
-        .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 24px; line-height: 1; padding: 4px 8px; border-radius: var(--radius-sm); }
-        .modal-close:hover { background: var(--surface-2); color: var(--fg); }
-        .modal-sub { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
-        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
-        .modal-grid .span-2 { grid-column: span 2; }
-        .modal-error {
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            background: var(--danger-soft);
-            color: var(--danger);
-            border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
-            font-size: 13px; font-weight: 600;
-            margin-bottom: 12px;
-            display: none;
-        }
-        .modal-error.show { display: block; }
-        .modal-actions {
-            display: flex; justify-content: flex-end; gap: 8px;
-            margin-top: 18px; padding-top: 14px;
-            border-top: 1px solid var(--border);
-        }
-
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-        }
-        .detail-table th {
-            text-align: left;
-            padding: 8px 10px;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--muted);
-            border-bottom: 1px solid var(--border);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .detail-table td {
-            padding: 8px 6px;
-            vertical-align: top;
-        }
-        .detail-table select, .detail-table input {
-            width: 100%;
-            padding: 7px 8px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--bg);
-            color: var(--fg);
-            font-size: 13px;
-            box-sizing: border-box;
-        }
-        .col-num {
-            width: 36px;
-            text-align: center;
-            color: var(--muted);
-            font-weight: 600;
-            padding-top: 14px;
-        }
-        .col-qty {
-            width: 100px;
-        }
-        .col-stock {
-            width: 90px;
-            text-align: center;
-            font-size: 12px;
-            color: var(--muted);
-            padding-top: 14px !important;
-        }
-        .col-price {
-            width: 160px;
-            text-align: right;
-            font-size: 13px;
-            padding-top: 6px !important;
-        }
-        .unit-price-input {
-            width: 100%;
-            padding: 7px 8px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            background: var(--bg);
-            color: var(--fg);
-            font-size: 13px;
-            box-sizing: border-box;
-            text-align: right;
-        }
-        .unit-price-input.is-invalid,
-        .qty-input.is-invalid {
-            border-color: var(--danger);
-            background: var(--danger-soft);
-            color: var(--danger);
-        }
-        .row-subtotal-cell {
-            padding-top: 14px !important;
-        }
-        .col-del {
-            width: 40px;
-            text-align: center;
-        }
-        .row-unit-price {
-            color: var(--muted);
-        }
-        .row-subtotal {
-            color: var(--accent);
-            font-weight: 600;
-        }
-        .grand-total-box {
-            margin-top: 16px;
-            padding: 14px 18px;
-            background: var(--accent-soft);
-            border-radius: var(--radius);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .grand-total-label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--muted);
-            letter-spacing: 0.5px;
-        }
-        .grand-total-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--accent);
-        }
-        .row-del-btn {
-            width: 28px;
-            height: 28px;
-            border: none;
-            background: none;
-            color: var(--danger);
-            cursor: pointer;
-            border-radius: var(--radius-sm);
-            margin-top: 4px;
-        }
-        .row-del-btn:hover {
-            background: var(--danger-soft);
-        }
-        .add-row-btn {
-            margin-top: 8px;
-            font-size: 13px;
-        }
-        .customer-warn-banner {
-            max-width: 600px;
-            margin: 24px auto;
-            padding: 16px 20px;
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #856404;
-            font-size: 14px;
-        }
-        .customer-warn-banner .banner-icon {
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-        .customer-warn-banner .banner-content {
-            flex: 1;
-        }
-        .customer-warn-banner a {
-            color: #3b82f6;
-            font-weight: 600;
-            text-decoration: underline;
-            margin-left: 8px;
-        }
-        .revision-reason { background:var(--surface-2); border:1px solid color-mix(in srgb,#7c3aed 30%,transparent); border-radius:10px; padding:14px 18px; margin-bottom:16px; }
-        .revision-reason .rr-label { font-weight:700; font-size:11px; color:#7c3aed; text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px; }
-        .revision-reason .rr-body { font-size:13px; color:var(--fg); }
-    </style>
     <body>
         <script>
             var contextPath = '${pageContext.request.contextPath}';
@@ -243,7 +35,7 @@
                     <header class="topbar">
                         <h1>Chỉnh sửa đơn hàng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <a href="${pageContext.request.contextPath}/order?action=detail&amp;id=${order.orderId}"><c:out value="${order.orderCode}"/></a> / Chỉnh sửa</span>
-<div class="top-actions">
+                    <div class="top-actions">
                         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
                             <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
                             <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
@@ -317,13 +109,13 @@
                                                     onclick="openCustomerPanel()" aria-haspopup="dialog">
                                                 <span class="cust-trigger-label" id="custTriggerLabel">-- Nhấp để chọn khách hàng --</span>
                                                 <svg class="cust-trigger-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                                    <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M21 21l-4.35-4.35M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16z" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                                 </svg>
                                             </button>
                                             <button type="button" class="cust-clear-btn" id="custClearBtn"
                                                     onclick="clearCustomerSelection()" title="Hủy chọn khách hàng" aria-label="Hủy chọn">
                                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M18 6L6 18M6 6l12 12"/>
+                                                <path d="M18 6L6 18M6 6l12 12"/>
                                                 </svg>
                                             </button>
                                         </div>
@@ -405,28 +197,28 @@
                                     </thead>
                                     <tbody id="detailBody">
                                         <c:forEach var="d" items="${details}" varStatus="vs">
-                                        <tr>
-                                            <td class="col-num"><span class="row-num">${vs.count}</span></td>
-                                            <td>
-                                                <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
-                                                    <option value="">-- Chọn máy --</option>
-                                                    <c:forEach var="g" items="${generators}">
-                                                        <option value="${g.id}" ${d.generatorId == g.id ? 'selected' : ''}>
-                                                            <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
-                                                        </option>
-                                                    </c:forEach>
-                                                </select>
-                                            </td>
-                                            <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required value="${d.quantity}" /></td>
-                                            <td class="col-stock"><span class="row-stock mono">—</span></td>
-                                            <td class="col-price">
-                                                <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#0'/>" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
-                                            </td>
-                                            <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
-                                            <td class="col-del">
-                                                <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
-                                            </td>
-                                        </tr>
+                                            <tr>
+                                                <td class="col-num"><span class="row-num">${vs.count}</span></td>
+                                                <td>
+                                                    <select name="generatorId" class="gen-select" required onchange="updateStockCell(this)">
+                                                        <option value="">-- Chọn máy --</option>
+                                                        <c:forEach var="g" items="${generators}">
+                                                            <option value="${g.id}" ${d.generatorId == g.id ? 'selected' : ''}>
+                                                                <c:out value="${g.model}"/> (<c:out value="${g.powerRating}"/> kW)
+                                                            </option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </td>
+                                                <td><input type="number" name="quantity" class="qty-input" placeholder="1" min="1" max="9999" step="1" oninput="validateQty(this); updateTotal()" onblur="validateQtyOnBlur(this)" required value="${d.quantity}" /></td>
+                                                <td class="col-stock"><span class="row-stock mono">—</span></td>
+                                                <td class="col-price">
+                                                    <input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#0'/>" oninput="validateUnitPrice(this); updateTotal()" onfocus="unformatPrice(this)" onblur="formatPriceDisplay(this)" required />
+                                                </td>
+                                                <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
+                                                <td class="col-del">
+                                                    <button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button>
+                                                </td>
+                                            </tr>
                                         </c:forEach>
                                     </tbody>
                                     <tfoot>
@@ -550,7 +342,7 @@
                 </div>
                 <div id="custLoading" style="display:none; text-align:center; padding:40px 20px; color:var(--muted);">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-dashoffset="10"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/></circle>
                     </svg><br>Đang tải...
                 </div>
                 <div class="cust-list-wrap" id="custList"></div>
@@ -568,12 +360,13 @@
                 <c:remove var="messageType" scope="session"/>
             </c:if>
             window.STOCK_MAP = {
-                <c:forEach var="entry" items="${stockMap}">${entry.key}: ${entry.value},</c:forEach>
+            <c:forEach var="entry" items="${stockMap}">${entry.key}: ${entry.value},</c:forEach>
             };
-            if (typeof setStockMap === 'function') setStockMap(window.STOCK_MAP);
-        </script>
+            if (typeof setStockMap === 'function')
+                setStockMap(window.STOCK_MAP);
+            </script>
 
-        <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
+            <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
@@ -584,7 +377,8 @@
                 if (typeof orig === 'function') {
                     window.clearCustomerSelection = function () {
                         orig();
-                        if (typeof refreshCustomerCard === 'function') refreshCustomerCard();
+                        if (typeof refreshCustomerCard === 'function')
+                            refreshCustomerCard();
                     };
                 }
             });
