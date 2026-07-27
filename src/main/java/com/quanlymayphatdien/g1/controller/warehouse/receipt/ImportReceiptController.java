@@ -996,11 +996,14 @@ Transfer transfer,
         int selectedGeneratorId = parseId(request.getParameter("selectedGeneratorId"));
         int exportReceiptId = parseId(request.getParameter("exportReceiptId"));
 
-        if (!fromPo && exportReceiptId <= 0 && selectedGeneratorId <= 0) {
+        boolean hasAnyManualGenId = genIds != null && java.util.Arrays.stream(genIds)
+                .anyMatch(id -> id != null && !id.trim().isEmpty() && !"0".equals(id.trim()));
+
+        if (!fromPo && exportReceiptId <= 0 && !hasAnyManualGenId && selectedGeneratorId <= 0) {
             errors.add("Vui lòng chọn mẫu máy phát điện ở mục 02 trước khi gửi phiếu");
         }
 
-        if (!fromPo && exportReceiptId <= 0 && selectedGeneratorId > 0 && genIds != null) {
+        if (!fromPo && exportReceiptId <= 0 && !hasAnyManualGenId && selectedGeneratorId > 0 && genIds != null) {
             for (int i = 0; i < genIds.length; i++) {
                 if (genIds[i] == null || genIds[i].trim().isEmpty()
                         || "0".equals(genIds[i].trim())) {

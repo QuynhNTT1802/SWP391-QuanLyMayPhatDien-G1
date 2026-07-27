@@ -224,6 +224,13 @@
                             </c:forEach>
                         </div>
                         </c:if>
+                        <div id="transferSuggestionBanner" class="alert alert-info" style="display:none; margin: 0 0 14px 0;">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M9 7v12M15 7v12M3 7l3-4h12l3 4"/></svg>
+                            <div class="alert-body">
+                                <div class="alert-title">Đề xuất chuyển kho</div>
+                                <ul id="transferSuggestionList"></ul>
+                            </div>
+                        </div>
                         <c:if test="${not empty stockWarningsTransfer}">
                             <div class="alert alert-warn" style="margin: 0 0 14px 0;">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
@@ -351,6 +358,8 @@
         {genId: ${req.generatorId}, model: '<c:out value="${req.generatorModel}"/>', qty: ${req.quantity}}<c:if test="${!st.last}">,</c:if>
         </c:forEach>
     ];
+    var STOCK_DISTRIBUTION = ${empty stockDistributionJson ? '{}' : stockDistributionJson};
+    var WAREHOUSE_MAP = ${empty warehouseMapJson ? '{}' : warehouseMapJson};
     var TRANSFER_REQUIREMENTS = [
         <c:forEach var="d" items="${transferDetails}" varStatus="st">
         {genId: ${d.generatorId}, qty: ${d.quantity}, model: '<c:out value="${d.generatorModel}"/>'}<c:if test="${!st.last}">,</c:if>
@@ -513,6 +522,7 @@
             generatorCache = [];
             warn.style.display = 'flex';
             validateInventoryRealtime();
+            checkTransferSuggestions('');
             return;
         }
         warn.style.display = 'none';
@@ -525,6 +535,7 @@
                     prefillApplied = true;
                 }
                 validateInventoryRealtime();
+                checkTransferSuggestions(whId);
             })
             .catch(function (err) {
                 console.error(err);
@@ -534,6 +545,7 @@
                     prefillApplied = true;
                 }
                 validateInventoryRealtime();
+                checkTransferSuggestions(whId);
             });
     }
 
@@ -886,6 +898,49 @@
         banner.style.display = 'flex';
     }
 
+    function checkTransferSuggestions(whId) {
+        var banner = document.getElementById('transferSuggestionBanner');
+        var list = document.getElementById('transferSuggestionList');
+        if (!banner || !list) return;
+        if (!whId || !ORDER_REQUIREMENTS || ORDER_REQUIREMENTS.length === 0) {
+            banner.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        var suggestions = [];
+        ORDER_REQUIREMENTS.forEach(function (req) {
+            var genId = String(req.genId);
+            var required = req.qty;
+            var dist = STOCK_DISTRIBUTION[genId];
+            if (!dist) return;
+            var inThisWh = parseInt(dist[whId] || 0, 10);
+            if (inThisWh >= required) return;
+            var shortage = required - inThisWh;
+            var otherWh = [];
+            Object.keys(dist).forEach(function (whKey) {
+                if (whKey === whId) return;
+                var qty = parseInt(dist[whKey], 10);
+                if (qty > 0) {
+                    otherWh.push({ id: whKey, qty: qty, name: WAREHOUSE_MAP[whKey] || ('Kho #' + whKey) });
+                }
+            });
+            if (otherWh.length === 0) return;
+            var totalOther = otherWh.reduce(function (s, o) { return s + o.qty; }, 0);
+            if (totalOther === 0) return;
+            var whNames = otherWh.map(function (o) { return o.name + ' (' + o.qty + ' máy)'; }).join(', ');
+            suggestions.push('Máy <strong>' + escapeHtml(req.model) + '</strong> cần <strong>' + required + '</strong> máy, kho này chỉ có <strong>' + inThisWh + '</strong> máy. Còn <strong>' + shortage + '</strong> máy có tại: ' + whNames + '. Vui lòng tạo phiếu chuyển kho trước khi xuất.');
+        });
+        if (suggestions.length === 0) {
+            banner.style.display = 'none';
+            list.innerHTML = '';
+            return;
+        }
+        var html = '';
+        suggestions.forEach(function (s) { html += '<li>' + s + '</li>'; });
+        list.innerHTML = html;
+        banner.style.display = 'flex';
+    }
+
     function validateReceiptForm() {
         var valid = true;
         var firstInvalid = null;
@@ -1097,6 +1152,8 @@
         updateEmptyState();
         updateTotalCounter();
         validateInventoryRealtime();
+        var whId = document.getElementById('warehouseSelect').value;
+        if (whId) checkTransferSuggestions(whId);
     });
 </script>
 </body>

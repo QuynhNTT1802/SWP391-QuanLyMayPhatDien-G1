@@ -616,7 +616,7 @@ window.WAREHOUSE_DATA = ${warehouseDataJson};
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
 <script>
     function confirmCancelCreate() {
-            location.href = window.APP_CTX + '/transfers';
+        location.href = window.APP_CTX + '/transfers';
     }
 
     // ========== Confirm Save Modal ==========

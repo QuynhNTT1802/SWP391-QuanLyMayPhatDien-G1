@@ -560,10 +560,6 @@ public class UserDAO extends DBContext implements I_DAO<User> {
         return 0;
     }
 
-    /**
-     * Tra ve warehouse_id ma user bi scope (neu co), hoac -1 neu user khong bi scope
-     * (admin/sale/ceo), hoac 0 neu user warehouse_staff/manager nhung chua duoc gan kho.
-     */
     public int getScopedWarehouseId(int userId) {
         String sql = "SELECT u.warehouse_id, "
                 + "EXISTS (SELECT 1 FROM user_role ur JOIN role r ON ur.role_id = r.id "
