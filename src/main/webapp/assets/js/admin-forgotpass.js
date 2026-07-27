@@ -1,11 +1,4 @@
 
-function toggleTheme() {
-    const html = document.documentElement;
-    const current = html.getAttribute('data-theme');
-    html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
-}
-document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
 const resetModal = document.getElementById('resetModal');
 function openModal(id, username) {
     resetModal.classList.add('open');

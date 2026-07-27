@@ -3,13 +3,6 @@ const APP_CTX = window.APP_CTX || '';
 const root = document.documentElement;
 const storedTheme = localStorage.getItem('wh-theme');
 if (storedTheme === 'dark' || storedTheme === 'light') root.setAttribute('data-theme', storedTheme);
-var themeToggle = document.getElementById('themeToggle');
-if (themeToggle) themeToggle.addEventListener('click', () => {
-  const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  root.setAttribute('data-theme', next);
-  localStorage.setItem('wh-theme', next);
-});
-
 var clearFiltersBtn = document.getElementById('clearFilters');
 if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', () => {
   window.location.href = APP_CTX + '/warehouse/suppliers?action=list';

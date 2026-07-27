@@ -1,4 +1,4 @@
-<%@page contentType="text/html" pageEncoding="UTF-8"%>
+﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -73,10 +73,6 @@
 
   .foot { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11.5px; font-family: var(--font-mono); display: flex; justify-content: space-between; }
 
-  .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
-  [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-  [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-
   @media (max-width: 1280px) {
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .charts { grid-template-columns: 1fr; }
@@ -100,10 +96,6 @@
         <kbd>Ctrl K</kbd>
       </div>
       <div class="top-actions">
-        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-        </button>
         <jsp:include page="../common/admin/bell.jsp"/>
       </div>
     </header>

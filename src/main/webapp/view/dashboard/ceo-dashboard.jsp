@@ -27,10 +27,6 @@
       <h1>Bảng Điều Khiển Giám đốc</h1>
       <span class="crumb">/ Tổng quan điều hành hệ thống</span>
       <div class="top-actions">
-        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-          <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-          <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
-        </button>
         <jsp:include page="../common/admin/bell.jsp"/>
         <a href="${pageContext.request.contextPath}/reports?type=inventory" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);background:var(--fg);color:#fff;text-decoration:none;font-weight:600;font-size:12.5px">
           <svg viewBox="0 0 24 24" style="width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.2"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>

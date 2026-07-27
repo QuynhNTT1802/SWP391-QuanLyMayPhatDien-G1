@@ -31,10 +31,6 @@
                         <h1>Người dùng</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users">Quản trị</a> / Người dùng</span>
                         <div class="top-actions">
-                            <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                                <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                                <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            </button>
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users?action=create">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                             Thêm người dùng
