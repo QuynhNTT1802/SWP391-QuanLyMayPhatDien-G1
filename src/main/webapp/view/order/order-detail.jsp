@@ -532,10 +532,6 @@
                     <h1>Chi tiết đơn hàng</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/order?action=list">Đơn hàng</a> / <span><c:out value="${order.orderCode}"/></span></span>
                     <div class="top-actions">
-                        <button type="button" class="btn" onclick="window.print()" title="In đơn hàng">
-                            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                            In đơn
-                        </button>
                         <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>

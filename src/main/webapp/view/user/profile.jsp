@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@page import="com.quanlymayphatdien.g1.entity.User"%>
 <%@page import="com.quanlymayphatdien.g1.entity.Role"%>
 <%@page import="java.util.List"%>
@@ -412,9 +412,6 @@
                 <div class="avatar-lg-wrap">
                   <div class="avatar-lg" id="avatarLg"><%=initials%></div>
                   <div class="status-dot" title="Đang online"></div>
-                  <button class="avatar-edit" id="avatarEdit" title="Đổi ảnh đại diện">
-                    <svg viewBox="0 0 24 24"><path d="M14.7 3a2.4 2.4 0 0 1 3.4 0l2.9 2.9a2.4 2.4 0 0 1 0 3.4L9.8 19.5l-5.6 1.4 1.4-5.6z"/></svg>
-                  </button>
                 </div>
                 <div class="hero-info">
                   <div class="name-row">

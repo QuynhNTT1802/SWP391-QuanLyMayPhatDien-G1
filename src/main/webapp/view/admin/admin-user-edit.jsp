@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : admin-user-edit
     Created on : May 17, 2026, 2:05:50 PM
     Author     : FPTShop
@@ -42,7 +42,6 @@
                     <div class="edit-hero">
                         <div class="edit-avatar">
                             ${user.name.substring(0, 1)}
-                            <button class="avatar-edit-btn" title="Đổi ảnh"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
                         </div>
                         <div class="edit-hero-body">
                             <h2 class="edit-hero-title">${user.name}</h2>
@@ -259,7 +258,8 @@
                 name: '<c:out value="${user.name}"/>',
                 phone: '<c:out value="${user.phone}"/>',
                 address: '<c:out value="${user.address}"/>',
-                status: '<c:out value="${user.status}"/>'
+                status: '<c:out value="${user.status}"/>',
+                warehouseId: '<c:out value="${user.warehouseId}"/>'
             };
             window.SESSION_DATA = {};
             <c:if test="${not empty sessionScope.message}">

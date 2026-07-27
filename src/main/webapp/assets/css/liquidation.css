@@ -1098,7 +1098,60 @@
 /* ---------- Customer card fit variant ---------- */
 .cust-card.cust-card-fit { width: fit-content; }
 
-/* ---------- Pagination ellipsis ---------- */
+/* ---------- Pagination ---------- */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    font-weight: 500;
+}
+.pagination .info {
+    color: var(--muted);
+    font-family: var(--font-mono);
+}
+.pagination .info strong {
+    color: var(--fg);
+    font-weight: 700;
+}
+.pagination .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.pagination .page-btn {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--fg-soft);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.pagination .page-btn:hover {
+    background: var(--surface-2);
+    color: var(--fg);
+}
+.pagination .page-btn.active {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+}
+.pagination .page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
 .pagination .controls .ellipsis {
     color: var(--muted-2);
     padding: 0 4px;

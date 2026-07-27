@@ -107,11 +107,11 @@
           Duyệt Luân Chuyển Kho (${not empty pendingTransfers ? pendingTransfers : 0})
         </a>
 
-        <a href="${pageContext.request.contextPath}/order" class="dash-quick-btn">
+        <a href="${pageContext.request.contextPath}/purchase-order" class="dash-quick-btn">
           <div class="dash-quick-icon">
             <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           </div>
-          Duyệt Đơn Bán Hàng (${not empty pendingOrders ? pendingOrders : 0})
+          Duyệt Phiếu Mua (${not empty pendingPOs ? pendingPOs : 0})
         </a>
 
         <a href="${pageContext.request.contextPath}/reports?type=inventory" class="dash-quick-btn">

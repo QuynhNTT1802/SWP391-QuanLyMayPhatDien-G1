@@ -13,7 +13,7 @@ import com.quanlymayphatdien.g1.entity.InventoryCheckSerial;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
