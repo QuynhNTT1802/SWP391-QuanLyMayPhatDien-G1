@@ -32,7 +32,6 @@
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users">Quản trị</a> / Người dùng</span>
                         <div class="top-actions">
                             <a class="btn btn-primary" href="${pageContext.request.contextPath}/admin/users?action=create">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
                             Thêm người dùng
                         </a>
                     </div>
@@ -54,13 +53,11 @@
                     </div>
 
                     <c:if test="${not empty sessionScope.message}">
-                        <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
-                            <c:out value="${sessionScope.message}"/>
-                        </div>
+                        <div class="alert"><c:out value="${sessionScope.message}"/></div>
                         <c:remove var="message" scope="session"/>
                     </c:if>
 
-                    <form method="get" action="${pageContext.request.contextPath}/admin/users" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+                    <form method="get" action="${pageContext.request.contextPath}/admin/users" class="filter-bar">
                         <input type="hidden" name="action" value="list" />
                         <input type="hidden" name="page" value="1" />
                         <div class="search-input">
@@ -83,7 +80,6 @@
                             </select>
                             <div class="spacer"></div>
                             <button type="button" class="btn" id="clearFilters" onclick="location.href = '${pageContext.request.contextPath}/admin/users?action=list'">
-                            <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Xoá lọc
                         </button>
                     </form>
@@ -104,9 +100,7 @@
                                     </c:when>
                                     <c:otherwise>
                                         <c:forEach var="user" items="${users}" varStatus="loop">
-                                            <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a'))
-                                                        location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'"
-                                                style="cursor:pointer;">
+                                            <tr data-id="${user.id}" onclick="if (!event.target.closest('button,input,a')) location.href = '${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}'">
                                                 <td>
                                                     <div class="user-cell">
                                                         <div class="user-avatar <c:out value="${userAvatarClass[loop.index]}"/>">
@@ -126,6 +120,7 @@
                                                             <c:when test="${role.roleName == 'warehouse_staff'}"><span class="pill role-keeper"><span class="pdot"></span>Thủ kho</span></c:when>
                                                             <c:when test="${role.roleName == 'sale_manager'}"><span class="pill role-manager"><span class="pdot"></span>Quản lý bán hàng</span></c:when>
                                                             <c:when test="${role.roleName == 'sales_staff'}"><span class="pill role-staff"><span class="pdot"></span>Nhân viên</span></c:when>
+                                                            <c:when test="${role.roleName == 'ceo'}"><span class="pill role-ceo"><span class="pdot"></span>CEO</span></c:when>
                                                             <c:otherwise><span class="pill role-staff"><span class="pdot"></span><c:out value="${role.roleName}"/></span></c:otherwise>
                                                             </c:choose>
                                                         </c:forEach>

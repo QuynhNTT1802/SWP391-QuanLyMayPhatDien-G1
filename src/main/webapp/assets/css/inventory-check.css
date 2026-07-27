@@ -621,3 +621,44 @@
 .no-padding { padding: 0 !important; }
 .has-value { border-color: var(--accent); }
 .field-max-400 { max-width: 400px; }
+
+.filter-select-auto { width: auto; }
+.year-input-inline {
+    width: 100px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    box-sizing: border-box;
+}
+.year-input-inline:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+.btn-export-outline {
+    background: #fff;
+    color: #000;
+    border: 1px solid #ddd;
+}
+[data-theme="dark"] .btn-export-outline {
+    background: var(--surface);
+    color: var(--fg);
+    border-color: var(--border);
+}
+.mt-12 { margin-top: 12px; }
+.mt-14 { margin-top: 14px; }
+.mb-16 { margin-bottom: 16px; }
+.note-section-wrap {
+    padding: 0 20px 18px;
+    margin-top: 14px;
+}
+.flex-date-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.flex-1 { flex: 1; }
+.nowrap { white-space: nowrap; }

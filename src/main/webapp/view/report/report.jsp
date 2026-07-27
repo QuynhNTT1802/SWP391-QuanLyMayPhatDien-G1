@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -40,7 +41,7 @@
         </div>
 
         <div class="report-filter-bar">
-            <form method="GET" action="${pageContext.request.contextPath}/reports" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+            <form method="GET" action="${pageContext.request.contextPath}/reports" class="filter-form">
                 <input type="hidden" name="type" value="${reportType}"/>
                 <input type="hidden" name="page" value="1"/>
 
@@ -60,12 +61,12 @@
                     </select>
                 </c:if>
 
-                <select name="month" class="filter-select" style="width:auto;">
+                <select name="month" class="filter-select filter-select-auto">
                     <c:forEach var="m" begin="1" end="12">
                         <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
                     </c:forEach>
                 </select>
-                <input type="number" name="year" value="${year}" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--fg);font-size:13px;font-family:var(--font-ui);font-weight:600;">
+                <input type="number" name="year" value="${year}" class="year-input">
 
                 <div class="spacer"></div>
                 <button type="submit" class="btn btn-primary">
@@ -96,11 +97,11 @@
                         </div>
                         <div class="summary-card">
                             <div class="summary-label">Nhập trong kì</div>
-                            <div class="summary-value" style="color:var(--accent)"><fmt:formatNumber value="${summary.totalImport}" pattern="#,##0"/></div>
+                            <div class="summary-value val-accent"><fmt:formatNumber value="${summary.totalImport}" pattern="#,##0"/></div>
                         </div>
                         <div class="summary-card">
                             <div class="summary-label">Xuất trong kì</div>
-                            <div class="summary-value" style="color:var(--info)"><fmt:formatNumber value="${summary.totalExport}" pattern="#,##0"/></div>
+                            <div class="summary-value val-info"><fmt:formatNumber value="${summary.totalExport}" pattern="#,##0"/></div>
                         </div>
                         <div class="summary-card">
                             <div class="summary-label">Tồn cuối kì</div>
@@ -132,8 +133,8 @@
                                     <td><c:out value="${item.model}"/></td>
                                     <td><c:out value="${item.brand}"/></td>
                                     <td class="num">${item.openQuantity}</td>
-                                    <td class="num" style="color:var(--accent)">${item.importQuantity}</td>
-                                    <td class="num" style="color:var(--info)">${item.exportQuantity}</td>
+                                    <td class="num val-accent">${item.importQuantity}</td>
+                                    <td class="num val-info">${item.exportQuantity}</td>
                                     <td class="num">${item.closeQuantity}</td>
                                 </tr>
                             </c:forEach>

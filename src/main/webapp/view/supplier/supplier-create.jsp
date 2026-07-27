@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/supplier.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
 </head>
 <body>
@@ -29,14 +31,14 @@
 
         <main>
             <c:if test="${not empty sessionScope.message}">
-                <div style="background:var(--accent);color:var(--bg);border-radius:var(--radius);padding:10px 16px;margin-bottom:12px;font-size:13px;font-weight:600;">
+                <div class="alert-success">
                     <c:out value="${sessionScope.message}"/>
                 </div>
                 <c:remove var="message" scope="session"/>
             </c:if>
             <c:if test="${not empty sessionScope.errors}">
                 <c:forEach var="err" items="${sessionScope.errors}">
-                    <div style="background:#ffeaea;color:#e74c3c;border:1px solid #e7b4b4;border-radius:6px;padding:10px 16px;margin-bottom:8px;font-size:13px;font-weight:600;">
+                    <div class="alert-danger">
                         <c:out value="${err.value}"/>
                     </div>
                 </c:forEach>
@@ -113,7 +115,7 @@
                         </div>
                     </div>
 
-                    <div class="form-section" style="display:flex;gap:8px;justify-content:flex-end;">
+                    <div class="form-section form-actions-end">
                         <a class="btn" href="${pageContext.request.contextPath}/warehouse/suppliers?action=list">Hủy</a>
                         <button type="submit" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>

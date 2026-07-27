@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <!doctype html>
 <html lang="vi" data-theme="light">
@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer.css">
 </head>
 <body>
 <div class="app">
@@ -47,13 +48,13 @@
             </div>
 
             <c:if test="${not empty sessionScope.message}">
-                <div style="background:var(--accent);color:var(--bg);padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                <div class="alert-success">
                     <c:out value="${sessionScope.message}"/>
                 </div>
                 <c:remove var="message" scope="session"/>
             </c:if>
 
-            <form method="get" action="${pageContext.request.contextPath}/warehouse/customers" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;flex:1;">
+            <form method="get" action="${pageContext.request.contextPath}/warehouse/customers" class="filter-form">
                 <input type="hidden" name="action" value="list" />
                 <input type="hidden" name="page" value="1" />
                 <div class="search-input">
@@ -101,7 +102,7 @@
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="c" items="${customers}">
-                                <tr onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/customers?action=view&id=${c.id}'" style="cursor:pointer;">
+                                <tr class="clickable-row" onclick="if (!event.target.closest('button,a')) location.href = '${pageContext.request.contextPath}/warehouse/customers?action=view&id=${c.id}'">
                                     <td>
                                         <div class="user-cell">
                                             <div class="user-name-block">

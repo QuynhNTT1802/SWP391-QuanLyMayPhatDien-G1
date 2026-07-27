@@ -1,4 +1,4 @@
-﻿<%--
+<%--
     Document   : user-detail
     Created on : May 17, 2026, 3:32:53 PM
     Author     : Aadmin
@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
 </head>
@@ -89,7 +90,7 @@
                         </c:forEach>
                         <c:choose>
                             <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
+                            <c:when test="${user.status == 'locked'}"><span class="pill status-locked"><span class="pdot"></span>Bị khóa</span></c:when>
                         </c:choose>
                     </div>
                 </div>
@@ -167,7 +168,7 @@
                             <div class="info-value">
                                 <c:choose>
                                     <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                    <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
+                                    <c:when test="${user.status == 'locked'}"><span class="pill status-locked"><span class="pdot"></span>Bị khóa</span></c:when>
                                 </c:choose>
                             </div>
                         </div>
@@ -233,9 +234,9 @@
 
                     <table>
                         <thead><tr>
-                            <th style="width:150px;">Thời gian</th>
-                            <th style="width:160px;">Người dùng</th>
-                            <th style="width:160px;">Hành động</th>
+                            <th class="col-w-150">Thời gian</th>
+                            <th class="col-w-160">Người dùng</th>
+                            <th class="col-w-160">Hành động</th>
                             <th>Chi tiết</th>
                         </tr></thead>
                         <tbody>
@@ -248,7 +249,7 @@
                                         </div>
                                         <strong>Chưa có lịch sử nào</strong>
                                         <c:if test="${not empty historyAction or not empty histSearch or not empty histDateFrom or not empty histDateTo}">
-                                            <span style="color:var(--muted);font-size:0.88rem;">Thử <a href="${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}&activeTab=history">xóa bộ lọc</a></span>
+                                            <span class="muted-link-row">Thử <a href="${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}&activeTab=history">xóa bộ lọc</a></span>
                                         </c:if>
                                     </div>
                                 </td></tr>
@@ -257,7 +258,7 @@
                                 <c:forEach var="hlog" items="${historyLogs}">
                                     <tr>
                                         <td><fmt:formatDate value="${hlog.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                        <td><div style="font-weight:600;color:var(--fg);">${hlog.username}</div></td>
+                                        <td><div class="history-username">${hlog.username}</div></td>
                                         <td>
                                             <span class="action-badge action-<c:choose><c:when test="${hlog.action == 'CREATE'}">create</c:when><c:when test="${hlog.action == 'UPDATE'}">update</c:when><c:when test="${hlog.action == 'UPDATE_PROFILE'}">update_profile</c:when><c:when test="${hlog.action == 'CHANGE_PASSWORD'}">change_password</c:when><c:when test="${hlog.action == 'ACTIVATE'}">activate</c:when><c:when test="${hlog.action == 'DEACTIVATE'}">deactivate</c:when><c:otherwise>default</c:otherwise></c:choose>">
                                                 <c:choose>
@@ -271,7 +272,7 @@
                                                 </c:choose>
                                             </span>
                                         </td>
-                                        <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                        <td class="history-cell-muted">
                                             <c:out value="${hlog.details}"/>
                                         </td>
                                     </tr>

@@ -40,7 +40,7 @@
                 </div>
 
                 <c:if test="${not empty requestScope.toastMessage}">
-                    <div style="background:${requestScope.toastType == 'danger' ? 'var(--danger-soft)' : 'var(--accent)'};color:${requestScope.toastType == 'danger' ? 'var(--danger)' : 'var(--bg)'};border:${requestScope.toastType == 'danger' ? '1px solid color-mix(in srgb,var(--danger) 30%,transparent)' : 'none'};padding:10px 16px;border-radius:var(--radius);margin-bottom:12px;font-weight:600;font-size:13px;">
+                    <div class="toast ${requestScope.toastType == 'danger' ? 'toast-danger' : 'toast-success'}">
                         <c:out value="${requestScope.toastMessage}"/>
                     </div>
                 </c:if>
@@ -48,7 +48,7 @@
                 <form method="POST" action="${pageContext.request.contextPath}/inventory-check?action=update" id="editForm">
                     <input type="hidden" name="checkId" value="${check.id}" />
 
-                    <div class="section" style="padding: 18px 22px;">
+                    <div class="section section-body">
                         <div class="form-grid">
                             <div class="form-field">
                                 <label>Mã phiếu</label>
@@ -73,24 +73,24 @@
                         </div>
                     </div>
 
-                    <div class="section" style="padding: 18px 22px; margin-top: 16px;">
-                        <h3 style="margin: 0 0 12px; font-size: 15px; font-weight: 700;">Chi tiết kiểm kê</h3>
+                    <div class="section section-body-mt">
+                        <h3 class="section-title-sm">Chi tiết kiểm kê</h3>
 
                         <c:choose>
                             <c:when test="${empty details}">
-                                <div style="padding: 24px; text-align: center; color: var(--muted);">Không có dữ liệu.</div>
+                                <div class="empty-state">Không có dữ liệu.</div>
                             </c:when>
                             <c:otherwise>
                                 <table class="detail-table" id="editTable">
                                     <thead>
                                         <tr>
-                                            <th style="width: 40px;">#</th>
+                                            <th class="col-40">#</th>
                                             <th>Mã máy</th>
                                             <th>Thương hiệu</th>
                                             <th>SL sổ sách</th>
                                             <th>SL thực tế</th>
                                             <th>Ghi chú</th>
-                                            <th style="width: 50px;"></th>
+                                            <th class="col-50"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -114,12 +114,12 @@
                                                     <button type="button" class="icon-btn toggle-serials"
                                                             data-detail-id="${d.id}"
                                                             title="Xem serials">
-                                                        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;"><polyline points="6 9 12 15 18 9"/></svg>
+                                                        <svg viewBox="0 0 24 24" class="icon-collapse"><polyline points="6 9 12 15 18 9"/></svg>
                                                     </button>
                                                 </td>
                                             </tr>
                                             <tr class="serial-row" data-detail-id="${d.id}">
-                                                <td colspan="7" style="padding: 0;">
+                                                <td colspan="7" class="no-padding">
                                                     <div class="serial-container">
                                                         <c:choose>
                                                             <c:when test="${empty serialsByDetail[d.id]}">
@@ -129,7 +129,7 @@
                                                                 <table class="serial-table">
                                                                     <thead>
                                                                         <tr>
-                                                                            <th style="width: 30px;">#</th>
+                                                                            <th class="col-30">#</th>
                                                                             <th>Serial</th>
                                                                             <th>Trạng thái</th>
                                                                             <th>Ghi chú</th>
@@ -180,7 +180,7 @@
                         </c:choose>
                     </div>
 
-                    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-bottom:40px;">
+                    <div class="form-actions">
                         <a href="${pageContext.request.contextPath}/inventory-check?action=detail&id=${check.id}" class="btn">Huỷ</a>
                         <button type="submit" class="btn btn-primary">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>

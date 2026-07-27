@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
@@ -16,52 +16,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/liquidation.css">
-    <style>
-        table.rpt { width: 100%; border-collapse: collapse; font-size: 13px; }
-        table.rpt th, table.rpt td { text-align: start; padding: 8px 10px; border-bottom: 1px solid var(--border); }
-        table.rpt th { white-space: nowrap; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; background: var(--surface-2); border-bottom: 1px solid var(--border-strong); border-top: 1px solid var(--border); }
-        table.rpt tbody tr:hover { background: var(--surface-2); }
-        table.rpt tfoot td { padding: 10px 12px; background: var(--surface-2); border-top: 2px solid var(--border-strong); font-weight: 600; }
-        td.num, th.num { text-align: end; font-family: var(--font-mono); white-space: nowrap; }
-        table.rpt .col-stt { width: 40px; text-align: center; white-space: nowrap; }
-        table.rpt .col-serial { width: 130px; font-family: var(--font-mono); }
-        table.rpt .col-date { width: 95px; white-space: nowrap; }
-        table.rpt .col-wh { width: 100px; }
-        table.rpt .col-status { width: 110px; }
-        table.rpt .col-model { width: 110px; }
-        table.rpt .col-brand { width: 90px; }
-        table.rpt .col-ref { width: 130px; font-family: var(--font-mono); font-size: 12px; }
-        .empty-cell { text-align: center; color: var(--muted); padding: 22px; }
-        .report-filter { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .report-filter .rf-field { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); transition: border-color .12s ease, box-shadow .12s ease; }
-        .report-filter .rf-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        .report-filter .rf-sep { color: var(--muted-2); font-size: 12px; }
-        .report-filter input[type="date"] { font-size: 12.5px; font-family: var(--font-ui); color: var(--fg); border: none; background: transparent; padding: 2px 0; outline: none; cursor: pointer; width: 116px; }
-        .report-filter > select { font-size: 12.5px; font-family: var(--font-ui); color: var(--fg); padding: 7px 28px 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); cursor: pointer; min-width: 130px; transition: border-color .12s ease, box-shadow .12s ease; }
-        .report-filter > select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-        .report-filter .btn { padding: 6px 12px; }
-        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-        .section-label { font-size: 13px; font-weight: 600; color: var(--fg); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        .rpt-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
-        .rpt-kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px 16px; position: relative; }
-        .rpt-kpi .label { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--muted); font-weight: 500; letter-spacing: 0.01em; margin-bottom: 10px; }
-        .rpt-kpi .label .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-        .rpt-kpi .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg); }
-        .rpt-kpi .value .unit { font-size: 13px; font-weight: 500; color: var(--muted); margin-inline-start: 4px; }
-        .rpt-kpi .delta { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-        .rpt-kpi .spark { margin-top: 12px; height: 32px; width: 100%; display: block; }
-        .report-main { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-bottom: 18px; }
-        .report-main .card { margin: 0; }
-        .analytics-stacked { display: flex; flex-direction: column; gap: 12px; }
-        table.rpt-as { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-        table.rpt-as th { font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 10px; text-align: start; border-bottom: 1px solid var(--border-strong); background: var(--surface-2); }
-        table.rpt-as th.num { text-align: end; }
-        table.rpt-as td { padding: 7px 10px; border-bottom: 1px solid var(--border); }
-        table.rpt-as tbody tr:last-child td { border-bottom: none; }
-        table.rpt-as tbody tr:hover { background: var(--surface-2); }
-        @media (max-width: 1100px) { .report-main { grid-template-columns: 1fr; } }
-        @media (max-width: 768px) { .rpt-kpis { grid-template-columns: 1fr; } }
-    </style>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/report-sub.css">
 </head>
 <body>
 <div class="app">
@@ -90,7 +45,7 @@
                 </div>
             </c:if>
 
-            <div class="section-head" style="margin-bottom: 16px;">
+            <div class="section-head rpt-section-head-mb">
                 <form class="report-filter" method="get" action="${pageContext.request.contextPath}/inventory/report">
                     <span class="rf-field">
                         <input type="date" name="fromDate" value="${fromDate}" max="${toDate}" title="Từ ngày"/>
@@ -117,14 +72,14 @@
             <c:if test="${not empty summary}">
                 <div class="rpt-kpis">
                     <div class="rpt-kpi">
-                        <div class="label">Tổng số serial <span class="dot" style="background:var(--info)"></span></div>
+                        <div class="label">Tổng số serial <span class="dot rpt-kpi-dot-info"></span></div>
                         <div class="value">${summary.totalSerials}</div>
                         <div class="delta">
                             <span class="sub">Đang trong kho ${summary.inStock}</span>
                         </div>
                     </div>
                     <div class="rpt-kpi">
-                        <div class="label">Đang trong kho <span class="dot" style="background:var(--accent)"></span></div>
+                        <div class="label">Đang trong kho <span class="dot rpt-kpi-dot-accent"></span></div>
                         <div class="value">${summary.inStock}</div>
                         <div class="delta">
                             <span class="sub">Tỷ lệ ${summary.totalSerials > 0 ? (summary.inStock * 100 / summary.totalSerials) : 0}% còn lại</span>
@@ -135,7 +90,7 @@
                         </svg>
                     </div>
                     <div class="rpt-kpi">
-                        <div class="label">Số mẫu máy & kho <span class="dot" style="background:var(--accent)"></span></div>
+                        <div class="label">Số mẫu máy & kho <span class="dot rpt-kpi-dot-accent"></span></div>
                         <div class="value">${summary.modelCount} <span class="unit">/ ${summary.warehouseCount} kho</span></div>
                         <div class="delta">
                             <span class="sub">Đa dạng sản phẩm &amp; vị trí</span>
@@ -145,24 +100,24 @@
             </c:if>
 
             <div class="report-main">
-                <section class="card" style="margin-bottom:0;">
-                    <div class="card-head" style="padding:12px 16px 0;">
-                        <h3 style="font-size:13px;font-weight:600;margin:0;">Biến động nhập/xuất theo tháng</h3>
+                <section class="card rpt-card-mb0">
+                    <div class="card-head rpt-card-head-pad">
+                        <h3 class="rpt-card-title">Biến động nhập/xuất theo tháng</h3>
                     </div>
                     <c:choose>
                         <c:when test="${empty monthlyTrend}">
                             <div class="empty-cell">Không có dữ liệu</div>
                         </c:when>
                         <c:otherwise>
-                            <div style="padding: 8px 14px 4px;">
-                                <canvas id="monthlyChart" height="240" style="display: block; width: 100%;"></canvas>
+                            <div class="rpt-chart-wrap">
+                                <canvas id="monthlyChart" height="240" class="rpt-chart-canvas"></canvas>
                             </div>
-                            <div class="chart-legend" style="display: flex; align-items: center; gap: 20px; padding: 8px 18px 14px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 4px;">
-                                <span class="legend-item" style="display: inline-flex; align-items: center; gap: 6px;">
-                                    <span class="legend-swatch" style="width: 10px; height: 2px; border-radius: 2px; background: var(--accent);"></span>Nhập
+                            <div class="chart-legend rpt-chart-legend">
+                                <span class="legend-item rpt-legend-item">
+                                    <span class="legend-swatch rpt-legend-swatch accent"></span>Nhập
                                 </span>
-                                <span class="legend-item" style="display: inline-flex; align-items: center; gap: 6px;">
-                                    <span class="legend-swatch" style="width: 10px; height: 2px; border-radius: 2px; background: var(--info);"></span>Xuất
+                                <span class="legend-item rpt-legend-item">
+                                    <span class="legend-swatch rpt-legend-swatch info"></span>Xuất
                                 </span>
                             </div>
                         </c:otherwise>
@@ -170,9 +125,9 @@
                 </section>
 
                 <div class="analytics-stacked">
-                    <section class="card" style="margin-bottom:12px;">
-                        <h3 style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin:0;padding:10px 14px;border-bottom:1px solid var(--border);">Phân tích theo kho</h3>
-                        <div style="overflow-x:auto;">
+                    <section class="card">
+                        <h3 class="rpt-analytics-title">Phân tích theo kho</h3>
+                        <div class="rpt-overflow-x">
                         <table class="rpt-as">
                             <thead>
                                 <tr>
@@ -200,9 +155,9 @@
                         </table>
                         </div>
                     </section>
-                    <section class="card" style="margin-bottom:0;">
-                        <h3 style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin:0;padding:10px 14px;border-bottom:1px solid var(--border);">Phân tích theo trạng thái</h3>
-                        <div style="overflow-x:auto;">
+                    <section class="card rpt-card-mb0">
+                        <h3 class="rpt-analytics-title">Phân tích theo trạng thái</h3>
+                        <div class="rpt-overflow-x">
                         <table class="rpt-as">
                             <thead>
                                 <tr>
@@ -337,7 +292,7 @@
 
             <div class="section-label">Chi tiết số serial trong kỳ</div>
             <section class="card">
-                <div style="overflow-x: auto;">
+                <div class="rpt-overflow-x">
                 <table class="rpt">
                     <thead>
                         <tr>
