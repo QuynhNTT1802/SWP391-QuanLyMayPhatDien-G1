@@ -83,7 +83,7 @@
                 <c:if test="${perms.contains('proposals.approve') or perms.contains('proposals.create')}">
                     <a href="${pageContext.request.contextPath}/proposal">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Đề xuất nhập kho
+                        Đề xuất mua hàng                       
                     </a>
                 </c:if>
                 <c:if test="${perms.contains('purchase_orders.view')}">
@@ -187,10 +187,6 @@
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7 7 7-7"/></svg>
                     Xuất
                 </a>
-                <a href="${pageContext.request.contextPath}/reports?type=inventory-check" class="${activePage == 'report-inventory-check' ? 'active' : ''}">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
-                    Kiểm kê
-                </a>
                 <a href="${pageContext.request.contextPath}/reports?type=purchase" class="${activePage == 'report-purchase' ? 'active' : ''}">
                     <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8 2a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/></svg>
                     Mua
@@ -241,7 +237,6 @@
             </a>
         </div>
     </c:if>
-
 
     <c:if test="${not empty perms and (perms.contains('users.view') or perms.contains('roles.view') or perms.contains('forgot_pw.process'))}">
         <div class="nav-parent" onclick="this.classList.toggle('open');this.nextElementSibling.classList.toggle('open')">

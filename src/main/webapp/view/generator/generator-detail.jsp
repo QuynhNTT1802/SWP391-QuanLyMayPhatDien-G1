@@ -1,4 +1,4 @@
-﻿<%-- 
+<%-- 
     Document   : generator-detail
     Created on : May 23, 2026
     Author     : Admin
@@ -19,6 +19,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/generator.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/inventory-check.css">
@@ -49,7 +50,6 @@
                     <h1>Chi tiết máy phát điện</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/warehouse/generators?action=list">Máy phát điện</a> / <span id="crumbId"><c:out value="${generator.model}"/></span></span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                         <a class="btn" href="${pageContext.request.contextPath}/warehouse/generators?action=update&id=${generator.id}">
                             <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                             Chỉnh sửa
@@ -124,7 +124,7 @@
                                             <input class="info-input" type="text" disabled value="${generator.status == 'active' ? 'Đang hoạt động' : (generator.status == 'locked' ? 'Bị khóa' : '')}">
                                         </div>
                                     </div>
-                                    <div class="form-grid cols-5" style="margin-top:14px;">
+                                    <div class="form-grid cols-5 grid-mt-14">
                                         <div class="info-field">
                                             <label>Ngày tạo</label>
                                             <input class="info-input mono" type="text" disabled value="<c:out value='${createdDate}'/>">

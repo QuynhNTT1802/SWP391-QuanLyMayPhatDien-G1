@@ -181,6 +181,7 @@ public class UserManagementController extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         RoleDAO roleDAO = new RoleDAO();
         request.setAttribute("allRoles", roleDAO.findAll());
+        request.setAttribute("warehouses", new WarehouseDAO().findAll());
         request.getRequestDispatcher("/view/admin/admin-user-create.jsp").forward(request, response);
     }
 
@@ -216,7 +217,8 @@ public class UserManagementController extends HttpServlet {
             newUser.setStatus(status);
             newUser.setCreatedAt(LocalDateTime.now());
             newUser.setUpdatedAt(LocalDateTime.now());
-            newUser.setCreatedBy(1);
+            User loggedUser = (User) request.getSession().getAttribute("loggedUser");
+            newUser.setCreatedBy(loggedUser.getId());
             
             UserDAO userDAO = new UserDAO();
             int newUserId = userDAO.insert(newUser);
@@ -347,7 +349,8 @@ public class UserManagementController extends HttpServlet {
                     user.setWarehouseId(null);
                 }
                 user.setUpdatedAt(LocalDateTime.now());
-                user.setUpdatedBy(1);
+                User loggedUserForUpdate = (User) request.getSession().getAttribute("loggedUser");
+                user.setUpdatedBy(loggedUserForUpdate.getId());
 
                 boolean isUpdated = userDAO.update(user);
 
@@ -613,7 +616,7 @@ public class UserManagementController extends HttpServlet {
                     page = 1;
                 }
             } catch (NumberFormatException e) {
-                page = 1;
+                e.printStackTrace();
             }
         }
 

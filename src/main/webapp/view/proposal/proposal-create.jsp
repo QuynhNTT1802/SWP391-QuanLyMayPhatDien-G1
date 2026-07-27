@@ -17,6 +17,7 @@
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/create-user.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/searchable-dropdown.css">
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/customer-picker.css">
+
         <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/proposal-create.css">
     </head>
     <body>
@@ -27,10 +28,6 @@
                         <h1>Tạo đề xuất</h1>
                         <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal">Đề xuất nhập kho</a> / Tạo mới</span>
                     <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
                         <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
@@ -419,6 +416,7 @@ MSG.ADDED_SUP_SUFFIX = '"';
         <script src="${pageContext.request.contextPath}/assets/js/toast.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/searchable-dropdown.js" charset="UTF-8"></script>
+
         <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
         <script src="${pageContext.request.contextPath}/assets/js/proposal-create.js"></script>
         <script>

@@ -134,7 +134,7 @@
                                                                         <c:choose>
                                                                             <c:when test="${not empty d.unitPrice}">
                                                                                 <span class="mono"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/> ₫</span>
-                                                                                <input type="hidden" name="unitPrice" value="${d.unitPrice}"/>
+                                                                                <input type="hidden" name="unitPrice" value="<fmt:formatNumber value='${d.unitPrice}' pattern='#0'/>"/>
                                                                             </c:when>
                                                                             <c:otherwise>
                                                                                 <input type="number" name="unitPrice" class="qty-input price-input" min="0" step="1000" placeholder="Nhập đơn giá" style="border-color:#dc3545;"/>

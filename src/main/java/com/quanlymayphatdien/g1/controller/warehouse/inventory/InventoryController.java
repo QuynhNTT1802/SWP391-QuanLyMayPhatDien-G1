@@ -74,6 +74,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
+                e.printStackTrace();
                 page = 1;
             }
         }
@@ -120,6 +121,7 @@ public class InventoryController extends HttpServlet {
             try {
                 selectedWarehouse = Integer.parseInt(whParam);
             } catch (NumberFormatException ignored) {
+                ignored.printStackTrace();
             }
         }
         if (selectedWarehouse != null) {
@@ -154,6 +156,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
+                e.printStackTrace();
                 page = 1;
             }
         }
@@ -201,6 +204,7 @@ public class InventoryController extends HttpServlet {
                 page = Integer.parseInt(pageStr);
                 if (page < 1) page = 1;
             } catch (NumberFormatException e) {
+                e.printStackTrace();
                 page = 1;
             }
         }

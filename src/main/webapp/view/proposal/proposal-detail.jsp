@@ -34,10 +34,6 @@
                     <h1>Chi tiết đề xuất nhập kho</h1>
                     <span class="crumb">/ <a href="${pageContext.request.contextPath}/proposal?action=list">Đề xuất nhập kho</a> / <span><c:out value="${proposal.proposalCode}"/></span></span>
 <div class="top-actions">
-                        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
-                            <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                            <svg class="icon-moon" viewBox="0 0 24 24"><path d="M12 2.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg>
-                        </button>
                         <jsp:include page="../common/admin/bell.jsp"/>
                     </div>
                 </header>
@@ -80,7 +76,6 @@
 
                     <c:set var="canApprove" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.approve')}" />
                     <c:set var="canReject" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.reject')}" />
-                    <c:set var="canCancelProp" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.cancel')}" />
                     <c:set var="hasLockedPO" value="${not empty proposal.purchaseOrderId}" />
 
 
@@ -285,11 +280,7 @@
                                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                                     <input id="genSearch" placeholder="Tìm kiếm thông tin..." autocomplete="off"/>
                                 </div>
-                                <div class="spacer"></div>
-                                <button type="button" class="btn" title="Xuất file (đang phát triển)">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    Xuất file
-                                </button>
+
                             </div>
 
                             <div style="overflow-x:auto;">
@@ -574,22 +565,6 @@
                         <div class="modal-actions">
                             <button type="button" class="btn" onclick="closeModal('rejectModal')">Huỷ</button>
                             <button type="submit" class="btn btn-danger">Xác nhận từ chối</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </c:if>
-
-        <c:if test="${proposal.status == 'PENDING' && canCancelProp}">
-            <div class="modal-host" id="cancelModal">
-                <div class="modal-card">
-                    <h3>Huỷ phiếu đề xuất</h3>
-                    <div class="modal-sub">Phiếu đề xuất sẽ bị huỷ. Hành động này không thể hoàn tác.</div>
-                    <form method="POST" action="${pageContext.request.contextPath}/proposal?action=cancel">
-                        <input type="hidden" name="id" value="${proposal.proposalId}" />
-                        <div class="modal-actions">
-                            <button type="button" class="btn" onclick="closeModal('cancelModal')">Đóng</button>
-                            <button type="submit" class="btn btn-danger">Xác nhận huỷ</button>
                         </div>
                     </form>
                 </div>

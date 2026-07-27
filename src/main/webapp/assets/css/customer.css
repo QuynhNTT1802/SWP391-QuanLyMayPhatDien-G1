@@ -1,0 +1,52 @@
+.status-locked .pdot {
+    background: var(--danger);
+}
+
+.section-padded {
+    padding: 18px 22px;
+}
+
+.grid-mt {
+    margin-top: 14px;
+}
+
+.section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-title-sm {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.btn-sm {
+    font-size: 12px;
+}
+
+.order-table-link {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.activity-header {
+    margin-bottom: 14px;
+}
+
+.activity-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.activity-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 2px 0 0;
+    letter-spacing: -0.01em;
+}

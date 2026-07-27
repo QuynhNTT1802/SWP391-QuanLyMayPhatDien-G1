@@ -33,7 +33,7 @@ import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.entity.Warehouse;
 import static com.quanlymayphatdien.g1.utils.GlobalUtils.TRANSFER_STATUS_APPROVED;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -390,7 +390,7 @@ public class ExportReceiptController extends HttpServlet {
             int liqId = parseId(liquidationIdStr);
             LiquidationDAO liqDAO = new LiquidationDAO();
             Liquidation liq = liqDAO.findById(liqId);
-            if (liq != null && "APPROVED".equalsIgnoreCase(liq.getStatus())) {
+            if (liq != null && GlobalUtils.LIQUIDATION_STATUS_APPROVED.equalsIgnoreCase(liq.getStatus())) {
                 LiquidationDetailDAO liqDetailDAO = new LiquidationDetailDAO();
                 List<LiquidationDetail> liqDetails = liqDetailDAO.findByLiquidationId(liqId);
                 Receipt prefill = new Receipt();
@@ -891,9 +891,9 @@ public class ExportReceiptController extends HttpServlet {
                             "UPDATE inventory SET status = ? "
                             + "WHERE inventory_id IN (SELECT inventory_id FROM receipt_detail WHERE receipt_id = ?) "
                             + "AND status = ?")) {
-                        ps.setString(1, InventoryDAO.STATUS_SOLD);
+                        ps.setString(1, GlobalUtils.INVENTORY_STATUS_SOLD);
                         ps.setInt(2, receiptId);
-                        ps.setString(3, InventoryDAO.STATUS_PENDING_LIQUIDATION);
+                        ps.setString(3, GlobalUtils.INVENTORY_STATUS_PENDING_LIQUIDATION);
                         ps.executeUpdate();
                     }
                 }
@@ -931,7 +931,7 @@ public class ExportReceiptController extends HttpServlet {
                         }
                         boolean marked = isTransferExport
                                 ? inventoryDAO.markAsInTransit(conn, inv.getInventoryId())
-                                : inventoryDAO.markAsExported(conn, inv.getInventoryId(), InventoryDAO.STATUS_SOLD);
+                                : inventoryDAO.markAsExported(conn, inv.getInventoryId(), GlobalUtils.INVENTORY_STATUS_SOLD);
                         if (!marked) {
                             throw new SQLException("Số serial \"" + sn + "\" không ở trạng thái IN_STOCK");
                         }
@@ -968,7 +968,7 @@ public class ExportReceiptController extends HttpServlet {
                 }
                 if (liquidationId > 0) {
                     LiquidationDAO liqDAO = new LiquidationDAO();
-                    liqDAO.updateStatus(conn, liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
+                    liqDAO.updateStatus(conn, liquidationId, GlobalUtils.SALE_ORDER_STATUS_COMPLETED, loggedUser.getId(), receiptId);
                     ActivityLog liqLog = new ActivityLog();
                     liqLog.setUserId(loggedUser.getId());
                     liqLog.setEntityType("liquidation");
@@ -1020,7 +1020,7 @@ public class ExportReceiptController extends HttpServlet {
             }
             if (liquidationId > 0) {
                 LiquidationDAO liqDAO = new LiquidationDAO();
-                liqDAO.updateStatus(liquidationId, GlobalUtils.STATUS_COMPLETED, loggedUser.getId(), receiptId);
+                liqDAO.updateStatus(liquidationId, GlobalUtils.SALE_ORDER_STATUS_COMPLETED, loggedUser.getId(), receiptId);
                 ActivityLog liqLog = new ActivityLog();
                 liqLog.setUserId(loggedUser.getId());
                 liqLog.setEntityType("liquidation");
@@ -1034,7 +1034,7 @@ public class ExportReceiptController extends HttpServlet {
                     String liqLink = request.getContextPath() + "/liquidations?action=detail&id=" + liquidationId;
                     String liqCode = liq.getLiquidationCode();
                     if (liq.getCreatedBy() > 0 && liq.getCreatedBy() != loggedUser.getId()) {
-                        NotificationService.send(
+                        NotificationUtil.send(
                                 liq.getCreatedBy(),
                                 "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
                                 loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
@@ -1045,7 +1045,7 @@ public class ExportReceiptController extends HttpServlet {
                     }
                     if (liq.getCeoReviewedBy() != null && liq.getCeoReviewedBy() > 0
                             && !liq.getCeoReviewedBy().equals(loggedUser.getId())) {
-                        NotificationService.send(
+                        NotificationUtil.send(
                                 liq.getCeoReviewedBy(),
                                 "Đơn thanh lý " + liqCode + " — đã hoàn tất xuất kho",
                                 loggedUser.getName() + " đã xuất kho hoàn tất đơn thanh lý " + liqCode + ".",
@@ -1112,7 +1112,7 @@ public class ExportReceiptController extends HttpServlet {
                 continue;
             }
             if (scopedWh != null && scopedWh == transfer.getDestWarehouseId()) {
-                NotificationService.send(
+                NotificationUtil.send(
                         u.getId(),
                         "Phiếu xuất mới từ kho nguồn",
                         "Kho nguồn đã tạo phiếu xuất " + receipt.getReceiptCode()

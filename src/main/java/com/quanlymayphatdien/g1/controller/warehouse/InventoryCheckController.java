@@ -12,9 +12,10 @@ import com.quanlymayphatdien.g1.entity.InventoryCheckDetail;
 import com.quanlymayphatdien.g1.entity.InventoryCheckSerial;
 import com.quanlymayphatdien.g1.entity.StockCard;
 import com.quanlymayphatdien.g1.entity.User;
+import com.quanlymayphatdien.g1.entity.Warehouse;
 import com.quanlymayphatdien.g1.utils.InventoryCheckExcelSupport;
 import com.quanlymayphatdien.g1.utils.NotificationUtil;
-
+import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.LocalDate;
@@ -26,6 +27,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.time.LocalDate;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +73,9 @@ public class InventoryCheckController extends HttpServlet {
                     break;
                 case "exportReport":
                     exportReport(request, response);
+                    break;
+                case "exportExcel":
+                    exportExcel(request, response);
                     break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -149,22 +155,41 @@ public class InventoryCheckController extends HttpServlet {
         request.setAttribute("doingCount", checkDAO.countByStatus("doing"));
         request.setAttribute("completedCount", checkDAO.countByStatus("completed"));
 
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+        request.setAttribute("month", month);
+        request.setAttribute("year", year);
+
         request.getRequestDispatcher("/view/inventory-check/inventory-check-list.jsp").forward(request, response);
     }
 
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String warehouseIdParam = request.getParameter("warehouseId");
-        Integer warehouseId = null;
-        if (warehouseIdParam != null && !warehouseIdParam.isEmpty()) {
-            warehouseId = Integer.parseInt(warehouseIdParam);
+        HttpSession session = request.getSession(false);
+        User loggedUser = (User) session.getAttribute("loggedUser");
+        int warehouseId = resolveAssignedWarehouseId(session, loggedUser);
+        if (warehouseId <= 0) {
+            session.setAttribute("toastType", "danger");
+            session.setAttribute("toastMessage", "Tài khoản của bạn chưa được gán kho để tạo phiếu kiểm kê");
+            response.sendRedirect(request.getContextPath() + "/inventory-check");
+            return;
         }
 
-        request.setAttribute("warehouses", warehouseDAO.findAll());
+        request.setAttribute("selectedWarehouse", warehouseId);
+        String currentWarehouseName = "";
+        Warehouse currentWarehouse = warehouseDAO.findById(warehouseId);
+        if (currentWarehouse == null) {
+            session.setAttribute("toastType", "danger");
+            session.setAttribute("toastMessage", "Kho được gán cho tài khoản không tồn tại hoặc đã bị vô hiệu hóa");
+            response.sendRedirect(request.getContextPath() + "/inventory-check");
+            return;
+        }
+        currentWarehouseName = currentWarehouse.getName();
+        request.setAttribute("currentWarehouseName", currentWarehouseName);
 
-        if (warehouseId != null) {
-            request.setAttribute("selectedWarehouse", warehouseId);
-
+        if (warehouseId > 0) {
             List<Inventory> listSerials = inventoryDAO.findInStockByWarehouse(warehouseId);
 
             Map<Integer, List<Inventory>> groupedByGenerator = new HashMap<>();
@@ -273,18 +298,14 @@ public class InventoryCheckController extends HttpServlet {
         HttpSession session = request.getSession(false);
         User loggedUser = (User) session.getAttribute("loggedUser");
 
-        String whParam = request.getParameter("warehouseId");
         String notes = request.getParameter("notes");
         String[] genIds = request.getParameterValues("generatorId");
 
         List<String> errors = new ArrayList<>();
 
-        int warehouseId = 0;
-        try {
-            warehouseId = Integer.parseInt(whParam);
-            if (warehouseId <= 0) errors.add("Vui lòng chọn kho");
-        } catch (NumberFormatException e) {
-            errors.add("Kho không hợp lệ");
+        int warehouseId = resolveAssignedWarehouseId(session, loggedUser);
+        if (warehouseId <= 0) {
+            errors.add("Tài khoản của bạn chưa được gán kho");
         }
 
         List<InventoryCheckDetail> details = new ArrayList<>();
@@ -318,9 +339,12 @@ public class InventoryCheckController extends HttpServlet {
 
         int checkId = checkDAO.insert(check);
         if (checkId <= 0) {
+            Warehouse currentWarehouse = warehouseDAO.findById(warehouseId);
             request.setAttribute("toastMessage", "Không thể tạo phiếu kiểm kê");
             request.setAttribute("toastType", "danger");
-            request.setAttribute("warehouses", warehouseDAO.findAll());
+            request.setAttribute("selectedWarehouse", warehouseId);
+            request.setAttribute("currentWarehouseName",
+                    currentWarehouse != null ? currentWarehouse.getName() : "");
             request.getRequestDispatcher("/view/inventory-check/inventory-check-create.jsp").forward(request, response);
             return;
         }
@@ -352,6 +376,14 @@ public class InventoryCheckController extends HttpServlet {
         session.setAttribute("toastMessage", "Tạo phiếu kiểm kê thành công");
         session.setAttribute("toastType", "success");
         response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+    }
+
+    private int resolveAssignedWarehouseId(HttpSession session, User loggedUser) {
+        int warehouseId = WarehouseAccessUtil.getScopedWarehouseId(session);
+        if (warehouseId <= 0 && loggedUser != null && loggedUser.getWarehouseId() != null) {
+            warehouseId = loggedUser.getWarehouseId();
+        }
+        return warehouseId;
     }
 
     private void updateCheck(HttpServletRequest request, HttpServletResponse response)
@@ -508,6 +540,67 @@ public class InventoryCheckController extends HttpServlet {
             session.setAttribute("toastType", "danger");
         }
         response.sendRedirect(request.getContextPath() + "/inventory-check?action=detail&id=" + checkId);
+    }
+
+    private void exportExcel(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        String search = request.getParameter("search");
+        String whParam = request.getParameter("warehouseId");
+        Integer warehouseId = (whParam != null && !whParam.isEmpty()) ? Integer.parseInt(whParam) : null;
+        String status = request.getParameter("status");
+
+        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, 1, Integer.MAX_VALUE);
+
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+
+        final int fMonth = month, fYear = year;
+        list = list.stream()
+            .filter(c -> c.getCreatedAt() != null
+                && c.getCreatedAt().getMonthValue() == fMonth
+                && c.getCreatedAt().getYear() == fYear)
+            .collect(Collectors.toList());
+
+        XSSFWorkbook wb = new XSSFWorkbook();
+        XSSFSheet sheet = wb.createSheet("Kiểm kê");
+
+        String[] headers = {"STT", "Mã phiếu", "Trạng thái", "Người thực hiện", "Kho kiểm kê", "Thời gian bắt đầu", "Thời gian kết thúc"};
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        int rowNum = 1;
+        for (int i = 0; i < list.size(); i++) {
+            InventoryCheck c = list.get(i);
+            Row r = sheet.createRow(rowNum++);
+            r.createCell(0).setCellValue(i + 1);
+            r.createCell(1).setCellValue(c.getCheckCode() != null ? c.getCheckCode() : "");
+
+            String statusText;
+            if ("doing".equals(c.getStatus())) statusText = "Đang kiểm kê";
+            else if ("completed".equals(c.getStatus())) statusText = "Đã hoàn thành";
+            else statusText = c.getStatus() != null ? c.getStatus() : "";
+            r.createCell(2).setCellValue(statusText);
+
+            r.createCell(3).setCellValue(c.getCreatedByName() != null ? c.getCreatedByName() : "");
+            r.createCell(4).setCellValue(c.getWarehouseName() != null ? c.getWarehouseName() : "");
+            r.createCell(5).setCellValue(c.getStartedAt() != null ? c.getStartedAt().toString() : "");
+            r.createCell(6).setCellValue(c.getCompletedAt() != null ? c.getCompletedAt().toString() : "");
+        }
+
+        for (int i = 0; i < headers.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=DanhSachKiemKe.xlsx");
+        try (OutputStream out = response.getOutputStream()) {
+            wb.write(out);
+        }
+        wb.close();
     }
 
     private void exportReport(HttpServletRequest request, HttpServletResponse response)

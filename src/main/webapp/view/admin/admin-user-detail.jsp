@@ -1,4 +1,4 @@
-﻿<%--
+<%--
     Document   : user-detail
     Created on : May 17, 2026, 3:32:53 PM
     Author     : Aadmin
@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/base.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/sidebar.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-user.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/user-detail.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/admin-category.css">
 </head>
@@ -33,7 +34,6 @@
             <h1>Chi tiết người dùng</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/admin/users?action=list">Người dùng</a> / <span id="crumbId"><c:out value="${user.username}"/></span></span>
             <div class="top-actions">
-                <button class="icon-btn theme-toggle" id="themeToggle"><svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.8"/></svg><svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.8"/></svg></button>
                 <a class="btn" href="${pageContext.request.contextPath}/admin/users?action=update&id=${user.id}">
                     <svg class="icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                     Chỉnh sửa
@@ -90,7 +90,7 @@
                         </c:forEach>
                         <c:choose>
                             <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                            <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
+                            <c:when test="${user.status == 'locked'}"><span class="pill status-locked"><span class="pdot"></span>Bị khóa</span></c:when>
                         </c:choose>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
                             <div class="info-value">
                                 <c:choose>
                                     <c:when test="${user.status == 'active'}"><span class="pill status-active"><span class="pdot"></span>Đang hoạt động</span></c:when>
-                                    <c:when test="${user.status == 'locked'}"><span class="pill status-active" style="color:var(--muted)"><span class="pdot"></span>Bị khóa</span></c:when>
+                                    <c:when test="${user.status == 'locked'}"><span class="pill status-locked"><span class="pdot"></span>Bị khóa</span></c:when>
                                 </c:choose>
                             </div>
                         </div>
@@ -234,9 +234,9 @@
 
                     <table>
                         <thead><tr>
-                            <th style="width:150px;">Thời gian</th>
-                            <th style="width:160px;">Người dùng</th>
-                            <th style="width:160px;">Hành động</th>
+                            <th class="col-w-150">Thời gian</th>
+                            <th class="col-w-160">Người dùng</th>
+                            <th class="col-w-160">Hành động</th>
                             <th>Chi tiết</th>
                         </tr></thead>
                         <tbody>
@@ -249,7 +249,7 @@
                                         </div>
                                         <strong>Chưa có lịch sử nào</strong>
                                         <c:if test="${not empty historyAction or not empty histSearch or not empty histDateFrom or not empty histDateTo}">
-                                            <span style="color:var(--muted);font-size:0.88rem;">Thử <a href="${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}&activeTab=history">xóa bộ lọc</a></span>
+                                            <span class="muted-link-row">Thử <a href="${pageContext.request.contextPath}/admin/users?action=view&id=${user.id}&activeTab=history">xóa bộ lọc</a></span>
                                         </c:if>
                                     </div>
                                 </td></tr>
@@ -258,7 +258,7 @@
                                 <c:forEach var="hlog" items="${historyLogs}">
                                     <tr>
                                         <td><fmt:formatDate value="${hlog.createdAtAsDate}" pattern="dd/MM/yyyy HH:mm"/></td>
-                                        <td><div style="font-weight:600;color:var(--fg);">${hlog.username}</div></td>
+                                        <td><div class="history-username">${hlog.username}</div></td>
                                         <td>
                                             <span class="action-badge action-<c:choose><c:when test="${hlog.action == 'CREATE'}">create</c:when><c:when test="${hlog.action == 'UPDATE'}">update</c:when><c:when test="${hlog.action == 'UPDATE_PROFILE'}">update_profile</c:when><c:when test="${hlog.action == 'CHANGE_PASSWORD'}">change_password</c:when><c:when test="${hlog.action == 'ACTIVATE'}">activate</c:when><c:when test="${hlog.action == 'DEACTIVATE'}">deactivate</c:when><c:otherwise>default</c:otherwise></c:choose>">
                                                 <c:choose>
@@ -272,7 +272,7 @@
                                                 </c:choose>
                                             </span>
                                         </td>
-                                        <td style="max-width:340px;color:var(--muted);font-size:0.9rem;line-height:1.5;">
+                                        <td class="history-cell-muted">
                                             <c:out value="${hlog.details}"/>
                                         </td>
                                     </tr>
