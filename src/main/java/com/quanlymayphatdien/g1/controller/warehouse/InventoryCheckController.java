@@ -132,12 +132,17 @@ public class InventoryCheckController extends HttpServlet {
             }
         }
 
-        int totalItems = checkDAO.countWithFilters(search, warehouseId, status);
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
+        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
+
+        int totalItems = checkDAO.countWithFilters(search, warehouseId, status, month, year);
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
         if (totalPages < 1) totalPages = 1;
         if (page > totalPages) page = totalPages;
 
-        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, page, pageSize);
+        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, month, year, page, pageSize);
         int fromIndex = totalItems == 0 ? 0 : (page - 1) * pageSize + 1;
         int toIndex = Math.min(page * pageSize, totalItems);
 
@@ -154,11 +159,6 @@ public class InventoryCheckController extends HttpServlet {
         request.setAttribute("totalChecks", checkDAO.countTotal());
         request.setAttribute("doingCount", checkDAO.countByStatus("doing"));
         request.setAttribute("completedCount", checkDAO.countByStatus("completed"));
-
-        int month = LocalDate.now().getMonthValue();
-        int year = LocalDate.now().getYear();
-        try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
-        try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
         request.setAttribute("month", month);
         request.setAttribute("year", year);
 
@@ -549,19 +549,12 @@ public class InventoryCheckController extends HttpServlet {
         Integer warehouseId = (whParam != null && !whParam.isEmpty()) ? Integer.parseInt(whParam) : null;
         String status = request.getParameter("status");
 
-        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, 1, Integer.MAX_VALUE);
-
         int month = LocalDate.now().getMonthValue();
         int year = LocalDate.now().getYear();
         try { month = Integer.parseInt(request.getParameter("month")); } catch (Exception e) {}
         try { year = Integer.parseInt(request.getParameter("year")); } catch (Exception e) {}
 
-        final int fMonth = month, fYear = year;
-        list = list.stream()
-            .filter(c -> c.getCreatedAt() != null
-                && c.getCreatedAt().getMonthValue() == fMonth
-                && c.getCreatedAt().getYear() == fYear)
-            .collect(Collectors.toList());
+        List<InventoryCheck> list = checkDAO.findWithFilters(search, warehouseId, status, month, year, 1, Integer.MAX_VALUE);
 
         XSSFWorkbook wb = new XSSFWorkbook();
         XSSFSheet sheet = wb.createSheet("Kiểm kê");

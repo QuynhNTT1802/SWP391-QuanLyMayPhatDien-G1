@@ -73,12 +73,12 @@
                         <option value="doing" <c:if test="${selectedStatus == 'doing'}">selected</c:if>>Đang kiểm kê</option>
                         <option value="completed" <c:if test="${selectedStatus == 'completed'}">selected</c:if>>Đã hoàn thành</option>
                     </select>
-                    <select name="month" class="filter-select filter-select-auto">
+                    <select name="month" class="filter-select filter-select-auto" onchange="this.form.submit()">
                         <c:forEach var="m" begin="1" end="12">
                             <option value="${m}" ${m == month ? 'selected' : ''}>Tháng ${m}</option>
                         </c:forEach>
                     </select>
-                    <input type="number" name="year" value="${year}" class="year-input-inline">
+                    <input type="number" name="year" value="${year}" class="year-input-inline" onchange="this.form.submit()">
                     <div class="spacer"></div>
                     <c:if test="${not empty search or not empty selectedWarehouse or not empty selectedStatus}">
                         <a href="${pageContext.request.contextPath}/inventory-check" class="btn">
@@ -194,19 +194,5 @@
     <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
     <script src="${pageContext.request.contextPath}/assets/js/inventory-check.js"></script>
-    <script>
-    function exportExcel() {
-        var form = document.querySelector('form[action*="inventory-check"]');
-        var params = new URLSearchParams();
-        params.set('action', 'exportExcel');
-        var inputs = form.querySelectorAll('input[name], select[name]');
-        inputs.forEach(function(inp) {
-            if (inp.name !== 'action' && inp.name !== 'page' && inp.value) {
-                params.set(inp.name, inp.value);
-            }
-        });
-        window.location = form.action + '?' + params.toString();
-    }
-    </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -198,10 +198,6 @@
             <h1>Chi tiết đơn thanh lý</h1>
             <span class="crumb">/ <a href="${pageContext.request.contextPath}/liquidations">Thanh lý</a> / <span>${liquidation.liquidationCode}</span></span>
             <div class="top-actions">
-                <button type="button" class="btn" onclick="window.print()" title="In đơn thanh lý">
-                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                    In phiếu
-                </button>
                 <jsp:include page="../common/admin/bell.jsp"/>
             </div>
         </header>
@@ -523,6 +519,22 @@
                                             </c:forEach>
                                         </tbody>
                                     </table>
+                                     <c:if test="${totalPages > 1}">
+                                         <div class="pagination" style="margin-top: 12px;">
+                                             <div class="info">Hiển thị trang ${currentPage} / ${totalPages} (Tổng ${totalItems} máy)</div>
+                                             <div class="controls">
+                                                 <c:if test="${currentPage > 1}">
+                                                     <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}&cond=${condFilter}&page=${currentPage-1}">« Trước</a>
+                                                 </c:if>
+                                                 <c:forEach var="p" begin="1" end="${totalPages}">
+                                                     <a class="page-btn ${p == currentPage ? 'active' : ''}" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}&cond=${condFilter}&page=${p}">${p}</a>
+                                                 </c:forEach>
+                                                 <c:if test="${currentPage < totalPages}">
+                                                     <a class="page-btn" href="${pageContext.request.contextPath}/liquidations?action=detail&id=${liquidation.liquidationId}&cond=${condFilter}&page=${currentPage+1}">Sau »</a>
+                                                 </c:if>
+                                             </div>
+                                         </div>
+                                     </c:if>
                                     <div class="section-action-bar">
                                         <div class="action-bar-left">
                                             <span class="bar-count">Đã chọn <strong id="editBarSelectedCount">0</strong> máy</span>
@@ -1220,6 +1232,7 @@
                     showToast('Phải chọn ít nhất 1 máy phát điện.', 'danger');
                     return;
                 }
+
                 var missingPrice = checked.some(function(cb) {
                     var row = cb.closest('.pick-trow');
                     var priceInput = row ? row.querySelector('.liq-price-input') : null;

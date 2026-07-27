@@ -44,14 +44,7 @@
                             <h2 class="page-title">Danh sách phiếu mua</h2>
                             <div class="page-sub">${totalPOs} phiếu mua</div>
                         </div>
-                        <div class="right">
-                            <c:if test="${canCreatePo}">
-                                <a class="btn btn-primary" href="${pageContext.request.contextPath}/proposal?action=list">
-                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                                    Tạo phiếu mua
-                                </a>
-                            </c:if>
-                        </div>
+                        
                     </div>
 
                     <script>

@@ -11,7 +11,7 @@ import java.util.List;
 public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck> {
 
     public List<InventoryCheck> findWithFilters(String search, Integer warehouseId,
-            String status, int page, int pageSize) {
+            String status, int month, int year, int page, int pageSize) {
         List<InventoryCheck> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
             "SELECT ic.*, w.name AS warehouse_name, u.name AS created_by_name "
@@ -33,6 +33,9 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             sql.append("AND ic.status = ? ");
             params.add(status);
         }
+        sql.append("AND MONTH(ic.created_at) = ? AND YEAR(ic.created_at) = ? ");
+        params.add(month);
+        params.add(year);
         sql.append("ORDER BY ic.created_at DESC LIMIT ? OFFSET ?");
         params.add(pageSize);
         params.add((page - 1) * pageSize);
@@ -55,7 +58,7 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
         return list;
     }
 
-    public int countWithFilters(String search, Integer warehouseId, String status) {
+    public int countWithFilters(String search, Integer warehouseId, String status, int month, int year) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM inventory_check ic WHERE 1=1 ");
         List<Object> params = new ArrayList<>();
 
@@ -71,6 +74,9 @@ public class InventoryCheckDAO extends DBContext implements I_DAO<InventoryCheck
             sql.append("AND ic.status = ? ");
             params.add(status);
         }
+        sql.append("AND MONTH(ic.created_at) = ? AND YEAR(ic.created_at) = ? ");
+        params.add(month);
+        params.add(year);
 
         try {
             connection = getConnection();

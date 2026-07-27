@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
@@ -62,7 +62,6 @@
                             <option value="">Loại: Tất cả</option>
                             <option value="IMPORT" <c:if test="${typeFilter == 'IMPORT'}">selected</c:if>>Nhập kho</option>
                             <option value="EXPORT" <c:if test="${typeFilter == 'EXPORT'}">selected</c:if>>Xuất kho</option>
-                            <option value="ADJUST" <c:if test="${typeFilter == 'ADJUST'}">selected</c:if>>Điều chỉnh</option>
                         </select>
                         <label style="font-size:13px;color:var(--muted);">Từ:</label>
                         <input type="date" name="fromDate" class="filter-select" value="<c:out value='${fromDate}'/>" />

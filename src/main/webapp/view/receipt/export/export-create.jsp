@@ -1,4 +1,4 @@
-﻿<%@page contentType="text/html" pageEncoding="UTF-8"%>
+<%@page contentType="text/html" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -144,24 +144,12 @@
                             </div>
                             <div class="form-field">
                                 <label>Lý do *</label>
-                                <c:choose>
-                                    <c:when test="${fromLiquidation}">
-                                        <input type="hidden" name="reasonId" value="${receipt.reasonId}" />
-                                        <select class="input" disabled>
-                                            <c:forEach var="r" items="${receiptReasons}">
-                                                <option value="${r.id}" ${r.id == receipt.reasonId ? 'selected' : ''}>${r.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <select name="reasonId" class="input" required onchange="validateField(this)">
-                                            <option value="">-- Chọn lý do --</option>
-                                            <c:forEach var="r" items="${receiptReasons}">
-                                                <option value="${r.id}">${r.name}</option>
-                                            </c:forEach>
-                                        </select>
-                                    </c:otherwise>
-                                </c:choose>
+                                <select name="reasonId" class="input" required onchange="validateField(this)">
+                                    <option value="">-- Chọn lý do --</option>
+                                    <c:forEach var="r" items="${receiptReasons}">
+                                        <option value="${r.id}" ${r.id == receipt.reasonId ? 'selected' : ''}>${r.name}</option>
+                                    </c:forEach>
+                                </select>
                                 <span class="field-error" style="display:none;"></span>
                             </div>
                             <c:if test="${not empty order}">
@@ -326,9 +314,7 @@
 <script>
     var ctx = window.APP_CTX;
     function confirmCancelCreate() {
-        if (confirm('Bạn có chắc muốn huỷ tạo phiếu xuất?')) {
             location.href = ctx + '/export-receipt';
-        }
     }
 
     // ========== DATA from server ==========

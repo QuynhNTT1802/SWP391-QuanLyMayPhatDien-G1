@@ -1,5 +1,20 @@
 const APP_CTX = window.APP_CTX || '';
 
+function exportExcel() {
+    var form = document.querySelector('form.filter-form[action*="inventory-check"]');
+    if (!form) return;
+    var params = new URLSearchParams();
+    params.set('action', 'exportExcel');
+    var inputs = form.querySelectorAll('input[name], select[name]');
+    inputs.forEach(function (inp) {
+        if (inp.name !== 'action' && inp.name !== 'page' && inp.value) {
+            params.set(inp.name, inp.value);
+        }
+    });
+    var formAction = form.getAttribute('action');
+    window.location = formAction + '?' + params.toString();
+}
+
 const root = document.documentElement;
 const storedTheme = localStorage.getItem('wh-theme');
 if (storedTheme === 'dark' || storedTheme === 'light') root.setAttribute('data-theme', storedTheme);

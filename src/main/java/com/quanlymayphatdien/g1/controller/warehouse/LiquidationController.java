@@ -419,8 +419,37 @@ public class LiquidationController extends HttpServlet {
                     selectedSerials.add(d.getSerialNumber());
                 }
             }
+            String pageParam = request.getParameter("page");
+            int page = 1;
+            if (pageParam != null && !pageParam.trim().isEmpty()) {
+                try { page = Integer.parseInt(pageParam.trim()); } catch (NumberFormatException ignore) {}
+            }
+            if (page < 1) page = 1;
+            int pageSize = 6;
 
-            List<Inventory> inStock = inventoryDAO.findInStockByWarehouse(whId);
+            String condParam = request.getParameter("cond");
+            String condSqlFilter = (condParam != null && !condParam.trim().isEmpty()) ? condParam.trim() : "all";
+            String condSql = !"all".equals(condSqlFilter) ? condSqlFilter : null;
+            request.setAttribute("condFilter", condSqlFilter);
+
+            Map<String, Integer> condCounts = inventoryDAO.countEligibleByCondition(whId, 6);
+            int cGood = condCounts.getOrDefault("GOOD", 0);
+            int cPoor = condCounts.getOrDefault("POOR", 0);
+            int cDamaged = condCounts.getOrDefault("DAMAGED", 0);
+            int cAll = cGood + cPoor + cDamaged;
+            request.setAttribute("condCountGood", cGood);
+            request.setAttribute("condCountPoor", cPoor);
+            request.setAttribute("condCountDamaged", cDamaged);
+            request.setAttribute("condCountAll", cAll);
+
+            int totalItems = inventoryDAO.countEligibleForLiquidation(whId, 6, condSql);
+            int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("pageSize", pageSize);
+            request.setAttribute("totalItems", totalItems);
+            request.setAttribute("totalPages", totalPages);
+
+            List<Inventory> inStock = inventoryDAO.findEligibleForLiquidation(whId, 6, condSql, page, pageSize);
             List<Map<String, Object>> pickRows = buildPickRows(inStock, selectedSerials);
 
             // Add missing serials (PENDING_LIQUIDATION) for same warehouse

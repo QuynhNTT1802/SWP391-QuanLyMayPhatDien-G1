@@ -298,6 +298,14 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             }
             detailDAO.batchInsert(conn, details);
             writeStockCardsForImport(conn, receiptId, r.getReceiptCode(), r.getWarehouseId(), userId, details);
+            if (r.getPurchaseOrderId() != null && r.getPurchaseOrderId() > 0) {
+                int poId = r.getPurchaseOrderId();
+                String updatePoSql = "UPDATE purchase_order SET status = 'COMPLETED' WHERE po_id = ?";
+                try (PreparedStatement updatePoPs = conn.prepareStatement(updatePoSql)) {
+                    updatePoPs.setInt(1, poId);
+                    updatePoPs.executeUpdate();
+                }
+            }
             conn.commit();
             return receiptId;
         } catch (SQLException e) {
@@ -396,6 +404,13 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             } else {
                 writeStockCardsForExport(conn, receiptId, r.getReceiptCode(), r.getWarehouseId(), userId, details);
             }
+            if (r.getOrderId() != null && r.getOrderId() > 0) {
+                String updateSoSql = "UPDATE sale_order SET status = 'COMPLETED' WHERE order_id = ?";
+                try (PreparedStatement updateSoPs = conn.prepareStatement(updateSoSql)) {
+                    updateSoPs.setInt(1, r.getOrderId());
+                    updateSoPs.executeUpdate();
+                }
+            }
             conn.commit();
             return receiptId;
         } catch (SQLException e) {
@@ -440,7 +455,7 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             sc.setWarehouseId(warehouseId);
             sc.setGeneratorId(genId);
             sc.setReceiptId(receiptId);
-            sc.setTransactionType("TRANSFER_OUT");
+            sc.setTransactionType("EXPORT");
             sc.setQuantityChange(-totalQty);
             sc.setQuantityAfter(qtyAfter);
             sc.setReferenceNote("Phiếu xuất " + receiptCode + " (luân chuyển)");
