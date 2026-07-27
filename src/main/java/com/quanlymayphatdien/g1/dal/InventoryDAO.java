@@ -870,11 +870,6 @@ public class InventoryDAO extends DBContext implements I_DAO<Inventory> {
         return result;
     }
 
-    /**
-     * Kiem tra serial co dang IN_STOCK o dung kho khong (dung cho xuat kho).
-     * Tra ve true neu OK, false neu khong ton tai hoac khong o trang thai
-     * IN_STOCK.
-     */
     public boolean isInStockAtWarehouse(Connection conn, String serialNumber, int warehouseId) throws SQLException {
         String sql = "SELECT COUNT(*) FROM inventory WHERE serial_number = ? AND warehouse_id = ? AND status = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {

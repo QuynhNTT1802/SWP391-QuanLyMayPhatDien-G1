@@ -107,7 +107,7 @@
                                                 <td style="text-align:center;font-family:var(--font-mono);color:var(--muted);font-weight:600;">${fromIndex + st.index}</td>
                                                 <td><a href="${pageContext.request.contextPath}/inventory/list?generator=${gs.id}<c:if test="${selectedWarehouse != null}">&warehouse=${selectedWarehouse}</c:if>"><c:out value="${gs.model}"/></a></td>
                                                 <td><c:out value="${gs.brand}"/></td>
-                                                <td style="text-align:center;font-family:var(--font-mono);font-weight:700;">${gs.totalSerials}</td>
+                                                <td style="text-align:center;font-family:var(--font-mono);font-weight:700;${gs.totalSerials <= 3 ? 'color:var(--danger);' : ''}">${gs.totalSerials}</td>
                                             </tr>
                                         </c:forEach>
                                     </c:otherwise>

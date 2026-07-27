@@ -214,12 +214,20 @@
                             </div>
                         </c:if>
                         <c:if test="${not empty fromExportReceipt}">
+                            <c:set var="trBreakdown" value=""/>
+                            <c:forEach var="td" items="${transfer.details}" varStatus="loop">
+                                <c:set var="tdLabel" value="${td.generatorModel}"/>
+                                <c:if test="${not empty td.generatorBrand}">
+                                    <c:set var="tdLabel" value="${tdLabel} (${td.generatorBrand})"/>
+                                </c:if>
+                                <c:set var="trBreakdown" value="${trBreakdown}${td.quantity} máy ${tdLabel}${!loop.last ? ', ' : ''}"/>
+                            </c:forEach>
                             <div class="alert alert-info" style="margin: 14px 0;">
                                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
                                 <div class="alert-body">
                                     <div class="alert-title">Nhập từ phiếu luân chuyển</div>
                                     <div>
-                                        Tổng cần nhập: <strong>${expectedRows} số serial</strong>
+                                        Tổng cần nhập: <strong>${expectedRows} số serial</strong>, bao gồm: <strong>${trBreakdown}</strong>.
                                     </div>
                                 </div>
                             </div>
@@ -911,9 +919,6 @@
     var IMPORT_SCAN_MIN_LEN = 2;
 
     function initImportScanner() {
-        // Global scanner: bắt mọi keydown ở document, phân biệt scanner (gõ
-        // nhanh < 50ms/char) với người gõ tay (chậm > 100ms). Khi Enter/Tab
-        // xuất hiện và buffer đủ dài → xử lý như scan.
         document.addEventListener('keydown', function (e) {
             var now = Date.now();
             var gap = now - importScanLastKey;
@@ -1028,10 +1033,11 @@
                     if (data.status === 'SOLD' || (isTransferImportMode && data.status === 'IN_TRANSIT')) {
                         existingInvId = data.inventoryId;
                     } else {
-                        var sysMsg = 'Số serial "' + serial + '" đã tồn tại trong hệ thống, không thể nhập mới.';
-                        if (isTransferImportMode) {
-                            sysMsg = 'Số serial "' + serial + '" đang trong trạng thái luân chuyển, không thể nhập.';
-                        }
+                        var statusName = data.status === 'IN_STOCK' ? 'tồn kho'
+                            : data.status === 'IN_TRANSIT' ? 'đang luân chuyển'
+                            : data.status === 'SOLD' ? 'đã bán'
+                            : data.status || 'không xác định';
+                        var sysMsg = 'Số serial "' + serial + '" đang ở trạng thái ' + statusName + ', không thể nhập.';
                         toast(sysMsg, 'danger');
                         clearScanBuf();
                         return;

@@ -194,22 +194,11 @@ public class ReceiptExcelSupport {
         return result;
     }
 
-    /**
-     * Bo dau " (*)" o cuoi header (template tu danh dau cot bat buoc).
-     * "Ma may (*)" -> "Ma may", "Serial (*)" -> "Serial".
-     */
     private static String stripRequiredMarker(String s) {
         if (s == null) return "";
         return s.replaceAll("\\s*\\(\\*\\)\\s*$", "").trim();
     }
 
-    /**
-     * Map mot ten cot Excel ve canonical key (COL_MODEL / COL_SERIAL / COL_NOTE)
-     * de controller co the tra cuu nhat quan. So khop khong phan biet hoa thuong
-     va khong dau (Vi khong dau).
-     *
-     * Tra ve null neu khong nhan dien duoc.
-     */
     public static String canonicalHeader(String header) {
         if (header == null) return null;
         String normalized = removeDiacritics(header.trim().toLowerCase());
