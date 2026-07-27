@@ -727,15 +727,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
     }
 
     // ===================== END BÁO CÁO NHẬP / XUẤT =====================
-
-    /**
-     * Ghi stock_card theo generator cho mot phieu nhap (IMPORT) moi tao.
-     * Moi generator_id se tao mot stock_card voi quantity_change = +size(group)
-     * va quantity_after = so luong IN_STOCK hien tai cua (warehouse, generator).
-     *
-     * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
-     * de dam bao atomic.
-     */
     public void writeStockCardsForImport(Connection conn, int receiptId, String receiptCode,
                                          int warehouseId, int createdBy,
                                          List<ReceiptDetail> details) throws SQLException {
@@ -775,15 +766,6 @@ public class ReceiptDAO extends DBContext implements I_DAO<Receipt> {
             scDAO.insert(conn, sc);
         }
     }
-
-    /**
-     * Ghi stock_card theo generator cho mot phieu xuat (EXPORT) moi tao.
-     * Moi generator_id se tao mot stock_card voi quantity_change = -size(group)
-     * va quantity_after = so luong luy ke tru di luong xuat.
-     *
-     * Phai goi trong cung transaction (cung Connection) voi qua trinh insert receipt/insert inventory
-     * de dam bao atomic.
-     */
     public void writeStockCardsForExport(Connection conn, int receiptId, String receiptCode,
                                          int warehouseId, int createdBy,
                                          List<ReceiptDetail> details) throws SQLException {
