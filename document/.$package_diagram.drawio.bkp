@@ -1,0 +1,197 @@
+<?xml version="1.0" ?>
+<mxfile host="Electron" agent="Antigravity">
+  <diagram id="package-diagram-swp391" name="Package Diagram - SWP391 G1">
+    <mxGraphModel dx="1600" dy="1100" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1950" pageHeight="1300" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="title_banner" parent="1" value="PACKAGE DIAGRAM - HỆ THỐNG QUẢN LÝ MÁY PHÁT ĐIỆN (SWP391 - GROUP 1)" style="shape=rectangle;html=1;whiteSpace=wrap;fillColor=#1E88E5;strokeColor=#1565C0;fontColor=#FFFFFF;fontStyle=1;fontSize=18;align=center;verticalAlign=middle;rounded=1;shadow=1;" vertex="1">
+          <mxGeometry x="40" y="20" width="1870" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_root" parent="1" value="Package: com.quanlymayphatdien.g1" style="shape=folder;fontStyle=1;tabWidth=250;tabHeight=30;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=15;spacingTop=5;fontSize=14;fillColor=#F8F9FA;strokeColor=#455A64;strokeWidth=2;dashed=0;" vertex="1">
+          <mxGeometry x="40" y="90" width="1870" height="980" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_webui" parent="pkg_root" value="webapp (Presentation Layer)" style="shape=folder;fontStyle=1;tabWidth=180;tabHeight=25;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=3;fontSize=12;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;" vertex="1">
+          <mxGeometry x="30" y="50" width="420" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_webui" parent="pkg_webui" value="&lt;b&gt;Views &amp; User Interfaces:&lt;/b&gt;&lt;br/&gt;• JSP Pages (/admin, /warehouse, /authen, /user)&lt;br/&gt;• Customer &amp; Order Views (/order, /proposal)&lt;br/&gt;• Report Views (/report)&lt;br/&gt;• Static Assets (CSS, JS, Images, Bootstrap)&lt;br/&gt;• JSTL Tag Libraries &amp; Modals" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#A5D6A7;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="15" y="35" width="390" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_filter" parent="pkg_root" value="filter" style="shape=folder;fontStyle=1;tabWidth=140;tabHeight=25;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=3;fontSize=12;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;" vertex="1">
+          <mxGeometry x="470" y="50" width="420" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_filter" parent="pkg_filter" value="&lt;b&gt;Security &amp; Middleware Filters:&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;SecurityFilter:&lt;/b&gt; Authentication &amp; Authorization,&lt;br/&gt;  Role-based Access Control (RBAC), URL Protection&lt;br/&gt;• &lt;b&gt;EncodingFilter:&lt;/b&gt; UTF-8 Character Encoding" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#FFCC80;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="15" y="35" width="390" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_utils" parent="pkg_root" value="utils" style="shape=folder;fontStyle=1;tabWidth=140;tabHeight=25;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=3;fontSize=12;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=2;" vertex="1">
+          <mxGeometry x="910" y="50" width="920" height="190" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_utils_sec" parent="pkg_utils" value="&lt;b&gt;Security &amp; Helpers:&lt;/b&gt;&lt;br/&gt;• AuthUtil, BCryptUtils&lt;br/&gt;• WarehouseAccessUtil&lt;br/&gt;• GlobalUtils, PeriodUtils, Notification" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#CE93D8;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="15" y="35" width="270" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_utils_excel" parent="pkg_utils" value="&lt;b&gt;Excel Export Support Classes:&lt;/b&gt;&lt;br/&gt;• CategoryExcelSupport, InventoryCheckExcelSupport&lt;br/&gt;• InventoryReportExcelSupport, LiquidationReportExcelSupport&lt;br/&gt;• ProposalExcelSupport, ReceiptExcelSupport&lt;br/&gt;• ReceiptReportExcelSupport, StockCardReportExcelSupport, ReportExcelSupport" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#CE93D8;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="300" y="35" width="605" height="140" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_controller" parent="pkg_root" value="controller" style="shape=folder;fontStyle=1;tabWidth=160;tabHeight=25;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=3;fontSize=12;fillColor=#E3F2FD;strokeColor=#1565C0;strokeWidth=2;" vertex="1">
+          <mxGeometry x="30" y="270" width="1800" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_authen" parent="pkg_controller" value="controller.authen" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="20" y="35" width="200" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_authen" parent="sub_authen" value="• AuthenServlet" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="180" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_admin" parent="pkg_controller" value="controller.admin" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="230" y="35" width="230" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_admin" parent="sub_admin" value="• CategoryController&lt;br/&gt;• DashboardController&lt;br/&gt;• ForgotPasswordController&lt;br/&gt;• RoleController&lt;br/&gt;• UserManagementController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="210" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_user" parent="pkg_controller" value="controller.user" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="470" y="35" width="210" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_user" parent="sub_user" value="• ProfileServlet&lt;br/&gt;• ChangePasswordServlet&lt;br/&gt;• NotificationController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="190" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_order" parent="pkg_controller" value="controller.order" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="690" y="35" width="190" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_order" parent="sub_order" value="• OrderController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="170" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_proposal" parent="pkg_controller" value="controller.proposal" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="890" y="35" width="220" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_proposal" parent="sub_proposal" value="• ProposalController&lt;br/&gt;• PurchaseOrderController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="200" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_report" parent="pkg_controller" value="controller.report" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="1120" y="35" width="180" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_report" parent="sub_report" value="• ReportController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_home" parent="pkg_controller" value="controller.homepage" style="shape=folder;fontStyle=1;tabWidth=130;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#FFFFFF;strokeColor=#64B5F6;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="1310" y="35" width="180" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_home" parent="sub_home" value="• HomeController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="160" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="sub_warehouse" parent="pkg_controller" value="controller.warehouse" style="shape=folder;fontStyle=1;tabWidth=160;tabHeight=22;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;fontSize=11;fillColor=#E1F5FE;strokeColor=#0288D1;strokeWidth=1.5;" vertex="1">
+          <mxGeometry x="20" y="165" width="1760" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_wh_main" parent="sub_warehouse" value="&lt;b&gt;Warehouse &amp; Logistics Controllers:&lt;/b&gt;&lt;br/&gt;• WarehouseController, CustomerController, SupplierController&lt;br/&gt;• GeneratorManagementController, LiquidationController, InventoryCheckController&lt;br/&gt;• StockCardController, InventoryReportController, LiquidationReportController, ReceiptReportController, StockCardReportController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="30" width="850" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="nest_receipt" parent="sub_warehouse" value="warehouse.receipt" style="shape=folder;fontStyle=1;tabWidth=120;tabHeight=20;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=6;fontSize=10;fillColor=#FFFFFF;strokeColor=#4FC3F7;" vertex="1">
+          <mxGeometry x="870" y="30" width="280" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_nest_receipt" parent="nest_receipt" value="• ImportReceiptController&lt;br/&gt;• ExportReceiptController" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="25" width="260" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="nest_inventory" parent="sub_warehouse" value="warehouse.inventory" style="shape=folder;fontStyle=1;tabWidth=120;tabHeight=20;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=6;fontSize=10;fillColor=#FFFFFF;strokeColor=#4FC3F7;" vertex="1">
+          <mxGeometry x="1160" y="30" width="280" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_nest_inventory" parent="nest_inventory" value="• Stock &amp; Inventory Servlets" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="25" width="260" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="nest_transfer" parent="sub_warehouse" value="warehouse.transfer" style="shape=folder;fontStyle=1;tabWidth=120;tabHeight=20;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=6;fontSize=10;fillColor=#FFFFFF;strokeColor=#4FC3F7;" vertex="1">
+          <mxGeometry x="1450" y="30" width="290" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="cnt_nest_transfer" parent="nest_transfer" value="• Stock Transfer Servlets" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=10;fillColor=#FAFAFA;strokeColor=#E0E0E0;spacingLeft=4;spacingTop=3;" vertex="1">
+          <mxGeometry x="10" y="25" width="270" height="58" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_entity" parent="pkg_root" value="entity (Domain Model)" style="shape=folder;fontStyle=1;tabWidth=140;tabHeight=25;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=3;fontSize=12;fillColor=#FFF8E1;strokeColor=#F57F17;strokeWidth=2;" vertex="1">
+          <mxGeometry x="30" y="600" width="860" height="350" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_entity" parent="pkg_entity" value="&lt;b&gt;Domain Entities &amp; Value Objects:&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;User &amp; Access Control:&lt;/b&gt; User, Role, Permission, ActivityLog, PasswordResetRequest, Admin&lt;br/&gt;• &lt;b&gt;Inventory &amp; Equipment:&lt;/b&gt; Generator, GeneratorSummary, Category, CategoryBrand, CategoryFuelType, CategoryOrigin, etc.&lt;br/&gt;• &lt;b&gt;Warehouse Operations:&lt;/b&gt; Warehouse, Inventory, InventoryCheck, InventoryCheckDetail, InventoryCheckSerial, StockCard&lt;br/&gt;• &lt;b&gt;Transactions &amp; Receipts:&lt;/b&gt; Receipt, ReceiptDetail, Liquidation, LiquidationDetail, Transfer, TransferDetail&lt;br/&gt;• &lt;b&gt;Orders &amp; Proposals:&lt;/b&gt; ImportProposal, ImportProposalDetail, PurchaseOrder, PurchaseOrderDetail, SaleOrder, OrderDetail&lt;br/&gt;• &lt;b&gt;Partners &amp; Reports:&lt;/b&gt; Customer, Supplier, Notification, BaseReportDAO items, Report Summaries" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#FFE082;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="15" y="35" width="830" height="300" as="geometry"/>
+        </mxCell>
+        <mxCell id="pkg_dal" parent="pkg_root" value="dal (Data Access Layer)" style="shape=folder;fontStyle=1;tabWidth=140;tabHeight=25;tabPosition=left;html=1;boundedLbl=1;verticalAlign=top;align=left;spacingLeft=10;spacingTop=3;fontSize=12;fillColor=#E0F2F1;strokeColor=#00695C;strokeWidth=2;" vertex="1">
+          <mxGeometry x="910" y="600" width="920" height="350" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_dal_base" parent="pkg_dal" value="&lt;b&gt;Database Connection Infrastructure:&lt;/b&gt;&lt;br/&gt;• &lt;b&gt;DBContext:&lt;/b&gt; JDBC Driver, Connection Pool &amp; Credentials Management&lt;br/&gt;• &lt;b&gt;I_DAO:&lt;/b&gt; Generic Data Access Object Interface" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#80CBC4;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="15" y="35" width="890" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="content_dal_daos" parent="pkg_dal" value="&lt;b&gt;Data Access Objects (DAOs):&lt;/b&gt;&lt;br/&gt;• UserDAO, AdminDAO, RoleDAO, PermissionDAO, PasswordResetRequestDAO&lt;br/&gt;• GeneratorDAO, CategoryDAO, CategoryExtensionDAO, GeneratorCategoryDAO&lt;br/&gt;• WarehouseDAO, InventoryDAO, InventoryCheckDAO, InventoryCheckReportDAO, StockCardDAO&lt;br/&gt;• ReceiptDAO, ReceiptDetailDAO, LiquidationDAO, LiquidationDetailDAO, TransferDAO, TransferDetailDAO&lt;br/&gt;• ImportProposalDAO, ImportProposalDetailDAO, PurchaseOrderDAO, OrderDetailDAO, SaleOrderDAO&lt;br/&gt;• CustomerDAO, SupplierDAO, ActivityLogDAO, NotificationDAO&lt;br/&gt;• ExportReportDAO, ImportReportDAO, PurchaseReportDAO, SalesReportDAO, InventoryReportDAO, BaseReportDAO" style="html=1;whiteSpace=wrap;align=left;verticalAlign=top;fontSize=11;fillColor=#FFFFFF;strokeColor=#80CBC4;spacingLeft=8;spacingTop=5;" vertex="1">
+          <mxGeometry x="15" y="110" width="890" height="225" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext_db" parent="1" value="Database Server (MS SQL Server)&lt;br/&gt;[Tables, Stored Procedures, Triggers, Foreign Keys]" style="shape=cylinder3;boundedLbl=1;whiteSpace=wrap;html=1;size=15;fillColor=#ECEFF1;strokeColor=#37474F;strokeWidth=2;fontStyle=1;fontSize=12;" vertex="1">
+          <mxGeometry x="950" y="1100" width="920" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="ext_lib" parent="1" value="External Libraries &amp; Frameworks&lt;br/&gt;(Apache POI, BCrypt, Java Servlet API 4.0, JSTL, JDBC Driver)" style="shape=rectangle;rounded=1;html=1;whiteSpace=wrap;fillColor=#EDE7F6;strokeColor=#512DA8;strokeWidth=2;fontStyle=1;fontSize=12;align=center;verticalAlign=middle;" vertex="1">
+          <mxGeometry x="40" y="1100" width="870" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_web_filter" parent="pkg_root" source="pkg_webui" target="pkg_filter" value="«access»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#2E7D32;" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_web_ctrl" parent="pkg_root" source="pkg_webui" target="pkg_controller" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#2E7D32;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="240" y="300"/>
+              <mxPoint x="240" y="340"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_filter_utils" parent="pkg_root" source="pkg_filter" target="pkg_utils" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#E65100;" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_filter_ctrl" parent="pkg_root" source="pkg_filter" target="pkg_controller" value="«intercept»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#E65100;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="300"/>
+              <mxPoint x="680" y="340"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_ctrl_dal" parent="pkg_root" source="pkg_controller" target="pkg_dal" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#1565C0;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1370" y="590"/>
+              <mxPoint x="1370" y="685"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_ctrl_entity" parent="pkg_root" source="pkg_controller" target="pkg_entity" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#1565C0;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="460" y="590"/>
+              <mxPoint x="460" y="685"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_ctrl_utils" parent="pkg_root" source="pkg_controller" target="pkg_utils" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#1565C0;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1370" y="340"/>
+              <mxPoint x="1370" y="260"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_dal_entity" parent="pkg_root" source="pkg_dal" target="pkg_entity" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#00695C;" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_utils_entity" parent="pkg_root" source="pkg_utils" target="pkg_entity" value="«use»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#7B1FA2;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="930" y="260"/>
+              <mxPoint x="900" y="260"/>
+              <mxPoint x="900" y="660"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_dal_db" parent="1" source="pkg_dal" target="ext_db" value="«access / JDBC»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#00695C;" edge="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_utils_lib" parent="1" source="pkg_utils" target="ext_lib" value="«import»" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;endArrow=open;endFill=0;strokeWidth=1.5;fontSize=10;fontStyle=1;strokeColor=#7B1FA2;" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1370" y="1080"/>
+              <mxPoint x="475" y="1080"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

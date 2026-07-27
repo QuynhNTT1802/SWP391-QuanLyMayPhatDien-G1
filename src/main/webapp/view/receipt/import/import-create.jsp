@@ -267,7 +267,6 @@
                                 </small>
                             </div>
                             </c:if>
-
                         </div>
 
                         <div class="tab-pane" data-tab="excel">

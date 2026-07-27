@@ -22,7 +22,7 @@ import java.util.Set;
 public class SecurityFilter implements Filter {
 
     private static final Set<String> PUBLIC_PATHS = Set.of(
-            "/authen", "/", "/home"
+            "/authen"
     );
 
     private static final List<String> PUBLIC_PREFIXES = List.of(

@@ -33,7 +33,7 @@ import com.quanlymayphatdien.g1.utils.WarehouseAccessUtil;
 import com.google.gson.Gson;
 import com.quanlymayphatdien.g1.dal.TransferDAO;
 import com.quanlymayphatdien.g1.entity.Warehouse;
-import com.quanlymayphatdien.g1.utils.NotificationService;
+import com.quanlymayphatdien.g1.utils.NotificationUtil;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -1694,7 +1694,7 @@ public class ImportReceiptController extends HttpServlet {
                 continue;
             }
             if (scopedWh != null && scopedWh == transfer.getSourceWarehouseId()) {
-                NotificationService.send(
+                NotificationUtil.send(
                         u.getId(),
                         "Phiếu nhập đã hoàn tất",
                         "Kho đích đã tạo phiếu nhập " + receipt.getReceiptCode()

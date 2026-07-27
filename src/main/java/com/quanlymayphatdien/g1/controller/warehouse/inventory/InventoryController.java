@@ -22,7 +22,6 @@ import jakarta.servlet.http.HttpSession;
 import java.util.List;
 import java.util.Map;
 
-
 @WebServlet(name = "InventoryController", urlPatterns = {"/inventory", "/inventory/*"})
 public class InventoryController extends HttpServlet {
 

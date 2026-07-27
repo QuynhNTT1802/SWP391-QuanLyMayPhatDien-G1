@@ -8,7 +8,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Dashboard</title>
+<title>Bảng Điều Khiển</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -22,11 +22,7 @@
   .kpi .label .dot { width: 6px; height: 6px; border-radius: 50%; }
   .kpi .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; color: var(--fg); }
   .kpi .delta { margin-top: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-  .kpi.accent .dot { background: var(--accent); }
-  .kpi.info .dot { background: var(--info); }
-  .kpi.warn .dot { background: var(--warn); }
-  .kpi.danger .dot { background: var(--danger); }
-  .kpi.purple .dot { background: #7c3aed; }
+  .kpi .dot { background: var(--muted); }
 
   .charts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
@@ -39,8 +35,7 @@
   .tx:last-child { border-bottom: 0; }
   .tx-icon { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--border); }
   .tx-icon svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-  .tx-icon.in { color: var(--accent); background: var(--accent-soft); border-color: transparent; }
-  .tx-icon.out { color: var(--info); background: var(--info-soft); border-color: transparent; }
+  .tx-icon.in, .tx-icon.out { color: var(--muted-2); background: var(--surface-2); border-color: var(--border); }
   .tx-body { line-height: 1.3; min-width: 0; }
   .tx-title { font-size: 13px; font-weight: 500; }
   .tx-sub { font-size: 11.5px; color: var(--muted); font-family: var(--font-mono); }
@@ -53,12 +48,7 @@
   .rpt-card a { text-decoration: none; color: inherit; display: flex; gap: 14px; align-items: flex-start; width: 100%; }
   .rpt-icon { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0; }
   .rpt-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-  .rpt-icon.green { background: var(--accent-soft); color: var(--accent); }
-  .rpt-icon.blue { background: var(--info-soft); color: var(--info); }
-  .rpt-icon.orange { background: var(--warn-soft); color: var(--warn); }
-  .rpt-icon.purple { background: #e8dfff; color: #7c3aed; }
-  .rpt-icon.red { background: var(--danger-soft); color: var(--danger); }
-  .rpt-icon.teal { background: #d5f5f0; color: #0d9488; }
+  .rpt-icon { background: var(--surface-2); color: var(--muted); }
   .rpt-body { flex: 1; min-width: 0; }
   .rpt-title { font-size: 13px; font-weight: 600; }
   .rpt-desc { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
@@ -68,9 +58,7 @@
   .alert { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
   .alert-icon { width: 30px; height: 30px; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
   .alert-icon svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-  .alert.warn .alert-icon { background: var(--warn-soft); color: var(--warn); }
-  .alert.danger .alert-icon { background: var(--danger-soft); color: var(--danger); }
-  .alert.info .alert-icon { background: var(--info-soft); color: var(--info); }
+  .alert.warn .alert-icon, .alert.danger .alert-icon, .alert.info .alert-icon { background: var(--surface-2); color: var(--muted-2); }
   .alert-body { flex: 1; min-width: 0; }
   .alert-title { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .alert-title .count { font-family: var(--font-mono); font-size: 11px; padding: 1px 6px; border-radius: 3px; background: var(--surface-2); color: var(--fg-soft); border: 1px solid var(--border); font-weight: 500; }
@@ -104,7 +92,7 @@
 
   <div>
     <header class="topbar" data-od-id="topbar">
-      <h1>Dashboard</h1>
+      <h1>Bảng Điều Khiển</h1>
       <span class="crumb">/ Tổng quan</span>
       <div class="search">
         <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -112,7 +100,7 @@
         <kbd>Ctrl K</kbd>
       </div>
       <div class="top-actions">
-        <button class="icon-btn theme-toggle" id="themeToggle" title="Doi theme">
+        <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
           <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" fill="none" stroke-width="1.6"/></svg>
         </button>
@@ -122,12 +110,12 @@
 
     <main>
 
-      <%-- ===== ADMIN KPIs: Quản lý người dùng & hệ thống ===== --%>
+      <%-- ===== KPI Quản trị: Người dùng & hệ thống ===== --%>
       <c:if test="${not empty perms and perms.contains('users.view')}">
       <section data-od-id="admin-kpis">
         <div class="kpis">
           <div class="kpi accent">
-            <div class="label">Người dùng active <span class="dot"></span></div>
+            <div class="label">Người dùng hoạt động <span class="dot"></span></div>
             <div class="value"><fmt:formatNumber value="${activeUsers}" pattern="#,##0"/></div>
             <div class="delta">Người dùng đang hoạt động</div>
           </div>
@@ -137,12 +125,12 @@
             <div class="delta">Tài khoản đã bị vô hiệu hoá</div>
           </div>
           <div class="kpi info">
-            <div class="label">Vai trò (Roles)</div>
+            <div class="label">Vai trò</div>
             <div class="value">${totalRoles}</div>
             <div class="delta">Vai trò trong hệ thống</div>
           </div>
           <div class="kpi purple">
-            <div class="label">Quyền (Permissions)</div>
+            <div class="label">Quyền hạn</div>
             <div class="value">${totalPermissions}</div>
             <div class="delta">Quyền đã khai báo</div>
           </div>
@@ -150,7 +138,7 @@
       </section>
       </c:if>
 
-      <%-- ===== SYSTEM OVERVIEW KPIs ===== --%>
+      <%-- ===== KPI Tổng quan hệ thống ===== --%>
       <c:if test="${not empty perms and perms.contains('warehouses.view')}">
       <section data-od-id="sys-kpis">
         <div class="kpis">
@@ -178,7 +166,7 @@
       </section>
       </c:if>
 
-      <%-- ===== WH STAFF: Kho của tôi ===== --%>
+      <%-- ===== Nhân viên kho: Kho của tôi ===== --%>
       <c:if test="${not empty userRoleNames and userRoleNames.contains('warehouse_staff')}">
       <section data-od-id="wh-staff-kpis">
         <div class="kpis">
@@ -193,12 +181,12 @@
             <div class="delta">model khác nhau</div>
           </div>
           <div class="kpi warn">
-            <div class="label">Transfer chờ xuất</div>
+            <div class="label">Luân chuyển chờ xuất</div>
             <div class="value">${readyExportCount}</div>
             <div class="delta">cần tạo phiếu xuất</div>
           </div>
           <div class="kpi info">
-            <div class="label">Transfer chờ nhận</div>
+            <div class="label">Luân chuyển chờ nhận</div>
             <div class="value">${readyImportCount}</div>
             <div class="delta">cần tạo phiếu nhập</div>
           </div>
@@ -206,7 +194,7 @@
       </section>
       </c:if>
 
-      <%-- ===== WH MANAGER KPIs ===== --%>
+      <%-- ===== KPI Quản lý kho ===== --%>
       <c:if test="${not empty userRoleNames and userRoleNames.contains('warehouse_manager')}">
       <section data-od-id="wh-mgr-kpis">
         <div class="kpis">
@@ -216,7 +204,7 @@
             <div class="delta">đề xuất nhập kho</div>
           </div>
           <div class="kpi info">
-            <div class="label">Transfer chờ CEO</div>
+            <div class="label">Luân chuyển chờ duyệt</div>
             <div class="value">${transferPendingCount}</div>
             <div class="delta">chờ phê duyệt</div>
           </div>
@@ -236,7 +224,7 @@
       </section>
       </c:if>
 
-      <%-- ===== SALES KPIs ===== --%>
+      <%-- ===== KPI Kinh doanh ===== --%>
       <c:if test="${not empty perms and (perms.contains('orders.view') or perms.contains('orders.approve'))}">
       <section data-od-id="sales-kpis">
         <div class="kpis">
@@ -248,17 +236,17 @@
             <div class="delta">đơn hàng hôm nay</div>
           </div>
           <div class="kpi warn">
-            <div class="label">Đơn PENDING (của tôi)</div>
+            <div class="label">Đơn chờ duyệt (của tôi)</div>
             <div class="value"><fmt:formatNumber value="${myPendingOrders}" pattern="#,##0"/></div>
             <div class="delta">chờ duyệt</div>
           </div>
           <div class="kpi info">
-            <div class="label">Đơn APPROVED (của tôi)</div>
+            <div class="label">Đơn đã duyệt (của tôi)</div>
             <div class="value"><fmt:formatNumber value="${myApprovedOrders}" pattern="#,##0"/></div>
             <div class="delta">đã duyệt</div>
           </div>
           <div class="kpi accent">
-            <div class="label">Đơn COMPLETED (của tôi)</div>
+            <div class="label">Đơn hoàn thành (của tôi)</div>
             <div class="value"><fmt:formatNumber value="${myCompletedOrders}" pattern="#,##0"/></div>
             <div class="delta">đã hoàn thành</div>
           </div>
@@ -272,17 +260,17 @@
           <div class="kpi warn">
             <div class="label">Đơn chờ duyệt</div>
             <div class="value"><fmt:formatNumber value="${pendingOrders}" pattern="#,##0"/></div>
-            <div class="delta">PENDING</div>
+            <div class="delta">Chờ duyệt</div>
           </div>
           <div class="kpi info">
             <div class="label">Đơn đã duyệt</div>
             <div class="value"><fmt:formatNumber value="${approvedOrders}" pattern="#,##0"/></div>
-            <div class="delta">APPROVED</div>
+            <div class="delta">Đã duyệt</div>
           </div>
           <div class="kpi accent">
             <div class="label">Đơn hoàn thành</div>
             <div class="value"><fmt:formatNumber value="${completedOrders}" pattern="#,##0"/></div>
-            <div class="delta">COMPLETED</div>
+            <div class="delta">Hoàn thành</div>
           </div>
           </c:otherwise>
           </c:choose>
@@ -290,20 +278,20 @@
       </section>
       </c:if>
 
-      <%-- ===== CUSTOMER / SUPPLIER KPIs ===== --%>
+      <%-- ===== KPI Khách hàng / Nhà cung cấp ===== --%>
       <c:if test="${not empty perms and (perms.contains('customers.view') or perms.contains('suppliers.view'))}">
       <section data-od-id="cussup-kpis">
         <div class="kpis">
           <c:if test="${not empty perms and perms.contains('customers.view')}">
           <div class="kpi accent">
-            <div class="label">Khách hàng active <span class="dot"></span></div>
+            <div class="label">Khách hàng hoạt động <span class="dot"></span></div>
             <div class="value"><fmt:formatNumber value="${activeCustomers}" pattern="#,##0"/></div>
             <div class="delta">khách hàng đang hoạt động</div>
           </div>
           </c:if>
           <c:if test="${not empty perms and perms.contains('suppliers.view')}">
           <div class="kpi info">
-            <div class="label">Nhà cung cấp active</div>
+            <div class="label">Nhà cung cấp hoạt động</div>
             <div class="value"><fmt:formatNumber value="${activeSuppliers}" pattern="#,##0"/></div>
             <div class="delta">NCC đang hoạt động</div>
           </div>
@@ -312,14 +300,14 @@
       </section>
       </c:if>
 
-      <%-- ===== CEO KPIs: Hàng chờ duyệt ===== --%>
+      <%-- ===== KPI Giám đốc: Hàng chờ duyệt ===== --%>
       <c:if test="${not empty userRoleNames and userRoleNames.contains('ceo')}">
       <section data-od-id="ceo-kpis">
         <div class="kpis">
           <div class="kpi danger">
             <div class="label">Thanh lý chờ duyệt <span class="dot"></span></div>
             <div class="value">${pendingLiquidations}</div>
-            <div class="delta">cần CEO phê duyệt</div>
+            <div class="delta">cần phê duyệt</div>
           </div>
           <div class="kpi warn">
             <div class="label">Transfer chờ duyệt</div>
@@ -327,7 +315,7 @@
             <div class="delta">luân chuyển kho</div>
           </div>
           <div class="kpi info">
-            <div class="label">PO chờ duyệt</div>
+            <div class="label">Phiếu mua chờ duyệt</div>
             <div class="value">${pendingPOs}</div>
             <div class="delta">phiếu mua hàng</div>
           </div>
@@ -340,7 +328,7 @@
       </section>
       </c:if>
 
-      <%-- ===== CHARTS: Order Status Donut (sale_manager, admin) ===== --%>
+      <%-- ===== Biểu đồ: Trạng thái đơn hàng ===== --%>
       <c:if test="${not empty perms and perms.contains('orders.approve') and not empty donutSegments}">
       <div class="section-head"><h2>Thống kê đơn hàng</h2></div>
       <section class="charts" data-od-id="order-charts">
@@ -350,7 +338,7 @@
             <circle cx="100" cy="100" r="80" fill="none" stroke="var(--surface-2)" stroke-width="24"/>
             <c:forEach var="seg" items="${donutSegments}">
             <circle cx="100" cy="100" r="80" fill="none"
-              stroke="${seg.color}" stroke-width="24"
+              stroke="var(--muted)" stroke-width="24"
               stroke-dasharray="${seg.dashLen} ${seg.gap}"
               stroke-dashoffset="${seg.dashOffset}"
               transform="rotate(-90 100 100)"/>
@@ -360,14 +348,14 @@
           </svg>
           <div style="display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:12px;font-size:12px">
             <c:forEach var="seg" items="${donutSegments}">
-            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${seg.color};margin-right:4px"></span>${seg.status} ${seg.count}</span>
+            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--muted);margin-right:4px"></span>${seg.status} ${seg.count}</span>
             </c:forEach>
           </div>
         </div>
       </section>
       </c:if>
 
-      <%-- ===== CHARTS: Import/Export Monthly Trend (warehouse roles, admin) ===== --%>
+      <%-- ===== Biểu đồ: Xu hướng nhập xuất kho ===== --%>
       <c:if test="${not empty perms and perms.contains('receipts.view') and not empty monthlyImportTrend}">
       <div class="section-head"><h2>Xu hướng nhập xuất</h2></div>
       <section class="charts" data-od-id="import-export-chart">
@@ -423,21 +411,21 @@
               <c:set var="idx" value="${idx + 1}"/>
             </c:forEach>
             <c:if test="${not empty importPoints}">
-            <polyline points="${importPoints}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+            <polyline points="${importPoints}" fill="none" stroke="var(--muted)" stroke-width="2"/>
             </c:if>
             <c:if test="${not empty exportPoints}">
-            <polyline points="${exportPoints}" fill="none" stroke="var(--info)" stroke-width="2" stroke-dasharray="3,3"/>
+            <polyline points="${exportPoints}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3,3"/>
             </c:if>
           </svg>
           <div class="chart-legend" style="display:flex;gap:20px;margin-top:8px;font-size:12px;color:var(--muted)">
-            <span><span style="display:inline-block;width:14px;height:2px;background:var(--accent);margin-right:6px"></span>Nhập kho</span>
-            <span><span style="display:inline-block;width:14px;height:0;border-top:2px dashed var(--info);margin-right:6px"></span>Xuất kho</span>
+            <span><span style="display:inline-block;width:14px;height:2px;background:var(--muted);margin-right:6px"></span>Nhập kho</span>
+            <span><span style="display:inline-block;width:14px;height:0;border-top:2px dashed var(--muted);margin-right:6px"></span>Xuất kho</span>
           </div>
         </div>
       </section>
       </c:if>
 
-      <%-- ===== REPORT CARDS ===== --%>
+      <%-- ===== Thẻ báo cáo ===== --%>
       <c:if test="${not empty perms and perms.contains('reports.view')}">
       <div class="section-head"><h2>Báo cáo</h2></div>
       <section class="report-cards" data-od-id="report-cards">
@@ -513,7 +501,7 @@
             </div>
             <div class="rpt-body">
               <div class="rpt-title">Báo cáo bán hàng</div>
-              <div class="rpt-desc">Các đơn bán hàng (sale order) trong kì</div>
+              <div class="rpt-desc">Các đơn bán hàng trong kì</div>
               <span class="rpt-link">Xem báo cáo →</span>
             </div>
           </a>
@@ -522,10 +510,10 @@
       </section>
       </c:if>
 
-      <%-- ===== BOTTOM FEEDS (2 columns) ===== --%>
+      <%-- ===== Khu vực dưới (2 cột) ===== --%>
       <section class="grid-2" data-od-id="activity">
 
-        <%-- Receipt transactions feed ===== --%>
+        <%-- Danh sách giao dịch ===== --%>
         <c:if test="${not empty perms and perms.contains('receipts.view')}">
         <div class="card">
           <div class="card-head">
@@ -569,7 +557,7 @@
         </div>
         </c:if>
 
-        <%-- ===== QUICK LINKS (admin) ===== --%>
+        <%-- ===== Liên kết nhanh (Quản trị) ===== --%>
         <c:if test="${not empty perms and perms.contains('users.view')}">
         <div class="card">
           <div class="card-head"><h3>Truy cập nhanh</h3></div>
@@ -589,14 +577,14 @@
               </a>
               <a href="${pageContext.request.contextPath}/admin/dashboard" class="ql">
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-                Dashboard
+                Bảng điều khiển
               </a>
             </div>
           </div>
         </div>
         </c:if>
 
-        <%-- ===== CEO Quick Links ===== --%>
+        <%-- ===== Liên kết nhanh Giám đốc ===== --%>
         <c:if test="${not empty userRoleNames and userRoleNames.contains('ceo')}">
         <div class="card">
           <div class="card-head"><h3>Truy cập nhanh</h3></div>
@@ -627,7 +615,7 @@
 
       </section>
 
-      <%-- ===== ALERTS ===== --%>
+      <%-- ===== Cảnh báo ===== --%>
       <div class="section-head"><h2>Cảnh báo cần xử lý</h2></div>
       <section class="alerts" data-od-id="alerts">
 
@@ -635,8 +623,8 @@
         <div class="alert info">
           <div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></div>
           <div class="alert-body">
-            <div class="alert-title">Người dùng <span class="count">${activeUsers} active</span></div>
-            <div class="alert-desc">Hệ thống có ${activeUsers} người dùng active, ${lockedUsers} tài khoản bị khoá.</div>
+            <div class="alert-title">Người dùng <span class="count">${activeUsers} hoạt động</span></div>
+            <div class="alert-desc">Hệ thống có ${activeUsers} người dùng hoạt động, ${lockedUsers} tài khoản bị khoá.</div>
             <a class="alert-cta" href="${pageContext.request.contextPath}/admin/users">Quản lý người dùng →</a>
           </div>
         </div>
@@ -657,7 +645,7 @@
         <div class="alert danger">
           <div class="alert-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
           <div class="alert-body">
-            <div class="alert-title">Chờ CEO phê duyệt <span class="count">${pendingLiquidations + pendingTransfers + pendingPOs}</span></div>
+            <div class="alert-title">Chờ phê duyệt <span class="count">${pendingLiquidations + pendingTransfers + pendingPOs}</span></div>
             <div class="alert-desc">${pendingLiquidations} thanh lý, ${pendingTransfers} luân chuyển, ${pendingPOs} phiếu mua cần xử lý.</div>
             <a class="alert-cta" href="${pageContext.request.contextPath}/liquidations">Xem ngay →</a>
           </div>
@@ -678,7 +666,7 @@
       </section>
 
       <div class="foot">
-        <span>Dashboard · Tổng quan hệ thống</span>
+        <span>Bảng điều khiển · Tổng quan hệ thống</span>
         <span>v2.5.0</span>
       </div>
 

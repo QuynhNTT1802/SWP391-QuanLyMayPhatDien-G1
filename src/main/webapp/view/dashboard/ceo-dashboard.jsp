@@ -8,7 +8,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bảng Điều Khiển — CEO & Điều Hành</title>
+<title>Bảng Điều Khiển — Giám đốc & Điều hành</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
 
   <div>
     <header class="topbar">
-      <h1>Bảng Điều Khiển CEO</h1>
+      <h1>Bảng Điều Khiển Giám đốc</h1>
       <span class="crumb">/ Tổng quan điều hành hệ thống</span>
       <div class="top-actions">
         <button class="icon-btn theme-toggle" id="themeToggle" title="Đổi giao diện">
@@ -41,10 +41,10 @@
 
     <main class="dashboard-container">
 
-      <%-- Hero Header Banner --%>
+      <%-- Đầu trang hero --%>
       <jsp:include page="dashboard-header.jsp" />
 
-      <%-- Section 1: 4 Template KPI Cards --%>
+      <%-- Phần 1: 4 Thẻ KPI --%>
       <section>
         <div class="kpis">
           <div class="kpi">
@@ -78,21 +78,21 @@
 
           <div class="kpi">
             <div class="label">Hồ Sơ Cần Phê Duyệt</div>
-            <div class="value mono" style="color: var(--danger)"><fmt:formatNumber value="${not empty pendingApprovalsCount ? pendingApprovalsCount : 0}" pattern="#,##0"/></div>
+            <div class="value mono"><fmt:formatNumber value="${not empty pendingApprovalsCount ? pendingApprovalsCount : 0}" pattern="#,##0"/></div>
             <div class="delta">
               <span class="change down">Cần xử lý</span>
-              chuyển kho / thanh lý / PO
+              chuyển kho / thanh lý / phiếu mua
             </div>
             
           </div>
         </div>
       </section>
 
-      <%-- Quick Hub: Phím Tắt Thao Tác CEO Nhanh --%>
+      <%-- Trung tâm điều khiển nhanh Giám đốc --%>
       <div class="dash-sec-head">
         <h3>
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Phím Tắt Điều Hành & Phê Duyệt CEO
+          Phím Tắt Điều Hành & Phê Duyệt
         </h3>
       </div>
 
@@ -126,7 +126,7 @@
         </a>
       </div>
 
-      <%-- Section 2: Activity Grid (Smooth Executive SVG Area Line Chart) --%>
+      <%-- Phần 2: Lưới hoạt động (Biểu đồ đường SVG) --%>
       <div class="dash-sec-head">
         <h3>
           <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
@@ -135,7 +135,7 @@
       </div>
 
       <section class="dash-grid-3-1">
-        <%-- Executive Line Chart Card With SVG Gradient Areas --%>
+        <%-- Thẻ biểu đồ đường Nhập / Xuất --%>
         <div class="card">
           <div class="card-head">
             <div>
@@ -153,12 +153,12 @@
             <svg class="chart" viewBox="0 0 720 240" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <linearGradient id="ceoImportGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.35"/>
-                  <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.0"/>
+                  <stop offset="0%" stop-color="var(--muted)" stop-opacity="0.25"/>
+                  <stop offset="100%" stop-color="var(--muted)" stop-opacity="0.0"/>
                 </linearGradient>
                 <linearGradient id="ceoExportGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="var(--info)" stop-opacity="0.25"/>
-                  <stop offset="100%" stop-color="var(--info)" stop-opacity="0.0"/>
+                  <stop offset="0%" stop-color="var(--muted)" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="var(--muted)" stop-opacity="0.0"/>
                 </linearGradient>
               </defs>
 
@@ -184,17 +184,17 @@
 
               <c:if test="${not empty lineImportPoints}">
               <polygon points="60,220 ${lineImportPoints} ${lineLastImportX},220" fill="url(#ceoImportGrad)"/>
-              <polyline points="${lineImportPoints}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+              <polyline points="${lineImportPoints}" fill="none" stroke="var(--muted)" stroke-width="2.5"/>
               </c:if>
               <c:if test="${not empty lineExportPoints}">
               <polygon points="60,220 ${lineExportPoints} ${lineLastExportX},220" fill="url(#ceoExportGrad)"/>
-              <polyline points="${lineExportPoints}" fill="none" stroke="var(--info)" stroke-width="2.2" stroke-dasharray="4,4"/>
+              <polyline points="${lineExportPoints}" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-dasharray="4,4"/>
               </c:if>
 
               <c:if test="${not empty lineLastImportVal}">
-              <g fill="var(--accent)">
+              <g fill="var(--muted)">
                 <circle cx="${lineLastImportX}" cy="${lineLastImportY}" r="4"/>
-                <circle cx="${lineLastImportX}" cy="${lineLastImportY}" r="7" fill="var(--accent)" opacity="0.25"/>
+                <circle cx="${lineLastImportX}" cy="${lineLastImportY}" r="7" fill="var(--muted)" opacity="0.25"/>
               </g>
               <g transform="translate(${lineLastImportX - 42}, ${lineLastImportY > 160 ? lineLastImportY - 30 : lineLastImportY + 8})">
                 <rect x="0" y="0" width="82" height="22" rx="4" fill="var(--surface-2)" stroke="var(--border)"/>
@@ -202,9 +202,9 @@
               </g>
               </c:if>
               <c:if test="${not empty lineLastExportVal}">
-              <g fill="var(--info)">
+              <g fill="var(--muted)">
                 <circle cx="${lineLastExportX}" cy="${lineLastExportY}" r="3.5"/>
-                <circle cx="${lineLastExportX}" cy="${lineLastExportY}" r="6" fill="var(--info)" opacity="0.22"/>
+                <circle cx="${lineLastExportX}" cy="${lineLastExportY}" r="6" fill="var(--muted)" opacity="0.22"/>
               </g>
               <g transform="translate(${lineLastExportX - 42}, ${lineLastExportY > 160 ? lineLastExportY - 30 : lineLastExportY + 8})">
                 <rect x="0" y="0" width="82" height="22" rx="4" fill="var(--surface-2)" stroke="var(--border)"/>
@@ -213,17 +213,17 @@
               </c:if>
             </svg>
             <div class="chart-legend">
-              <span class="legend-item"><span class="legend-swatch" style="background:var(--accent)"></span>Nhập kho</span>
-              <span class="legend-item"><span class="legend-swatch" style="background:var(--info); height:2px; border-top: 1px dashed var(--info)"></span>Xuất kho</span>
-              <span class="legend-item" style="margin-inline-start:auto"><span class="mono" style="color:var(--accent);font-weight:600">+<fmt:formatNumber value="${not empty totalInStock ? totalInStock : 0}" pattern="#,##0"/></span> máy khả dụng</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:var(--muted)"></span>Nhập kho</span>
+              <span class="legend-item"><span class="legend-swatch" style="background:var(--muted); height:2px; border-top: 1px dashed var(--muted)"></span>Xuất kho</span>
+              <span class="legend-item" style="margin-inline-start:auto"><span class="mono" style="font-weight:600">+<fmt:formatNumber value="${not empty totalInStock ? totalInStock : 0}" pattern="#,##0"/></span> máy khả dụng</span>
             </div>
           </div>
         </div>
 
-        <%-- CEO Pending Approvals Bar Chart --%>
+        <%-- Biểu đồ cột hồ sơ chờ phê duyệt --%>
         <div class="card">
           <div class="card-head">
-            <h3>Hồ Sơ Chờ CEO Phê Duyệt</h3>
+            <h3>Hồ Sơ Chờ Phê Duyệt</h3>
           </div>
           <div class="card-body" style="padding:12px 0">
             <c:set var="maxApproval" value="1"/>
@@ -234,7 +234,7 @@
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
               <div style="width:120px;font-size:13px;color:var(--fg);text-align:right;flex-shrink:0">Thanh lý</div>
               <div style="flex:1;height:28px;background:var(--surface-2);border-radius:6px;overflow:hidden">
-                <div style="width:${pendingLiquidations * 100 / maxApproval}%;height:100%;background:var(--danger);border-radius:6px;display:flex;align-items:center;padding-left:10px">
+                <div style="width:${pendingLiquidations * 100 / maxApproval}%;height:100%;background:var(--muted);border-radius:6px;display:flex;align-items:center;padding-left:10px">
                   <span style="font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:600">${not empty pendingLiquidations ? pendingLiquidations : 0}</span>
                 </div>
               </div>
@@ -242,15 +242,15 @@
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
               <div style="width:120px;font-size:13px;color:var(--fg);text-align:right;flex-shrink:0">Luân chuyển</div>
               <div style="flex:1;height:28px;background:var(--surface-2);border-radius:6px;overflow:hidden">
-                <div style="width:${pendingTransfers * 100 / maxApproval}%;height:100%;background:var(--warn);border-radius:6px;display:flex;align-items:center;padding-left:10px">
+                <div style="width:${pendingTransfers * 100 / maxApproval}%;height:100%;background:var(--muted);border-radius:6px;display:flex;align-items:center;padding-left:10px">
                   <span style="font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:600">${not empty pendingTransfers ? pendingTransfers : 0}</span>
                 </div>
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:12px">
-              <div style="width:120px;font-size:13px;color:var(--fg);text-align:right;flex-shrink:0">Phiếu mua PO</div>
+              <div style="width:120px;font-size:13px;color:var(--fg);text-align:right;flex-shrink:0">Phiếu mua</div>
               <div style="flex:1;height:28px;background:var(--surface-2);border-radius:6px;overflow:hidden">
-                <div style="width:${pendingPOs * 100 / maxApproval}%;height:100%;background:var(--info);border-radius:6px;display:flex;align-items:center;padding-left:10px">
+                <div style="width:${pendingPOs * 100 / maxApproval}%;height:100%;background:var(--muted);border-radius:6px;display:flex;align-items:center;padding-left:10px">
                   <span style="font-family:var(--font-mono);font-size:12px;color:#fff;font-weight:600">${not empty pendingPOs ? pendingPOs : 0}</span>
                 </div>
               </div>
@@ -263,7 +263,7 @@
         </div>
       </section>
 
-      <%-- Section 3: Model Inventory Table (Chỉ hiển thị Model Sắp hết & Hết hàng cần chú ý) --%>
+      <%-- Phần 3: Bảng tồn kho model với phân trang và lọc --%>
       <c:set var="attentionCount" value="${lowStockModelsCount + outOfStockModelsCount}"/>
       <div class="dash-sec-head">
         <h3>
@@ -274,69 +274,88 @@
       </div>
 
       <section class="card" style="padding:0;overflow:hidden">
-        <div class="card-head" style="padding:14px 16px;margin-bottom:0;border-bottom:1px solid var(--border)">
+        <div class="card-head" style="padding:10px 16px;margin-bottom:0;border-bottom:1px solid var(--border)">
           <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn inv-filter-btn active" onclick="filterInvTable('low', this)" style="padding:4px 10px;font-size:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer">Sắp hết · ${lowStockModelsCount}</button>
-            <button class="btn inv-filter-btn" onclick="filterInvTable('out', this)" style="padding:4px 10px;font-size:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;color:var(--muted)">Hết hàng · ${outOfStockModelsCount}</button>
+            <c:set var="commonQS" value=""/>
+            <c:if test="${not empty param.viewRole}"><c:set var="commonQS" value="viewRole=${param.viewRole}&"/></c:if>
+            <c:if test="${not empty param.range}"><c:set var="commonQS" value="${commonQS}range=${param.range}&"/></c:if>
+            <a href="?${commonQS}stockStatus=all&page=1" class="btn inv-filter-btn ${currentStockStatus == 'all' ? 'active' : ''}" style="padding:4px 10px;font-size:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-decoration:none;color:var(--fg)">Tất cả</a>
+            <a href="?${commonQS}stockStatus=low&page=1" class="btn inv-filter-btn ${currentStockStatus == 'low' ? 'active' : ''}" style="padding:4px 10px;font-size:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-decoration:none;color:var(--fg)">Sắp hết · ${lowStockModelsCount}</a>
+            <a href="?${commonQS}stockStatus=out&page=1" class="btn inv-filter-btn ${currentStockStatus == 'out' ? 'active' : ''}" style="padding:4px 10px;font-size:12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;text-decoration:none;color:var(--fg)">Hết hàng · ${outOfStockModelsCount}</a>
           </div>
         </div>
 
         <table class="inv" id="invTable">
           <thead>
             <tr>
-              <th style="width:120px">MÃ MODEL</th>
-              <th>MODEL MÁY PHÁT ĐIỆN</th>
+              <th style="width:120px">MÃ MÁY</th>
+              <th>MÁY PHÁT ĐIỆN</th>
               <th>HÃNG SẢN XUẤT</th>
               <th class="num">TỒN THỰC TẾ</th>
               <th>TRẠNG THÁI</th>
             </tr>
           </thead>
           <tbody>
-            <c:set var="renderedCount" value="0"/>
             <c:forEach var="m" items="${modelSummaries}">
-              <c:if test="${m.totalSerials <= 5}">
-                <c:set var="statusClass" value="${m.totalSerials > 0 ? 'low' : 'out'}"/>
-                <c:if test="${statusClass == 'low'}">
-                  <c:set var="renderedCount" value="${renderedCount + 1}"/>
-                </c:if>
-                <tr data-status="${statusClass}" style="${statusClass == 'out' ? 'display:none' : ''}">
-                  <td class="sku">GEN-${m.id}</td>
-                  <td>
-                    <div class="product"><c:out value="${m.model}"/></div>
-                    <div class="product-sub">Máy phát điện chính hãng</div>
-                  </td>
-                  <td><c:out value="${not empty m.brand ? m.brand : 'Chưa phân loại'}"/></td>
-                  <td class="num"><fmt:formatNumber value="${not empty m.totalSerials ? m.totalSerials : 0}" pattern="#,##0"/></td>
-                  <td>
-                    <c:choose>
-                      <c:when test="${m.totalSerials > 0}">
-                        <span class="pill low"><span class="pdot"></span>Sắp hết</span>
-                      </c:when>
-                      <c:otherwise>
-                        <span class="pill out"><span class="pdot"></span>Hết hàng</span>
-                      </c:otherwise>
-                    </c:choose>
-                  </td>
-                </tr>
-              </c:if>
+              <c:set var="statusClass" value="${m.totalSerials > 0 ? 'low' : 'out'}"/>
+              <tr>
+                <td class="sku">GEN-${m.id}</td>
+                <td>
+                  <div class="product"><c:out value="${m.model}"/></div>
+                  <div class="product-sub">Máy phát điện chính hãng</div>
+                </td>
+                <td><c:out value="${not empty m.brand ? m.brand : 'Chưa phân loại'}"/></td>
+                <td class="num"><fmt:formatNumber value="${not empty m.totalSerials ? m.totalSerials : 0}" pattern="#,##0"/></td>
+                <td>
+                  <c:choose>
+                    <c:when test="${m.totalSerials > 0}">
+                      <span class="pill low"><span class="pdot"></span>Sắp hết</span>
+                    </c:when>
+                    <c:otherwise>
+                      <span class="pill out"><span class="pdot"></span>Hết hàng</span>
+                    </c:otherwise>
+                  </c:choose>
+                </td>
+              </tr>
             </c:forEach>
 
-            <%-- Dynamic Empty Filter Message Row --%>
-            <tr id="emptyFilterRow" style="${renderedCount == 0 ? '' : 'display:none'}">
-              <td colspan="5" style="text-align:center;padding:32px 16px;color:var(--muted)">
-                <svg viewBox="0 0 24 24" style="width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;margin-bottom:6px;display:block;margin-inline:auto"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                Không có model máy phát điện nào ở trạng thái này.
-              </td>
-            </tr>
+            <c:if test="${empty modelSummaries}">
+              <tr>
+                <td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">Không có model máy phát điện nào ở trạng thái này.</td>
+              </tr>
+            </c:if>
           </tbody>
         </table>
+
+        <c:if test="${totalPages > 1}">
+        <c:set var="baseQS" value="stockStatus=${currentStockStatus}"/>
+        <c:if test="${not empty param.viewRole}"><c:set var="baseQS" value="${baseQS}&viewRole=${param.viewRole}"/></c:if>
+        <c:if test="${not empty param.range}"><c:set var="baseQS" value="${baseQS}&range=${param.range}"/></c:if>
+        <div class="pagination">
+          <div class="info">Hiển thị <strong>${fromIndex}</strong>–<strong>${toIndex}</strong> / <strong>${totalItems}</strong> kết quả</div>
+          <div class="controls">
+            <c:if test="${currentPage > 1}">
+              <a href="?${baseQS}&page=${currentPage - 1}" class="page-btn">‹</a>
+            </c:if>
+            <c:forEach begin="1" end="${totalPages}" var="p">
+              <c:choose>
+                <c:when test="${p == currentPage}"><span class="page-btn active">${p}</span></c:when>
+                <c:otherwise><a href="?${baseQS}&page=${p}" class="page-btn">${p}</a></c:otherwise>
+              </c:choose>
+            </c:forEach>
+            <c:if test="${currentPage < totalPages}">
+              <a href="?${baseQS}&page=${currentPage + 1}" class="page-btn">›</a>
+            </c:if>
+          </div>
+        </div>
+        </c:if>
       </section>
 
-      <%-- Section 4: 3 Template Alert Cards (.alerts) --%>
+      <%-- Phần 4: 3 Thẻ Cảnh Báo --%>
       <div class="dash-sec-head">
         <h3>
           <svg viewBox="0 0 24 24"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-          Hồ Sơ & Chứng Từ CEO Cần Phê Duyệt
+          Hồ Sơ & Chứng Từ Cần Phê Duyệt
         </h3>
       </div>
 
@@ -362,17 +381,17 @@
         <div class="alert info">
           <div class="alert-icon"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
           <div class="alert-body">
-            <div class="alert-title">Phiếu mua máy PO <span class="count">${not empty pendingPOs ? pendingPOs : 0} Phiếu</span></div>
+            <div class="alert-title">Phiếu mua máy <span class="count">${not empty pendingPOs ? pendingPOs : 0} Phiếu</span></div>
             <div class="alert-desc">Các phiếu mua máy mới bổ sung kho chờ duyệt cấp kinh phí.</div>
-            <a class="alert-cta" href="${pageContext.request.contextPath}/purchase-order">Xem phiếu mua PO →</a>
+            <a class="alert-cta" href="${pageContext.request.contextPath}/purchase-order">Xem phiếu mua →</a>
           </div>
         </div>
       </section>
 
-      <%-- Section 5: System Footer --%>
+      <%-- Phần 5: Chân trang hệ thống --%>
       <div class="foot">
         <span>Đồng bộ cuối · ${not empty todayFormattedDate ? todayFormattedDate : 'Hôm nay'} · Ban Giám Đốc Điều Hành</span>
-        <span>v2.4.1 · 6 người dùng đang online</span>
+        <span>v2.4.1 · 6 người dùng đang trực tuyến</span>
       </div>
 
     </main>
@@ -381,57 +400,5 @@
 
 <script src="${pageContext.request.contextPath}/assets/js/theme.js"></script>
 <script src="${pageContext.request.contextPath}/assets/js/sidebar.js"></script>
-<script>
-function filterInvTable(type, btn) {
-  document.querySelectorAll('.inv-filter-btn').forEach(function(b) { b.classList.remove('active'); });
-  btn.classList.add('active');
-  var rows = document.querySelectorAll('#invTable tbody tr:not(#emptyFilterRow)');
-  var visibleCount = 0;
-  rows.forEach(function(row) {
-    var status = row.getAttribute('data-status');
-    if (type === 'attention' || type === 'all') {
-      if (status === 'low' || status === 'out') {
-        row.style.display = '';
-        visibleCount++;
-      } else {
-        row.style.display = 'none';
-      }
-    } else if (status === type) {
-      row.style.display = '';
-      visibleCount++;
-    } else {
-      row.style.display = 'none';
-    }
-  });
-
-  var emptyRow = document.getElementById('emptyFilterRow');
-  if (emptyRow) {
-    if (visibleCount === 0) {
-      emptyRow.style.display = '';
-    } else {
-      emptyRow.style.display = 'none';
-    }
-  }
-}
-
-function exportTableToCSV(filename) {
-  var csv = [];
-  var rows = document.querySelectorAll('#invTable tr:not(#emptyFilterRow)');
-  for (var i = 0; i < rows.length; i++) {
-    var row = [], cols = rows[i].querySelectorAll('td, th');
-    for (var j = 0; j < cols.length; j++) {
-      row.push('"' + cols[j].innerText.replace(/"/g, '""').trim() + '"');
-    }
-    csv.push(row.join(','));
-  }
-  var csvFile = new Blob(['\uFEFF' + csv.join('\n')], {type: 'text/csv;charset=utf-8;'});
-  var downloadLink = document.createElement('a');
-  downloadLink.download = filename;
-  downloadLink.href = window.URL.createObjectURL(csvFile);
-  downloadLink.style.display = 'none';
-  document.body.appendChild(downloadLink);
-  downloadLink.click();
-}
-</script>
 </body>
 </html>
