@@ -613,6 +613,10 @@
                          ============================================================ --%>
                     <div class="header-bar">
                         <div class="left">
+                            <a class="back-link" href="${pageContext.request.contextPath}/purchase-order">
+                                <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                                Quay lại danh sách
+                            </a>
                             <span class="code-tag">
                                 <span class="ct-label">Phiếu mua -</span>
                                 <span><c:out value="${po.poCode}"/></span>
@@ -623,30 +627,13 @@
                             </h2>
                         </div>
                         <div class="right">
-                            <a class="btn" href="${pageContext.request.contextPath}/purchase-order">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                                Quay lại
-                            </a>
-                            <button type="button" class="btn" onclick="location.reload()">
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-                                Làm mới
-                            </button>
-                            <button type="button" class="btn" disabled>
-                                <svg class="icon" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                Lưu
-                            </button>
                             <c:if test="${canApproveNow}">
                                 <button type="button" class="btn btn-primary" onclick="openModal('approveModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
                                     Xác nhận
                                 </button>
                             </c:if>
-                            <c:if test="${canRevisionNow}">
-                                <button type="button" class="btn btn-warn" onclick="openModal('revisionModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Yêu cầu chỉnh sửa đề xuất
-                                </button>
-                            </c:if>
+                            
                             <c:if test="${canRejectNow}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('rejectModal')">
                                     <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -812,13 +799,13 @@
                                                         <td class="text-right mono"><strong><fmt:formatNumber value="${d.finalQuantity}"/></strong></td>
                                                         <td class="text-right mono">
                                                             <c:choose>
-                                                                <c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice}" type="currency" currencySymbol="₫"/></c:when>
+                                                                <c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice}" pattern="#,##0"/> ₫</c:when>
                                                                 <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                             </c:choose>
                                                         </td>
                                                         <td class="text-right mono" style="font-weight:600;">
                                                             <c:choose>
-                                                                <c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice * d.finalQuantity}" type="currency" currencySymbol="₫"/></c:when>
+                                                                <c:when test="${d.unitPrice != null}"><fmt:formatNumber value="${d.unitPrice * d.finalQuantity}" pattern="#,##0"/> ₫</c:when>
                                                                 <c:otherwise><span style="color:var(--muted);">—</span></c:otherwise>
                                                             </c:choose>
                                                         </td>
@@ -835,7 +822,7 @@
                                             <tr>
                                                 <td colspan="7" class="text-right" style="padding: 12px 14px;">Tổng cộng:</td>
                                                 <td class="text-right mono" style="padding: 12px 14px; color: var(--accent);">
-                                                    <fmt:formatNumber value="${grandTotal}" type="currency" currencySymbol="₫"/>
+                                                    <fmt:formatNumber value="${grandTotal}" pattern="#,##0"/> ₫
                                                 </td>
                                                 <td></td>
                                             </tr>
@@ -1069,7 +1056,6 @@
             <div class="modal-host" id="revisionModal">
                 <div class="modal-card">
                     <h3>Yêu cầu chỉnh sửa đề xuất</h3>
-                    <div class="modal-sub">Các đề xuất gốc sẽ được tách khỏi phiếu mua này và chuyển sang trạng thái <strong>Cần chỉnh sửa</strong> để Sale Manager chỉnh sửa (ghi chú, nhà cung cấp, kho, tháng...). Không áp dụng cho sai máy/giá/số lượng - trường hợp đó hãy dùng <strong>Từ chối</strong>.</div>
                     <form method="POST" action="${pageContext.request.contextPath}/purchase-order?action=requestRevision">
                         <input type="hidden" name="id" value="${po.poId}"/>
                         <label for="revisionReason">Lý do yêu cầu chỉnh sửa <span style="color:var(--danger)">*</span></label>

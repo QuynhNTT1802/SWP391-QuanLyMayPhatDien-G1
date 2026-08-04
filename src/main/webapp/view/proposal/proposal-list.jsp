@@ -149,10 +149,11 @@
                             <option value="">Trạng thái: Tất cả</option>
                             <option value="PENDING"   <c:if test="${statusFilter == 'PENDING'}">selected</c:if>>Chờ duyệt</option>
                             <option value="PENDING_CEO" <c:if test="${statusFilter == 'PENDING_CEO'}">selected</c:if>>Chờ CEO duyệt</option>
-                            <option value="APPROVED"  <c:if test="${statusFilter == 'APPROVED'}">selected</c:if>>Đã duyệt (Sale Manager / CEO)</option>
-                            <option value="REJECTED"  <c:if test="${statusFilter == 'REJECTED'}">selected</c:if>>Từ chối (Sale Manager / CEO)</option>
+                            <option value="APPROVED_SM" <c:if test="${statusFilter == 'APPROVED_SM'}">selected</c:if>>Đã duyệt bởi Sale Manager</option>
+                            <option value="APPROVED_CEO" <c:if test="${statusFilter == 'APPROVED_CEO'}">selected</c:if>>Đã duyệt bởi CEO</option>
+                            <option value="REJECTED_SM" <c:if test="${statusFilter == 'REJECTED_SM'}">selected</c:if>>Từ chối bởi Sale Manager</option>
+                            <option value="REJECTED_CEO" <c:if test="${statusFilter == 'REJECTED_CEO'}">selected</c:if>>Từ chối bởi CEO</option>
                             <option value="NEEDS_REVISION" <c:if test="${statusFilter == 'NEEDS_REVISION'}">selected</c:if>>Cần chỉnh sửa</option>
-                            <option value="CANCELLED" <c:if test="${statusFilter == 'CANCELLED'}">selected</c:if>>Đã hủy</option>
                             <option value="DELETED" <c:if test="${statusFilter == 'DELETED'}">selected</c:if>>Đã xoá</option>
                         </select>
 
