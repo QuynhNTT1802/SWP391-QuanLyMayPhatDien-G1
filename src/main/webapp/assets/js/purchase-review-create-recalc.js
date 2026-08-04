@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
             var g = el.getAttribute('data-gen');
             var n = perGen[g] ? perGen[g].note : '';
             el.textContent = n ? n : '\u2014';
-            el.style.color = n ? '' : 'var(--muted)';
+            el.classList.toggle('has-text', !!n);
         });
         if (grandQtyEl) grandQtyEl.textContent = totalQty;
         if (grandTotalEl) grandTotalEl.textContent = fmtMoney(totalMoney);
