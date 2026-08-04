@@ -221,8 +221,24 @@ public class ProposalController extends HttpServlet {
             try { poFilter = Integer.parseInt(poFilterStr); } catch (NumberFormatException e) {}
         }
 
+        String dbStatus = statusFilter;
+        Boolean hasPo = null;
+        if ("APPROVED_SM".equals(statusFilter)) {
+            dbStatus = GlobalUtils.STATUS_APPROVED;
+            hasPo = Boolean.FALSE;
+        } else if ("APPROVED_CEO".equals(statusFilter)) {
+            dbStatus = GlobalUtils.STATUS_APPROVED;
+            hasPo = Boolean.TRUE;
+        } else if ("REJECTED_SM".equals(statusFilter)) {
+            dbStatus = GlobalUtils.STATUS_REJECTED;
+            hasPo = Boolean.FALSE;
+        } else if ("REJECTED_CEO".equals(statusFilter)) {
+            dbStatus = GlobalUtils.STATUS_REJECTED;
+            hasPo = Boolean.TRUE;
+        }
+
         ImportProposalDAO dao = new ImportProposalDAO();
-        int total = dao.countByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo, loggedUser.getId());
+        int total = dao.countByFilters(dbStatus, search, createdByFilter, poFilter, dateFrom, dateTo, loggedUser.getId(), hasPo);
         int totalPages = (int) Math.ceil((double) total / pageSize);
         if (totalPages < 1) {
             totalPages = 1;
@@ -231,7 +247,7 @@ public class ProposalController extends HttpServlet {
             page = totalPages;
         }
 
-        List<ImportProposal> proposals = dao.searchByFilters(statusFilter, search, createdByFilter, poFilter, dateFrom, dateTo, loggedUser.getId(), page, pageSize);
+        List<ImportProposal> proposals = dao.searchByFilters(dbStatus, search, createdByFilter, poFilter, dateFrom, dateTo, loggedUser.getId(), hasPo, page, pageSize);
 
         java.util.Map<String, java.time.LocalDate> periodDeadlines = new java.util.HashMap<>();
         java.util.Set<String> seen = new java.util.HashSet<>();
@@ -342,6 +358,15 @@ request.setAttribute("selectedWarehouseId", warehouseId);
             return;
         }
         request.setAttribute("proposal", p);
+        if (p.getSupplierId() != null) {
+            Supplier supplier = new SupplierDAO().findById(p.getSupplierId());
+            if (supplier != null) {
+                request.setAttribute("supplierPhone", supplier.getPhone());
+                request.setAttribute("supplierEmail", supplier.getEmail());
+                request.setAttribute("supplierAddress", supplier.getAddress());
+                request.setAttribute("supplierCompany", supplier.getCompanyName());
+            }
+        }
         int formWarehouseId = parseInt(request.getParameter("warehouseId"));
         if (formWarehouseId <= 0) {
             formWarehouseId = p.getWarehouseId();

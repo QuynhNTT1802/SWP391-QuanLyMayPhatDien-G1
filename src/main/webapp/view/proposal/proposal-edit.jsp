@@ -123,12 +123,12 @@
                                         </svg>
                                     </button>
                                 </div>
-                                <input type="hidden" name="supplierId" id="sdHiddenId" value="${proposal.supplierId != null ? proposal.supplierId : ''}" />
-                                <input type="hidden" id="inpCustName" value="${proposal.supplierName != null ? proposal.supplierName : ''}" />
-                                <input type="hidden" id="inpCustPhone" value="" />
-                                <input type="hidden" id="inpCustEmail" value="" />
-                                <input type="hidden" id="inpCustAddress" value="" />
-                                <input type="hidden" id="customerCompany" value="" />
+                                    <input type="hidden" name="supplierId" id="sdHiddenId" value="${proposal.supplierId != null ? proposal.supplierId : ''}" />
+                                    <input type="hidden" id="inpCustName" value="${proposal.supplierName != null ? proposal.supplierName : ''}" />
+                                    <input type="hidden" id="inpCustPhone" value="${supplierPhone != null ? supplierPhone : ''}" />
+                                    <input type="hidden" id="inpCustEmail" value="${supplierEmail != null ? supplierEmail : ''}" />
+                                    <input type="hidden" id="inpCustAddress" value="${supplierAddress != null ? supplierAddress : ''}" />
+                                    <input type="hidden" id="customerCompany" value="${supplierCompany != null ? supplierCompany : ''}" />
                             </div>
 
                             <c:if test="${canCreateSupplier}">
@@ -185,7 +185,6 @@
                                     <th class="col-qty">Số lượng <span class="req">*</span></th>
                                     <th class="col-price">Đơn giá (VNĐ) <span class="req">*</span></th>
                                     <th class="col-price">Thành tiền</th>
-                                    <th class="col-note">Ghi chú dòng</th>
                                     <th class="col-del"></th>
                                 </tr>
                             </thead>
@@ -207,7 +206,6 @@
                                                 <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="${d.quantity}" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                                 <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="${d.unitPrice}" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                                 <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
-                                                <td><input type="text" name="detailNote" class="row-note-input" value="<c:out value='${d.note}'/>" placeholder="Ghi chú dòng" /></td>
                                                 <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                             </tr>
                                         </c:forEach>
@@ -227,18 +225,17 @@
                                             <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                             <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
                                             <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
-                                            <td><input type="text" name="detailNote" class="row-note-input" placeholder="Ghi chú dòng" /></td>
                                             <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                                         </tr>
                                     </c:otherwise>
                                 </c:choose>
                             </tbody>
                             <tfoot>
-                                <tr class="total-row">
-                                    <td colspan="6" class="text-right">Tổng cộng:</td>
-                                    <td class="text-right mono" id="grandTotal">0₫</td>
-                                    <td></td>
-                                </tr>
+                                        <tr class="total-row">
+                                            <td colspan="5" class="text-right">Tổng cộng:</td>
+                                            <td class="text-right mono" id="grandTotal">0₫</td>
+                                            <td></td>
+                                        </tr>
                             </tfoot>
                         </table>
 
@@ -261,9 +258,8 @@
                                 <td class="col-stock"><span class="row-stock mono">—</span></td>
                                 <td><input type="text" inputmode="numeric" name="quantity" class="qty-input" value="1" maxlength="4" oninput="validateQty(this);updateTotal()" onblur="finalizeQty(this)" required /></td>
                                 <td><input type="text" inputmode="numeric" name="unitPrice" class="unit-price-input mono" value="0" oninput="validateUnitPrice(this);updateTotal()" onfocus="unformatPrice(this)" onblur="finalizeUnitPrice(this)" required /></td>
-                                <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
-                                <td><input type="text" name="detailNote" class="row-note-input" placeholder="Ghi chú dòng" /></td>
-                                <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
+                                    <td class="col-price row-subtotal-cell"><span class="row-subtotal mono">0₫</span></td>
+                                    <td class="col-del"><button type="button" class="row-del-btn" onclick="removeRow(this)" title="Xoá dòng">×</button></td>
                             </tr>
                         </template>
                     </div>
@@ -484,6 +480,13 @@ MSG.ADDED_SUP_SUFFIX = '"';
                 label.classList.add('has-value');
             }
         }
+        if (typeof refreshSupplierCard === 'function') refreshSupplierCard();
+
+        document.querySelectorAll('.unit-price-input').forEach(function (el) {
+            var intPart = ((el.value || '').trim().split('.')[0] || '').replace(/[^\d]/g, '');
+            el.value = intPart || '0';
+        });
+        if (typeof updateTotal === 'function') updateTotal();
     })();
     document.addEventListener('DOMContentLoaded', function () {
         if (window.SESSION_DATA && window.SESSION_DATA.message && typeof showToast === 'function') {
