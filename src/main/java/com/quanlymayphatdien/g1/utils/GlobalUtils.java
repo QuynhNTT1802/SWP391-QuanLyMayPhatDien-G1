@@ -9,13 +9,12 @@ public class GlobalUtils {
     public static final String REGEX_EMAIL
             = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
     public static final String REGEX_PHONE = "^0[0-9]{9,10}$";
-    public static final String PHONE_ERROR_MSG = "S?T kh�ng h?p l? (10-11 s?, b?t ??u l� 0).";
+    public static final String PHONE_ERROR_MSG = "SĐT không hơp lệ (10-11 s?, b?t ??u l� 0).";
 
-    public static final String PASSWORD_ERROR_MSG = "M?t kh?u ph?i c� �t nh?t 1 ch? hoa, 1 ch? th??ng v� 1 s?.";
+    public static final String PASSWORD_ERROR_MSG = "Mậut khẩu phải có ít nhất 1 chữ hoa, 1 ch? th??ng v� 1 s?.";
 
     public static final String EMAIL_ERROR_MSG = "Email không hợp lệ.";
 
-    public static final String STATUS_DRAFT = "DRAFT";
 
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_APPROVED = "APPROVED";
@@ -31,7 +30,6 @@ public class GlobalUtils {
     public static final String PO_STATUS_PENDING_CEO = "PENDING_CEO";
     public static final String PO_STATUS_APPROVED = "APPROVED";
     public static final String PO_STATUS_REJECTED = "REJECTED";
-    public static final String PO_STATUS_CANCELLED = "CANCELLED";
 
     public static final String PROPOSAL_STATUS_PENDING_CEO = "PENDING_CEO";
     public static final String STATUS_NEEDS_REVISION = "NEEDS_REVISION";

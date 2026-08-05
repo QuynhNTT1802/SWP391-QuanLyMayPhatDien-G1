@@ -69,10 +69,7 @@
                             <c:set var="statusLabel" value="Đã xoá"/>
                             <c:set var="statusPillClass" value="status-deleted"/>
                         </c:when>
-                        <c:otherwise>
-                            <c:set var="statusLabel" value="Đã hủy"/>
-                            <c:set var="statusPillClass" value="status-cancelled"/>
-                        </c:otherwise>
+                        
                     </c:choose>
 
                     <c:set var="canApprove" value="${not empty sessionScope.userPermissions && sessionScope.userPermissions.contains('proposals.approve')}" />
@@ -109,16 +106,7 @@
                                 </button>
                             </c:if>
 
-                            <c:if test="${!hasLockedPO && proposal.status == 'NEEDS_REVISION' && proposal.revisionRequestedByRole == 'CEO' && canApprove && !isViewingDeleted}">
-                                <a class="btn" href="${pageContext.request.contextPath}/proposal?action=edit&id=${proposal.proposalId}">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Sửa đề xuất (yêu cầu từ CEO)
-                                </a>
-                                <button type="button" class="btn btn-primary" onclick="openModal('resubmitModal')">
-                                    <svg class="icon" viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-                                    Gửi duyệt lại
-                                </button>
-                            </c:if>
+                            
 
                             <c:if test="${!hasLockedPO && proposal.status == 'PENDING' && isOwner && !isViewingDeleted}">
                                 <button type="button" class="btn btn-danger" onclick="openModal('deleteModal')">
